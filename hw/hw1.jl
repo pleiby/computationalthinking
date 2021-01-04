@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.13
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -32,7 +32,7 @@ Feel free to ask questions!
 # ╔═╡ 911ccbce-ed68-11ea-3606-0384e7580d7c
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby")
 
 # press the ▶ button in the bottom right of this cell to run your edits
 # or use Shift+Enter
@@ -43,7 +43,7 @@ student = (name = "Jazzy Doe", kerberos_id = "jazz")
 # ╔═╡ 8ef13896-ed68-11ea-160b-3550eeabbd7d
 md"""
 
-Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
+Submission by: **_$(student.name)_** ($(student.kerberos_id)@gmail.com)
 """
 
 # ╔═╡ 5f95e01a-ee0a-11ea-030c-9dba276aba92
@@ -87,15 +87,24 @@ md"#### Exerise 1.1
 "
 
 # ╔═╡ f51333a6-eded-11ea-34e6-bfbb3a69bcb0
-random_vect = missing # replace this with your code!
+random_vect = rand(Float64, 10) # replace this with your code!
+
+# ╔═╡ 5be4e148-4ecd-11eb-0177-6d868feef709
+typeof(example_vector)
+
+# ╔═╡ 46f650b4-4ecd-11eb-2f2c-89149e9b71a9
+typeof(random_vect)
 
 # ╔═╡ cf738088-eded-11ea-2915-61735c2aa990
 md"👉 Make a function `mean` using a `for` loop, which computes the mean/average of a vector of numbers."
 
 # ╔═╡ 0ffa8354-edee-11ea-2883-9d5bfea4a236
 function mean(x)
-	
-	return missing
+	m = 0
+	for x_i in x
+		m += x_i
+	end
+	return m/length(x)
 end
 
 # ╔═╡ 1f104ce4-ee0e-11ea-2029-1d9c817175af
@@ -105,15 +114,15 @@ mean([1, 2, 3])
 md"👉 Define `m` to be the mean of `random_vect`."
 
 # ╔═╡ 2a391708-edee-11ea-124e-d14698171b68
-m = missing
+m = mean(random_vect)
 
 # ╔═╡ e2863d4c-edef-11ea-1d67-332ddca03cc4
 md"""👉 Write a function `demean`, which takes a vector `x` and subtracts the mean from each value in `x`."""
 
 # ╔═╡ ec5efe8c-edef-11ea-2c6f-afaaeb5bc50c
 function demean(x)
-	
-	return missing
+	x = x .- mean(x)
+	return x
 end
 
 # ╔═╡ 29e10640-edf0-11ea-0398-17dbf4242de3
@@ -129,11 +138,20 @@ if ismissing(random_vect)
 	"""
 end
 
+# ╔═╡ 18dfcc38-4ed1-11eb-3038-3bff7d096184
+?isapprox
+
+# ╔═╡ 0247e5a6-4ed0-11eb-03b5-19fd025548a7
+md"""Note results of the following `copy` instruction are replaced by the demean function. How does Pluto handle the sequencing of this?"""
+
 # ╔═╡ 73ef1d50-edf0-11ea-343c-d71706874c82
 copy_of_random_vect = copy(random_vect); # in case demean modifies `x`
 
 # ╔═╡ 38155b5a-edf0-11ea-3e3f-7163da7433fb
 mean(demean(copy_of_random_vect))
+
+# ╔═╡ e65043aa-4ecf-11eb-0744-c1889f8b0d7b
+random_vect
 
 # ╔═╡ a5f8bafe-edf0-11ea-0da3-3330861ae43a
 md"""
@@ -144,8 +162,9 @@ md"""
 
 # ╔═╡ b6b65b94-edf0-11ea-3686-fbff0ff53d08
 function create_bar()
-	
-	return missing
+	x = zeros(100)
+	x[40:59] .= 1
+	return x
 end
 
 # ╔═╡ 22f28dae-edf2-11ea-25b5-11c369ae1253
@@ -157,9 +176,13 @@ md"""
 
 # ╔═╡ 8c19fb72-ed6c-11ea-2728-3fa9219eddc4
 function vecvec_to_matrix(vecvec)
-	
-	return missing
+	# assume vectors are provided in column (major) order
+	M = Array{Any,2}(undef, length(vecvec[1]), length(vecvec))
+	return M
 end
+
+# ╔═╡ 16d5573a-4ed3-11eb-2cbb-f71574ac8ffb
+testVV = [[1,2], [3,4]]
 
 # ╔═╡ c4761a7e-edf2-11ea-1e75-118e73dadbed
 vecvec_to_matrix([[1,2], [3,4]])
@@ -1350,7 +1373,7 @@ with_sobel_edge_detect(sobel_camera_image)
 
 # ╔═╡ Cell order:
 # ╠═83eb9ca0-ed68-11ea-0bc5-99a09c68f867
-# ╟─8ef13896-ed68-11ea-160b-3550eeabbd7d
+# ╠═8ef13896-ed68-11ea-160b-3550eeabbd7d
 # ╟─ac8ff080-ed61-11ea-3650-d9df06123e1f
 # ╠═911ccbce-ed68-11ea-3606-0384e7580d7c
 # ╟─5f95e01a-ee0a-11ea-030c-9dba276aba92
@@ -1365,6 +1388,8 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═f51333a6-eded-11ea-34e6-bfbb3a69bcb0
 # ╟─b18e2c54-edf1-11ea-0cbf-85946d64b6a2
 # ╟─397941fc-edee-11ea-33f2-5d46c759fbf7
+# ╠═5be4e148-4ecd-11eb-0177-6d868feef709
+# ╠═46f650b4-4ecd-11eb-2f2c-89149e9b71a9
 # ╟─b1d5ca28-edf6-11ea-269e-75a9fb549f1d
 # ╟─cf738088-eded-11ea-2915-61735c2aa990
 # ╠═0ffa8354-edee-11ea-2883-9d5bfea4a236
@@ -1375,18 +1400,22 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─2b1ccaca-edee-11ea-34b0-c51659f844d0
 # ╟─e2863d4c-edef-11ea-1d67-332ddca03cc4
 # ╠═ec5efe8c-edef-11ea-2c6f-afaaeb5bc50c
-# ╟─29e10640-edf0-11ea-0398-17dbf4242de3
+# ╠═29e10640-edf0-11ea-0398-17dbf4242de3
 # ╟─6f67657e-ee1a-11ea-0c2f-3d567bcfa6ea
 # ╠═38155b5a-edf0-11ea-3e3f-7163da7433fb
+# ╠═18dfcc38-4ed1-11eb-3038-3bff7d096184
+# ╠═0247e5a6-4ed0-11eb-03b5-19fd025548a7
 # ╠═73ef1d50-edf0-11ea-343c-d71706874c82
+# ╠═e65043aa-4ecf-11eb-0744-c1889f8b0d7b
 # ╟─a5f8bafe-edf0-11ea-0da3-3330861ae43a
 # ╠═b6b65b94-edf0-11ea-3686-fbff0ff53d08
 # ╟─d862fb16-edf1-11ea-36ec-615d521e6bc0
 # ╟─e3394c8a-edf0-11ea-1bb8-619f7abb6881
 # ╟─22f28dae-edf2-11ea-25b5-11c369ae1253
 # ╠═8c19fb72-ed6c-11ea-2728-3fa9219eddc4
+# ╠═16d5573a-4ed3-11eb-2cbb-f71574ac8ffb
 # ╠═c4761a7e-edf2-11ea-1e75-118e73dadbed
-# ╟─adfbe9b2-ed6c-11ea-09ac-675262f420df
+# ╠═adfbe9b2-ed6c-11ea-09ac-675262f420df
 # ╟─393667ca-edf2-11ea-09c5-c5d292d5e896
 # ╠═9f1c6d04-ed6c-11ea-007b-75e7e780703d
 # ╠═70955aca-ed6e-11ea-2330-89b4d20b1795
