@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -198,13 +198,11 @@ philip
 typeof(philip)
 
 # ╔═╡ c9cd6c04-ebca-11ea-0990-5fa19ff7ed97
+# example of single RGBX object
 RGBX(0.9, 0.1, 0.1)
 
 # ╔═╡ 0d873d9c-e93b-11ea-2425-1bd79677fb97
 md"##"
-
-# ╔═╡ 6b09354a-ebb9-11ea-2d5a-3b75c5ae7aa9
-
 
 # ╔═╡ 2d6c434e-e93b-11ea-2678-3b9db4975089
 md"##"
@@ -282,6 +280,7 @@ md"## Getting pieces of an image"
 # ╔═╡ ae260168-e932-11ea-38fd-4f2c6f43e21c
 begin 
 	(h, w) = size(philip)
+	# bottom half of height, middle 80% of width
 	head = philip[(h ÷ 2):h, (w ÷ 10): (9w ÷ 10)]
 	# `÷` is typed as \div <TAB>  -- integer division
 end
@@ -299,7 +298,7 @@ md"## Manipulating matrices
 "
 
 # ╔═╡ 740ed2e2-e933-11ea-236c-f3c3f09d0f8b
-[head head]
+[head head] # column concatenation
 
 # ╔═╡ 6128a5ba-e93b-11ea-03f5-f170c7b90b25
 md"##"
@@ -423,6 +422,9 @@ md"## Transforming an image
 # ╔═╡ 182c0710-f6ad-11ea-2f47-9b9802587206
 @bind blur_factor Slider(1:20, show_value=true)
 
+# ╔═╡ 34946244-4f6d-11eb-0076-0b25db8ff151
+
+
 # ╔═╡ dec9f656-f6ae-11ea-0411-990c05a04839
 function blur(n)
 	return ones(n,n) / (n*n)
@@ -458,6 +460,9 @@ md"## Summary
 
 - Relatively simple mathematical operations can transform images in useful ways
 "
+
+# ╔═╡ 1ed6c5c2-4f6c-11eb-28cb-4764fe5188d5
+md"## Utilities"
 
 # ╔═╡ 58184d88-e939-11ea-2fc8-73b3476ebe92
 expand(image, ratio=5) = kron(image, ones(ratio, ratio))
@@ -745,7 +750,7 @@ pablo = decimate(process_raw_camera_data(raw_camera_data), 2)
 
 # ╔═╡ Cell order:
 # ╟─a50b5f48-e8d5-11ea-1f05-a3741b5d15ba
-# ╟─8a6fed4c-e94b-11ea-1113-d56f56fb293b
+# ╠═8a6fed4c-e94b-11ea-1113-d56f56fb293b
 # ╟─dc53f316-e8c8-11ea-150f-1374dbce114a
 # ╟─c3f43d66-e94b-11ea-02bd-23cfeb878ff1
 # ╟─c6c77738-e94b-11ea-22f5-1dce3dbcc3ca
@@ -779,7 +784,6 @@ pablo = decimate(process_raw_camera_data(raw_camera_data), 2)
 # ╠═7eff3522-ebca-11ea-1a65-59e66a4e72ab
 # ╠═c9cd6c04-ebca-11ea-0990-5fa19ff7ed97
 # ╟─0d873d9c-e93b-11ea-2425-1bd79677fb97
-# ╠═6b09354a-ebb9-11ea-2d5a-3b75c5ae7aa9
 # ╟─2d6c434e-e93b-11ea-2678-3b9db4975089
 # ╠═2b14e93e-e93b-11ea-25f1-5f565f80e778
 # ╟─0bdc6058-e8d5-11ea-1889-3f706cea7a1f
@@ -824,6 +828,7 @@ pablo = decimate(process_raw_camera_data(raw_camera_data), 2)
 # ╠═0bdbe44c-f6ad-11ea-32d3-d5f686a03b2d
 # ╠═182c0710-f6ad-11ea-2f47-9b9802587206
 # ╠═4650692e-f6ad-11ea-1b66-7bf72be16fa1
+# ╠═34946244-4f6d-11eb-0076-0b25db8ff151
 # ╠═dec9f656-f6ae-11ea-0411-990c05a04839
 # ╠═b7bd92c6-f6ad-11ea-134b-751e3c465f08
 # ╠═1cbd2ae6-f6af-11ea-289e-7d9f40cec06d
@@ -834,10 +839,11 @@ pablo = decimate(process_raw_camera_data(raw_camera_data), 2)
 # ╠═15ce202e-e939-11ea-2387-93be0ec4cf1f
 # ╠═cd5721d0-ede6-11ea-0918-1992c69bccc6
 # ╟─bf2167a4-e93d-11ea-03b2-cdd24b459ba9
-# ╟─5e688928-e939-11ea-0e16-fbc80af390ab
-# ╟─58184d88-e939-11ea-2fc8-73b3476ebe92
-# ╟─2dd09f16-e93a-11ea-2cdc-13f558e3391d
-# ╟─df1b7996-e93b-11ea-1a3a-81b4ec520679
+# ╠═1ed6c5c2-4f6c-11eb-28cb-4764fe5188d5
+# ╠═5e688928-e939-11ea-0e16-fbc80af390ab
+# ╠═58184d88-e939-11ea-2fc8-73b3476ebe92
+# ╠═2dd09f16-e93a-11ea-2cdc-13f558e3391d
+# ╠═df1b7996-e93b-11ea-1a3a-81b4ec520679
 # ╟─b8daeea0-ec79-11ea-34b5-3f13e8a56a42
 # ╟─bf1bb2c8-ec79-11ea-0671-3ffb34828f3c
 # ╟─69e3aa82-e93c-11ea-23fe-c1103d989cba
