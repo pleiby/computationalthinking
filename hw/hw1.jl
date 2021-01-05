@@ -275,9 +275,6 @@ test2 = reshape([RGB(1.0, 1.0, 1.0), RGB(1.0, 1.0, 0.0)], (2,1))
 # ╔═╡ d34c19d0-4f91-11eb-3eda-674e47f9dc2b
 mean_colors(test2)
 
-# ╔═╡ d75ec078-ee0d-11ea-3723-71fb8eecb040
-
-
 # ╔═╡ f68d4a36-ee07-11ea-0832-0360530f102e
 md"""
 #### Exercise 2.2
@@ -287,23 +284,22 @@ md"""
 # ╔═╡ f6991a50-ee07-11ea-0bc4-1d68eb028e6a
 begin
 	function quantize(x::Number)
-		
-		return missing
+		return floor(x, sigdigits = 1) # sigdigits are digits to right of decimal
 	end
 	
 	function quantize(color::AbstractRGB)
-		# you will write me in a later exercise!
-		return missing
+		return RGB(floor(color.r, sigdigits = 1), 
+			floor(color.g, sigdigits = 1),
+			floor(color.b, sigdigits = 1))
 	end
 	
 	function quantize(image::AbstractMatrix)
-		# you will write me in a later exercise!
-		return missing
+		return quantize.(image)
 	end
 end
 
 # ╔═╡ f6a655f8-ee07-11ea-13b6-43ca404ddfc7
-quantize(0.267), quantize(0.91)
+quantize(0.267), quantize(0.91), quantize(1.0)
 
 # ╔═╡ f6b218c0-ee07-11ea-2adb-1968c4fd473a
 md"""
@@ -336,8 +332,7 @@ md"""
 
 # ╔═╡ 63e8d636-ee0b-11ea-173d-bd3327347d55
 function invert(color::AbstractRGB)
-	
-	return missing
+	return RGB(1-color.r, 1-color.g, 1- color.b)
 end
 
 # ╔═╡ 2cc2f84e-ee0d-11ea-373b-e7ad3204bb00
@@ -358,9 +353,6 @@ invert(red)
 # ╔═╡ 846b1330-ee0b-11ea-3579-7d90fafd7290
 md"Can you invert the picture of Philip?"
 
-# ╔═╡ 943103e2-ee0b-11ea-33aa-75a8a1529931
-philip_inverted = missing
-
 # ╔═╡ f6d6c71a-ee07-11ea-2b63-d759af80707b
 md"""
 #### Exercise 2.6
@@ -368,22 +360,43 @@ md"""
 """
 
 # ╔═╡ f6e2cb2a-ee07-11ea-06ee-1b77e34c1e91
-begin
+begin 
+	function myclamp(x::Number, lobnd = 0, upbnd = 1)
+		return ((x > upbnd) ? upbnd :
+			(x < lobnd) ? lobnd : x)
+	end
+		
+	function rand_in0(s::Number)
+		return (rand(1)[1] - 0.5) * s
+	end
+	
+	function rand_in(s::Number)
+		return (rand(1)[1]*(2.0*s) - s)
+	end
+	
 	function noisify(x::Number, s)
-
-		return missing
+		return myclamp(x + rand_in(s)) # default clamp to 0 to 1
 	end
 	
 	function noisify(color::AbstractRGB, s)
-		# you will write me in a later exercise!
-		return missing
+		return RGB(noisify(color.r, s), 
+			noisify(color.g, s),
+			noisify(color.b, s))
 	end
 	
 	function noisify(image::AbstractMatrix, s)
-		# you will write me in a later exercise!
-		return missing
+		return noisify.(image, s)
 	end
 end
+
+# ╔═╡ f8f94ed2-4fa0-11eb-2116-5f023d45cc83
+s = .5
+
+# ╔═╡ 8ff730f8-4f9f-11eb-38a3-212b42c6a5f6
+maximum(rand(10000).*(2.0*s) .- s)
+
+# ╔═╡ b1637ce0-4fa1-11eb-3fb5-87bd30b557a2
+mean(noisify.(ones(100).*0.5, 0.1)), mean(noisify.(ones(100).*0.5, 0.1)), mean(noisify.(ones(100).*0.5, 0.1))
 
 # ╔═╡ f6fc1312-ee07-11ea-39a0-299b67aee3d8
 md"""
@@ -424,7 +437,7 @@ You may need noise intensities larger than 1. Why?
 
 # ╔═╡ bdc2df7c-ee0c-11ea-2e9f-7d2c085617c1
 answer_about_noise_intensity = md"""
-The image is unrecognisable with intensity ...
+The image is unrecognisable with intensity ...2|
 """
 
 # ╔═╡ 81510a30-ee0e-11ea-0062-8b3327428f9d
@@ -443,10 +456,19 @@ end
 size(philip)
 
 # ╔═╡ 86a09398-4f7f-11eb-2377-656df9e0e373
-testcolor = philip[300,100] + philip[300,101]
+test1color = philip[300,100] + philip[300,101]
 
 # ╔═╡ bf5dbd06-4f8d-11eb-3860-31d78f2e9bf6
-typeof(testcolor.r)
+typeof(test1color.r)
+
+# ╔═╡ 62db1658-4f94-11eb-2b1c-cb1abf4a679d
+typeof(quantize(test1color))
+
+# ╔═╡ c769e322-4f96-11eb-36b1-65eab131a06d
+test1color.r
+
+# ╔═╡ af4e97e2-4f96-11eb-126c-d32da77bff7b
+quantize(test1color).r
 
 # ╔═╡ f38180cc-4f8d-11eb-393e-2120c2e74488
 typeof(philip[300,100].b )
@@ -462,6 +484,9 @@ mean_colors(philip)
 
 # ╔═╡ 9751586e-ee0c-11ea-0cbb-b7eda92977c9
 quantize(philip)
+
+# ╔═╡ 943103e2-ee0b-11ea-33aa-75a8a1529931
+philip_inverted = invert.(philip)
 
 # ╔═╡ ac15e0d0-ee0c-11ea-1eaf-d7f88b5df1d7
 noisify(philip, philip_noise)
@@ -1054,7 +1079,7 @@ if !@isdefined(quantize)
 	not_defined(:quantize)
 else
 	let
-		result = quantize(.3)
+		result = quantize(.31) # was quantize(.3)
 
 		if ismissing(result)
 			still_missing()
@@ -1488,13 +1513,15 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═c52f7216-4f91-11eb-187a-0da4e0e1bf6a
 # ╠═d34c19d0-4f91-11eb-3eda-674e47f9dc2b
 # ╠═5be9b144-ee0d-11ea-2a8d-8775de265a1d
-# ╠═4d0158d0-ee0d-11ea-17c3-c169d4284acb
-# ╠═d75ec078-ee0d-11ea-3723-71fb8eecb040
+# ╟─4d0158d0-ee0d-11ea-17c3-c169d4284acb
 # ╟─f68d4a36-ee07-11ea-0832-0360530f102e
 # ╠═f6991a50-ee07-11ea-0bc4-1d68eb028e6a
 # ╠═f6a655f8-ee07-11ea-13b6-43ca404ddfc7
 # ╟─c905b73e-ee1a-11ea-2e36-23b8e73bfdb6
 # ╟─f6b218c0-ee07-11ea-2adb-1968c4fd473a
+# ╠═62db1658-4f94-11eb-2b1c-cb1abf4a679d
+# ╠═c769e322-4f96-11eb-36b1-65eab131a06d
+# ╠═af4e97e2-4f96-11eb-126c-d32da77bff7b
 # ╟─f6bf64da-ee07-11ea-3efb-05af01b14f67
 # ╟─25dad7ce-ee0b-11ea-3e20-5f3019dd7fa3
 # ╠═9751586e-ee0c-11ea-0cbb-b7eda92977c9
@@ -1509,6 +1536,9 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═943103e2-ee0b-11ea-33aa-75a8a1529931
 # ╟─f6d6c71a-ee07-11ea-2b63-d759af80707b
 # ╠═f6e2cb2a-ee07-11ea-06ee-1b77e34c1e91
+# ╠═f8f94ed2-4fa0-11eb-2116-5f023d45cc83
+# ╠═8ff730f8-4f9f-11eb-38a3-212b42c6a5f6
+# ╠═b1637ce0-4fa1-11eb-3fb5-87bd30b557a2
 # ╟─f6ef2c2e-ee07-11ea-13a8-2512e7d94426
 # ╟─f6fc1312-ee07-11ea-39a0-299b67aee3d8
 # ╟─774b4ce6-ee1b-11ea-2b48-e38ee25fc89b
