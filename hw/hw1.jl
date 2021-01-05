@@ -150,6 +150,9 @@ copy_of_random_vect = copy(random_vect); # in case demean modifies `x`
 # ╔═╡ 38155b5a-edf0-11ea-3e3f-7163da7433fb
 mean(demean(copy_of_random_vect))
 
+# ╔═╡ be39336a-4f7e-11eb-0c11-edd9f83caed5
+mean(demean(copy_of_random_vect)) ≈ 0
+
 # ╔═╡ e65043aa-4ecf-11eb-0744-c1889f8b0d7b
 random_vect
 
@@ -176,8 +179,9 @@ md"""
 
 # ╔═╡ 8c19fb72-ed6c-11ea-2728-3fa9219eddc4
 function vecvec_to_matrix(vecvec)
-	# assume vectors are provided in column (major) order
-	M = Array{Any,2}(undef, length(vecvec[1]), length(vecvec))
+	# assume vectors are provided in column (major) order, all of same length
+	# M = Array{Any,2}(undef, length(vecvec[1]), length(vecvec))
+	M = [vecvec[j][i] for i=1:length(vecvec[1]), j=1:length(vecvec)]
 	return M
 end
 
@@ -196,8 +200,12 @@ md"""
 
 # ╔═╡ 9f1c6d04-ed6c-11ea-007b-75e7e780703d
 function matrix_to_vecvec(matrix)
-	
-	return missing
+	# comprehension approach
+	VV = [[] for c=1:size(matrix)[2]] # vector of empty vectors
+	for c=1:size(matrix)[2]
+		VV[c] = [matrix[r,c] for r=1:size(matrix)[1]]
+	end
+	return VV	
 end
 
 # ╔═╡ 70955aca-ed6e-11ea-2330-89b4d20b1795
@@ -240,11 +248,32 @@ md"""
 👉 Write a function **`mean_colors`** that accepts an object called `image`. It should calculate the mean (average) amounts of red, green and blue in the image and return a tuple `(r, g, b)` of those means.
 """
 
+# ╔═╡ fccca1d4-4f8d-11eb-23f1-7d6845f4547c
+
+
+# ╔═╡ 83106a24-4f8a-11eb-1384-99edb12a3179
+(r, g, b) = (0, 0, 0)
+
+# ╔═╡ 5775ef20-4f8c-11eb-2bb7-4b52b4830a6e
+typeof((r, g, b))
+
 # ╔═╡ f6898df6-ee07-11ea-2838-fde9bc739c11
 function mean_colors(image)
-	
-	return missing
+	x = [0, 0, 0]
+	for i in 1:size(image)[1]
+		for j in 1:size(image)[2]
+			x = x .+ [image[i,j].r, image[i,j].g, image[i,j].b]
+		end
+	end
+	x = x ./ (size(image)[1] * size(image)[2])
+	return (x[1], x[2], x[3]) # return a tuple
 end
+
+# ╔═╡ c52f7216-4f91-11eb-187a-0da4e0e1bf6a
+test2 = reshape([RGB(1.0, 1.0, 1.0), RGB(1.0, 1.0, 0.0)], (2,1))
+
+# ╔═╡ d34c19d0-4f91-11eb-3eda-674e47f9dc2b
+mean_colors(test2)
 
 # ╔═╡ d75ec078-ee0d-11ea-3723-71fb8eecb040
 
@@ -409,6 +438,24 @@ philip = let
 	original = Images.load(philip_file)
 	decimate(original, 8)
 end
+
+# ╔═╡ cfb1aa58-4f8a-11eb-0752-5b34cb036539
+size(philip)
+
+# ╔═╡ 86a09398-4f7f-11eb-2377-656df9e0e373
+testcolor = philip[300,100] + philip[300,101]
+
+# ╔═╡ bf5dbd06-4f8d-11eb-3860-31d78f2e9bf6
+typeof(testcolor.r)
+
+# ╔═╡ f38180cc-4f8d-11eb-393e-2120c2e74488
+typeof(philip[300,100].b )
+
+# ╔═╡ e186e860-4f8a-11eb-2034-65c63eb0ab3b
+philip[300,100].r + philip[300,101].r
+
+# ╔═╡ 18c693d2-4f8d-11eb-3b28-457f7a835fd2
+[philip[300,100].r,  philip[300,101].g]
 
 # ╔═╡ 5be9b144-ee0d-11ea-2a8d-8775de265a1d
 mean_colors(philip)
@@ -1404,6 +1451,7 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─6f67657e-ee1a-11ea-0c2f-3d567bcfa6ea
 # ╠═38155b5a-edf0-11ea-3e3f-7163da7433fb
 # ╠═18dfcc38-4ed1-11eb-3038-3bff7d096184
+# ╠═be39336a-4f7e-11eb-0c11-edd9f83caed5
 # ╠═0247e5a6-4ed0-11eb-03b5-19fd025548a7
 # ╠═73ef1d50-edf0-11ea-343c-d71706874c82
 # ╠═e65043aa-4ecf-11eb-0744-c1889f8b0d7b
@@ -1415,7 +1463,7 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═8c19fb72-ed6c-11ea-2728-3fa9219eddc4
 # ╠═16d5573a-4ed3-11eb-2cbb-f71574ac8ffb
 # ╠═c4761a7e-edf2-11ea-1e75-118e73dadbed
-# ╠═adfbe9b2-ed6c-11ea-09ac-675262f420df
+# ╟─adfbe9b2-ed6c-11ea-09ac-675262f420df
 # ╟─393667ca-edf2-11ea-09c5-c5d292d5e896
 # ╠═9f1c6d04-ed6c-11ea-007b-75e7e780703d
 # ╠═70955aca-ed6e-11ea-2330-89b4d20b1795
@@ -1427,9 +1475,20 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═c8ecfe5c-ee05-11ea-322b-4b2714898831
 # ╟─e86ed944-ee05-11ea-3e0f-d70fc73b789c
 # ╟─c54ccdea-ee05-11ea-0365-23aaf053b7d7
+# ╠═cfb1aa58-4f8a-11eb-0752-5b34cb036539
+# ╠═86a09398-4f7f-11eb-2377-656df9e0e373
+# ╠═f38180cc-4f8d-11eb-393e-2120c2e74488
+# ╠═fccca1d4-4f8d-11eb-23f1-7d6845f4547c
+# ╠═bf5dbd06-4f8d-11eb-3860-31d78f2e9bf6
+# ╠═e186e860-4f8a-11eb-2034-65c63eb0ab3b
+# ╠═18c693d2-4f8d-11eb-3b28-457f7a835fd2
+# ╠═83106a24-4f8a-11eb-1384-99edb12a3179
+# ╠═5775ef20-4f8c-11eb-2bb7-4b52b4830a6e
 # ╠═f6898df6-ee07-11ea-2838-fde9bc739c11
+# ╠═c52f7216-4f91-11eb-187a-0da4e0e1bf6a
+# ╠═d34c19d0-4f91-11eb-3eda-674e47f9dc2b
 # ╠═5be9b144-ee0d-11ea-2a8d-8775de265a1d
-# ╟─4d0158d0-ee0d-11ea-17c3-c169d4284acb
+# ╠═4d0158d0-ee0d-11ea-17c3-c169d4284acb
 # ╠═d75ec078-ee0d-11ea-3723-71fb8eecb040
 # ╟─f68d4a36-ee07-11ea-0832-0360530f102e
 # ╠═f6991a50-ee07-11ea-0bc4-1d68eb028e6a
