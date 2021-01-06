@@ -42,7 +42,7 @@ Questions for Discussion - Computational Thinking
     - Note: Pluto is equivalent to having an edit window open, and a terminal with a compiler that runs automatically with each file save, except
         - editor file save is replace by the execution of any Pluto cell
         - Pluto _only_ reexecutes cells that are dependent on the recently changed cell
-
+- Note on Debugging: I like that stack traces show line number with hyperlink to code line
 ### Questions on Course 18.S181 HW 1
 - HW1 Ex.  Ex 1.1, why isapprox test fail:
     ```julia
@@ -52,6 +52,20 @@ Questions for Discussion - Computational Thinking
 - For HW1, Ex. 1.3, seek better solution for `matrix_to_vecvec()` function than hybrid comprehension/for-loop approach
 - Scoping issues: In HW1, just before Ex 2.1, why `philip = let ... end` rather than `begin ... end` block?
 - HW1, Ex. 2.1, `function mean_colors()`: better solution than awkward conversion of vector to tuple before return?
+    - Confused about the type of the separate color components of RGBX (UInt or Float?). Fudged through it.
+        ```julia
+        typeof(philip[300,100].b )`
+        #> Normed{UInt8,8}
+
+        [philip[300,100].r,  philip[300,101].g]
+        #> FixedPointNumbers.Normed{UInt8,8}`
+        ```
+    - HW1, Ex. 2.2 test provided for `quantize` were not any good (missed quantization to 0.01 rather than 0.1)
+- HW1, Ex. 2.3 quantize(color::AbstractRGB): 
+    - is there a way to broadcast quantize(x::Int) over the RGB color object?
+        - ould also be useful for `function invert(color::AbstractRGB)`
+    - RGB object is immutable, so have to return a new RGB element. But what about quantizing a Float - can you quantize the same float that is passed?
+- HW1 Ex 2.4 `function quantize(image::AbstractMatrix)` was wonderfully easy!
 
 ### Supplemental Information
 - [MIT 6.0002 Introduction to Computational Thinking and Data Science](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/)
