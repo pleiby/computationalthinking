@@ -863,22 +863,23 @@ md"""
 
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
-function 
-	# vector k is the kernel, of length 2l + 1 
+	# matrix K is the kernel, of length 2l + 1 
 	n_rm, n_cm = size(M)
 	n_rk, n_ck = size(K)
 	l = (n_rk -1) ÷ 2 # must K be square?
 	
-	cv = zeros(n_rm, n_cm) # initialize the convolution
+	cm = zeros(n_rm, n_cm) # initialize the convolution
 	
-	for i in 1:n_v
-		for j in -l:l
-			cv[i] += extend_mat(M, i+j) * k[j+l+1]
+	for r in 1:n_rm
+		for c in 1:n_cm
+			for j in -l:l
+				for k in -l:l
+					cm[r,c] += extend_mat(M, r+j, c+k) * k[j+l+1, k+l+1]
+				end
+			end
 		end
 	end
-	return cv
-end	
-	return missing
+	return cm
 end
 
 # ╔═╡ 5a5135c6-ee1e-11ea-05dc-eb0c683c2ce5
