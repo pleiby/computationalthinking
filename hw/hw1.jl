@@ -181,6 +181,7 @@ md"""
 function vecvec_to_matrix(vecvec)
 	# assume vectors are provided in column (major) order, all of same length
 	# M = Array{Any,2}(undef, length(vecvec[1]), length(vecvec))
+	# comprehension approach
 	M = [vecvec[j][i] for i=1:length(vecvec[1]), j=1:length(vecvec)]
 	return M
 end
@@ -200,7 +201,7 @@ md"""
 
 # ╔═╡ 9f1c6d04-ed6c-11ea-007b-75e7e780703d
 function matrix_to_vecvec(matrix)
-	# comprehension approach
+	# hybrid comprehension/for-loop approach
 	VV = [[] for c=1:size(matrix)[2]] # vector of empty vectors
 	for c=1:size(matrix)[2]
 		VV[c] = [matrix[r,c] for r=1:size(matrix)[1]]
@@ -396,7 +397,7 @@ s = .5
 maximum(rand(10000).*(2.0*s) .- s)
 
 # ╔═╡ b1637ce0-4fa1-11eb-3fb5-87bd30b557a2
-mean(noisify.(ones(100).*0.5, 0.1)), mean(noisify.(ones(100).*0.5, 0.1)), mean(noisify.(ones(100).*0.5, 0.1))
+minimum(noisify.(ones(100).*0.5, 0.1)), mean(noisify.(ones(100).*0.5, 0.1)), maximum(noisify.(ones(100).*0.5, 0.1))
 
 # ╔═╡ f6fc1312-ee07-11ea-39a0-299b67aee3d8
 md"""
@@ -468,7 +469,7 @@ typeof(quantize(test1color))
 test1color.r
 
 # ╔═╡ af4e97e2-4f96-11eb-126c-d32da77bff7b
-quantize(test1color).r
+quantize(test1color).r       
 
 # ╔═╡ f38180cc-4f8d-11eb-393e-2120c2e74488
 typeof(philip[300,100].b )
@@ -535,10 +536,25 @@ You've seen some colored lines in this notebook to visualize arrays. Can you mak
 """
 
 # ╔═╡ 01070e28-ee0f-11ea-1928-a7919d452bdd
-
+colored_line(v)
 
 # ╔═╡ 7522f81e-ee1c-11ea-35af-a17eb257ff1a
 md"Try changing `n` and `v` around. Notice that you can run the cell `v = rand(n)` again to regenerate new random values."
+
+# ╔═╡ 1bd31bae-4fab-11eb-04a2-23cacff65446
+md"""### Aside: Notes from Lecture 2 video"""
+
+# ╔═╡ eaad1a42-4fa6-11eb-0c88-01c677b8453c
+function showcoloredkernel(kernel)
+	toRGB(x) = RGB(max(-x,0), max(x,0), 0) # x mapped to red (negative) and green (positive) 
+	toRGB.(kernel) / maximum(abs.(kernel)) # map to red and green, and scale to 0 to 1
+end
+
+# ╔═╡ c2e1e5b0-4fa6-11eb-21ec-453041dd20fb
+kernel = Kernel.gaussian((1,1))
+
+# ╔═╡ 355abdde-4fab-11eb-144b-d5c9df74d00b
+showcoloredkernel(kernel)
 
 # ╔═╡ 801d90c0-ee09-11ea-28d6-61b806de26dc
 md"""
@@ -552,8 +568,8 @@ A better solution is to use the *closest* value that is inside the vector. Effec
 
 # ╔═╡ 802bec56-ee09-11ea-043e-51cf1db02a34
 function extend(v, i)
-	
-	return missing
+	return i > length(v) ? v[end] : 
+		i < 1 ? v[1] : v[i]
 end
 
 # ╔═╡ b7f3994c-ee1b-11ea-211a-d144db8eafc2
@@ -592,9 +608,36 @@ md"""
 
 # ╔═╡ 807e5662-ee09-11ea-3005-21fdcc36b023
 function blur_1D(v, l)
+	krnl = ones(2*l+1)/(2*l+1) # uniform kernel from -l to l
 	
-	return missing
+	n = length(v)
+	bv = zeros(n)
+	
+	for i in 1:n
+		# bv[i] = 0 # done at initialization
+		for j in -l:l
+			bv[i] = bv[i] + extend(v, i+j) * krnl[j+l+1]
+		end
+	end
+	return bv
 end
+
+# ╔═╡ 6e794366-4faf-11eb-3e2b-8780cc73ccaf
+l = 5
+
+# ╔═╡ 737c8e86-4faf-11eb-1f0a-fde9c4be1ed4
+k = ones(2*l+1)/(2*l+1)
+
+# ╔═╡ 690adfc4-4fb0-11eb-01dd-8124fe324bf6
+k[
+
+# ╔═╡ b72aca4e-4faf-11eb-217e-4d0fdced4864
+for j in -l:l
+	l
+end
+
+# ╔═╡ 18a7a1a4-4fb0-11eb-2bb7-41a0367296a2
+extend(v, 110)
 
 # ╔═╡ 808deca8-ee09-11ea-0ee3-1586fa1ce282
 let
@@ -619,7 +662,13 @@ md"""
 """
 
 # ╔═╡ ca1ac5f4-ee1c-11ea-3d00-ff5268866f87
+colored_line(v)
 
+# ╔═╡ 4140652e-4fae-11eb-0beb-4144587942da
+@bind l_box Slider(0:length(v), show_value=true)
+
+# ╔═╡ 27f57cf8-4fae-11eb-1ee0-0599075c5381
+colored_line(blur_1D(v, l_box))
 
 # ╔═╡ 80ab64f4-ee09-11ea-29b4-498112ed0799
 md"""
@@ -637,8 +686,19 @@ Again, we need to take care about what happens if $v_{i -n }$ falls off the end 
 
 # ╔═╡ 28e20950-ee0c-11ea-0e0a-b5f2e570b56e
 function convolve_vector(v, k)
+	# vector k is the kernel, of length 2l + 1 
+	n_v = length(v)
+	n_k = length(k)
+	l = (n_k -1) ÷ 2
 	
-	return missing
+	cv = zeros(n_v) # initialize the convolution
+	
+	for i in 1:n_v
+		for j in -l:l
+			cv[i] += extend(v, i+j) * k[j+l+1]
+		end
+	end
+	return cv
 end
 
 # ╔═╡ 93284f92-ee12-11ea-0342-833b1a30625c
@@ -669,17 +729,34 @@ and then **normalize** so that the sum of the resulting kernel is 1.
 For simplicity you can take $\sigma=1$.
 """
 
+# ╔═╡ 62dd09b8-4fb7-11eb-155a-b1df922e198d
+ker = ImageFiltering.Kernel.gaussian((3,))
+
 # ╔═╡ 1c8b4658-ee0c-11ea-2ede-9b9ed7d3125e
 function gaussian_kernel(n)
-	
-	return missing
+	sigma = 1.0
+	gk = zeros(2*n+1)
+	for i in -n:n
+		gk[i+n+1] = (1/sqrt(2 * pi * sigma^2)) * exp(- i*i/(2 * sigma^2))
+	end
+	return gk
 end
 
 # ╔═╡ f8bd22b8-ee14-11ea-04aa-ab16fd01826e
 md"Let's test your kernel function!"
 
 # ╔═╡ 2a9dd06a-ee13-11ea-3f84-67bb309c77a8
-gaussian_kernel_size_1D = 3 # change this value, or turn me into a slider!
+# gaussian_kernel_size_1D = 3 # change this value, or turn me into a slider!
+@bind gaussian_kernel_size_1D Slider(1:10, show_value=true)
+
+# ╔═╡ bd73978a-4fb6-11eb-22c7-5df3f1bca3e5
+gaussian_kernel_size_1D
+
+# ╔═╡ 375971f4-4fb8-11eb-08a3-13da6d17f8e2
+ker_home = gaussian_kernel(gaussian_kernel_size_1D)
+
+# ╔═╡ 7feb3728-4fb7-11eb-184b-53bbedeccaf5
+length(ker_home)
 
 # ╔═╡ 38eb92f6-ee13-11ea-14d7-a503ac04302e
 test_gauss_1D_a = let
@@ -733,7 +810,25 @@ md"""
 # ╔═╡ 7c2ec6c6-ee15-11ea-2d7d-0d9401a5e5d1
 function extend_mat(M::AbstractMatrix, i, j)
 	
-	return missing
+	num_rows, num_columns = size(M)
+	
+	if i > num_rows
+		r = num_rows
+	elseif i < 1
+		r = 1
+	else
+		r = i
+	end
+	
+	if j > num_columns
+		c = num_columns
+	elseif j < 1
+		c = 1
+	else
+		c = j
+	end
+	
+	return M[r, c]
 end
 
 # ╔═╡ 9afc4dca-ee16-11ea-354f-1d827aaa61d2
@@ -768,7 +863,21 @@ md"""
 
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
+function 
+	# vector k is the kernel, of length 2l + 1 
+	n_rm, n_cm = size(M)
+	n_rk, n_ck = size(K)
+	l = (n_rk -1) ÷ 2 # must K be square?
 	
+	cv = zeros(n_rm, n_cm) # initialize the convolution
+	
+	for i in 1:n_v
+		for j in -l:l
+			cv[i] += extend_mat(M, i+j) * k[j+l+1]
+		end
+	end
+	return cv
+end	
 	return missing
 end
 
@@ -1562,6 +1671,10 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─80108d80-ee09-11ea-0368-31546eb0d3cc
 # ╠═01070e28-ee0f-11ea-1928-a7919d452bdd
 # ╟─7522f81e-ee1c-11ea-35af-a17eb257ff1a
+# ╠═1bd31bae-4fab-11eb-04a2-23cacff65446
+# ╠═eaad1a42-4fa6-11eb-0c88-01c677b8453c
+# ╠═c2e1e5b0-4fa6-11eb-21ec-453041dd20fb
+# ╠═355abdde-4fab-11eb-144b-d5c9df74d00b
 # ╟─801d90c0-ee09-11ea-28d6-61b806de26dc
 # ╠═802bec56-ee09-11ea-043e-51cf1db02a34
 # ╟─b7f3994c-ee1b-11ea-211a-d144db8eafc2
@@ -1569,15 +1682,22 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═80479d98-ee09-11ea-169e-d166eef65874
 # ╠═805691ce-ee09-11ea-053d-6d2e299ee123
 # ╟─806e5766-ee0f-11ea-1efc-d753cd83d086
-# ╟─38da843a-ee0f-11ea-01df-bfa8b1317d36
+# ╠═38da843a-ee0f-11ea-01df-bfa8b1317d36
 # ╟─9bde9f92-ee0f-11ea-27f8-ffef5fce2b3c
-# ╟─45c4da9a-ee0f-11ea-2c5b-1f6704559137
+# ╠═45c4da9a-ee0f-11ea-2c5b-1f6704559137
 # ╟─bcf98dfc-ee1b-11ea-21d0-c14439500971
 # ╟─80664e8c-ee09-11ea-0702-711bce271315
 # ╠═807e5662-ee09-11ea-3005-21fdcc36b023
+# ╠═6e794366-4faf-11eb-3e2b-8780cc73ccaf
+# ╠═737c8e86-4faf-11eb-1f0a-fde9c4be1ed4
+# ╠═690adfc4-4fb0-11eb-01dd-8124fe324bf6
+# ╠═b72aca4e-4faf-11eb-217e-4d0fdced4864
+# ╠═18a7a1a4-4fb0-11eb-2bb7-41a0367296a2
 # ╟─808deca8-ee09-11ea-0ee3-1586fa1ce282
 # ╟─809f5330-ee09-11ea-0e5b-415044b6ac1f
 # ╠═ca1ac5f4-ee1c-11ea-3d00-ff5268866f87
+# ╠═4140652e-4fae-11eb-0beb-4144587942da
+# ╠═27f57cf8-4fae-11eb-1ee0-0599075c5381
 # ╟─ea435e58-ee11-11ea-3785-01af8dd72360
 # ╟─80ab64f4-ee09-11ea-29b4-498112ed0799
 # ╠═28e20950-ee0c-11ea-0e0a-b5f2e570b56e
@@ -1587,15 +1707,19 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─cf73f9f8-ee12-11ea-39ae-0107e9107ef5
 # ╟─7ffd14f8-ee1d-11ea-0343-b54fb0333aea
 # ╟─80b7566a-ee09-11ea-3939-6fab470f9ec8
+# ╠═62dd09b8-4fb7-11eb-155a-b1df922e198d
+# ╠═7feb3728-4fb7-11eb-184b-53bbedeccaf5
 # ╠═1c8b4658-ee0c-11ea-2ede-9b9ed7d3125e
 # ╟─f8bd22b8-ee14-11ea-04aa-ab16fd01826e
 # ╠═2a9dd06a-ee13-11ea-3f84-67bb309c77a8
+# ╠═bd73978a-4fb6-11eb-22c7-5df3f1bca3e5
+# ╠═375971f4-4fb8-11eb-08a3-13da6d17f8e2
 # ╟─b424e2aa-ee14-11ea-33fa-35491e0b9c9d
 # ╠═38eb92f6-ee13-11ea-14d7-a503ac04302e
 # ╟─bc1c20a4-ee14-11ea-3525-63c9fa78f089
 # ╠═24c21c7c-ee14-11ea-1512-677980db1288
 # ╟─27847dc4-ee0a-11ea-0651-ebbbb3cfd58c
-# ╠═b01858b6-edf3-11ea-0826-938d33c19a43
+# ╟─b01858b6-edf3-11ea-0826-938d33c19a43
 # ╟─7c1bc062-ee15-11ea-30b1-1b1e76520f13
 # ╠═7c2ec6c6-ee15-11ea-2d7d-0d9401a5e5d1
 # ╟─649df270-ee24-11ea-397e-79c4355e38db
