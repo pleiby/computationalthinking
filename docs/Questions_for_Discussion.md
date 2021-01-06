@@ -66,6 +66,7 @@ Questions for Discussion - Computational Thinking
         - ould also be useful for `function invert(color::AbstractRGB)`
     - RGB object is immutable, so have to return a new RGB element. But what about quantizing a Float - can you quantize the same float that is passed?
 - HW1 Ex 2.4 `function quantize(image::AbstractMatrix)` was wonderfully easy!
+- HW1 Ex 3 - not clear on Gaussian kernel
 
 ### Supplemental Information
 - [MIT 6.0002 Introduction to Computational Thinking and Data Science](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/)
