@@ -68,6 +68,31 @@ Questions for Discussion - Computational Thinking
 - HW1 Ex 2.4 `function quantize(image::AbstractMatrix)` was wonderfully easy!
 - HW1 Ex 3 - not clear on Gaussian kernel
 
+#### Continued Week 1
+- note the multiple ways to do iteration for the `convolve_image()` fn
+- what are the lessons re the application of convolution to different array types?
+    - sometimes I got messages like
+    `MethodError: no method matching +(::Float64, ::ColorTypes.RGB{Float64})`
+    - problem was initialization of the convoluted matrix elements to the wrong type (Float64 rather than the type of the input matrix, in this case, RGB)
+
+    ```julia
+    celem = 0.0 # initialize the convoluted element
+	
+	for j in -l:l
+		for k in -l:l
+			celem += extend_mat(M, r+j, c+k) * K[j+l+1, k+l+1]
+		end
+	end
+    ```
+    - problem appears to be that the temporary storage array or even element needs to be initiaize to zero of the correct type
+        - `convolve_image(philip, K_test)` works, when `convolve_point()` initializes `celem` appropriately
+            ```julia
+            celem = typeof(M[r,c])(0) # initialize the convoluted element to zero of desired
+            ```
+        - `convolve_image0(philip, K_test)` and `convolve_image1(philip, K_test)` still fail
+    - For Sobel Edge - did you detect edge for each color/channel separately?
+
+    
 ### Supplemental Information
 - [MIT 6.0002 Introduction to Computational Thinking and Data Science](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/)
 Instructor(s) Prof. Eric Grimson, Prof. John Guttag, Dr. Ana Bell, MIT Course Number 6.0002. As Taught In Fall 2016
