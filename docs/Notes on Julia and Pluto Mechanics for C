@@ -1,0 +1,16 @@
+Notes on Julia and Pluto Mechanics for ComputationalThinking Course
+=================================================================
+
+Notes on Running Pluto Notebook
+------------------------------
+
+- start a terminal, 
+    - and ideally change directory to the project area, so the Pluto notebook can easily find the files
+- start a Julia REPL (Julia 1.4+)
+    - `$ julia`
+- load the Pluto library and execute Pluto
+
+    ```{julia}
+    > import Pluto
+    > Pluto.run()
+    ```
