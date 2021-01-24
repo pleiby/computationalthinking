@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.12
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -59,7 +59,7 @@ Feel free to ask questions!
 # ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Pau Leiby", kerberos_id = "pleiby")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -84,7 +84,7 @@ md"""
 
 In the lecture (included below) we learned about what array views are. In this exercise we will add to that understanding and look at an important use of `view`s: to reduce the amount of memory allocations when reading sub-sequences within an array.
 
-We will use the `BenchmarkTools` package to emperically understand the effects of using views.
+We will use the `BenchmarkTools` package to empirically understand the effects of using views.
 """
 
 # ╔═╡ b49a21a6-f381-11ea-1a98-7f144c55c9b7
@@ -102,6 +102,12 @@ Read it and convince yourself that it is correct.
 """
 
 # ╔═╡ e799be82-f317-11ea-3ae4-6d13ece3fe10
+"""
+   function remove_in_each_row(img, column_numbers)
+
+shrink array (img), for each row remove one column element
+`column_numbers
+"""
 function remove_in_each_row(img, column_numbers)
 	@assert size(img, 1) == length(column_numbers) # same as the number of rows
 	m, n = size(img)
@@ -109,9 +115,15 @@ function remove_in_each_row(img, column_numbers)
 
 	# The prime (′) in the variable name is written as \prime<TAB>
     # You cannot use apostrophe for this! (Apostrophe means the transpose of a matrix)
+	#   (So probably kind of silly to use prime...)
 
-	for (i, j) in enumerate(column_numbers)
-		img′[i, :] = vcat(img[i, 1:j-1], img[i, j+1:end])
+	for (i, j) in enumerate(column_numbers) 
+		# for each row i, concat the two pieces w/o item/col j
+		img′[i, :] = vcat(img[i, 1:j-1], img[i, j+1:end]) 
+		#? Why vcat rather than hcat: 
+		#? Do we use vcat bc img[i, 1:j-1] yields a column vector rather than row?
+		#?   That is lame. Should be a row vector.
+		#? Are we transposing? No bc the new shrunk vector is stuffed into a row of img′
 	end
 	img′
 end
@@ -121,6 +133,9 @@ md"Let's use it to remove the pixels on the diagonal. These are the image dimens
 
 # ╔═╡ 9cced1a8-f326-11ea-0759-0b2f22e5a1db
 (before=size(img), after=size(remove_in_each_row(img, 1:size(img, 1))))
+
+# ╔═╡ 13ce8f9e-5dc0-11eb-1f1b-a1549ee98fca
+remove_in_each_row(img, 1:size(img, 1))
 
 # ╔═╡ 1d893998-f366-11ea-0828-512de0c44915
 md"""
@@ -157,9 +172,10 @@ function remove_in_each_row_no_vcat(img, column_numbers)
 	local img′ = similar(img, m, n-1) # create a similar image with one less column
 
 	for (i, j) in enumerate(column_numbers)
-		# EDIT THE FOLLOWING LINE and split it into two lines
+		# [x] EDITED THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .= img[i, 1:j-1]
+		img′[i, j:end] .= img[i, j+1:end] # note copy j+1th element to jth
 	end
 	img′
 end
@@ -181,7 +197,8 @@ md"""
 
 # ╔═╡ e49235a4-f367-11ea-3913-f54a4a6b2d6b
 no_vcat_observation = md"""
-<Your answer here>
+Removed 342 allocations, which is the number of rows. 
+That would correspond to one allocation for the vcat result for each row.
 """
 
 # ╔═╡ 837c43a4-f368-11ea-00a3-990a45cb0cbd
@@ -203,7 +220,8 @@ function remove_in_each_row_views(img, column_numbers)
 	for (i, j) in enumerate(column_numbers)
 		# EDIT THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .= @view img[i, 1:j-1]
+		img′[i, j:end] .= @view img[i, j+1:end] # note copy j+1th element to jth
 	end
 	img′
 end
@@ -238,7 +256,8 @@ Nice! If you did your optimizations right, you should be able to get down the es
 
 # ╔═╡ fd819dac-f368-11ea-33bb-17148387546a
 views_observation = md"""
-<your answer here>
+We avoided `687 - 3` allocations, which is 2 times the number of rows.
+Hence we avoided each of the 2 allocations for the left and right slices of each row.
 """
 
 # ╔═╡ 318a2256-f369-11ea-23a9-2f74c566549b
@@ -255,9 +274,20 @@ You should use this function whenever the problem set asks you to deal with _bri
 
 # ╔═╡ 6c7e4b54-f318-11ea-2055-d9f9c0199341
 begin
-	brightness(c::RGB) = mean((c.r, c.g, c.b))
+	"""
+		brightness(c:RBG)
+	Return a {Float64} which is the mean value of the colors in RGB or RGBA
+	"""
+	brightness(c::RGB) = mean((c.r, c.g, c.b)) # mean works across a tuple
 	brightness(c::RGBA) = mean((c.r, c.g, c.b))
 end
+
+# ╔═╡ 2eb1fa40-5dc7-11eb-1266-3f74a6a6fa8a
+brightness.(img)
+
+# ╔═╡ 86814fbe-5dc7-11eb-2c0d-7597e26c7539
+# Gray returns a pixel represetation of a Float64 brightness (a grayscale pixel)
+Gray(brightness.(img)[1,1])
 
 # ╔═╡ 74059d04-f319-11ea-29b4-85f5f8f5c610
 Gray.(brightness.(img))
@@ -266,12 +296,34 @@ Gray.(brightness.(img))
 md"""We provide you with a convolve function below.
 """
 
+# ╔═╡ 02358466-5dca-11eb-3f88-6b7855eee411
+# First look at a kernal object:
+k_test = Kernel.sobel()[1]
+
+# ╔═╡ 6c24fcb2-5dca-11eb-3d12-bdea400f7002
+[0.1 0.2 0.1;
+	0.2 0.3 0.2;
+	0.3 0.4 0.3]
+
+# ╔═╡ 547b79b6-5dc9-11eb-044c-3b1a2147ee81
+# reflect converts an array to an OffsetArray with re-ordered elements
+reflect([0.1 0.2 0.3;
+	0.2 0.3 0.4;
+	0.4 0.5 0.6]
+)
+# rand(3,3)
+
 # ╔═╡ d184e9cc-f318-11ea-1a1e-994ab1330c1a
 convolve(img, k) = imfilter(img, reflect(k)) # uses ImageFiltering.jl package
 # behaves the same way as the `convolve` function used in Lecture 2
 # You were asked to implement this in homework 1.
 
 # ╔═╡ cdfb3508-f319-11ea-1486-c5c58a0b9177
+"""
+	float_to_color(x)
+Maps a signed Float64 into an RGB pixel in the red to green scale,
+with 0.0 returning black.
+"""
 float_to_color(x) = RGB(max(0, -x), max(0, x), 0)
 
 # ╔═╡ 5fccc7cc-f369-11ea-3b9e-2f0eca7f0f0e
@@ -281,16 +333,24 @@ finally we define the `energy` function which takes the Sobel gradients along x 
 
 # ╔═╡ 6f37b34c-f31a-11ea-2909-4f2079bf66ec
 begin
-	energy(∇x, ∇y) = sqrt.(∇x.^2 .+ ∇y.^2)
+	"""
+	   function energy(img)
+	
+	`energy` function takes the Sobel gradients of _brightness_
+	along x and y directions
+	and computes the norm of the gradient for each pixel.
+	"""
+	energy(∇x, ∇y) = sqrt.(∇x.^2 .+ ∇y.^2) # the magnitude of the gradient
 	function energy(img)
+		# arrays of scalar derivatives of brightness in x and y directions
 		∇y = convolve(brightness.(img), Kernel.sobel()[1])
 		∇x = convolve(brightness.(img), Kernel.sobel()[2])
-		energy(∇x, ∇y)
+		energy(∇x, ∇y) # norm of gradient
 	end
 end
 
 # ╔═╡ 9fa0cd3a-f3e1-11ea-2f7e-bd73b8e3f302
-float_to_color.(energy(img))
+float_to_color.(energy(img)) # these will all be black-to-green, since energy>=0
 
 # ╔═╡ 87afabf8-f317-11ea-3cb3-29dced8e265a
 md"""
@@ -329,13 +389,44 @@ md"""
 random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)], 1:m-1; init=[i])
 
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
+"""
+	function greedy_seam(energies, starting_pixel::Int)
+
+function which takes a matrix of energies, and an index for a pixel on the first row, and computes a "seam" starting at that pixel.
+
+Returns a vector of of integers of length rows(energies)
+where each number points out a pixel to delete from the corresponding row
+"""
 function greedy_seam(energies, starting_pixel::Int)
+	(nr, nc) = size(energies)
+	seam = [clamp(starting_pixel, 1, nc)] # start at the starting_pixel, clamp to ncols
+	# push!(seam, clamp(starting_pixel, 1, nc)) # junk
+	for r in 2:nr
+		# use clamp to avoid search off 1st & last col - may be inefficient
+		coptions = clamp.((-1:1).+last(seam), 1, nc) # nearby allowed columns
+		cmin = argmax(energies[r, coptions]) # returns 1, 2, 3 as index to the max
+		cmin = coptions[cmin] # convert 1:3 to assoc column number
+		# cmin = argmax(energies[r, clamp(last(seam)-1, 1,nc):clamp(last(seam)+1, 1,nc)]) # returns 1, 2, 3 as index to the max
+		# cmin = clamp(last(seam) + (cmin-2), 1,nc) # convert 1:3 to -1:1
+		push!(seam, cmin)
+	end
+	return(seam)
 	# you can delete the body of this function - it's just a placeholder.
-	random_seam(size(energies)..., starting_pixel)
+	# random_seam(size(energies)..., starting_pixel)
+	# repeat([starting_pixel], size(energies, 1))
 end
 
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
 md"Before we apply your function to our test image, let's try it out on a small matrix of energies (displayed here in grayscale), just like in the lecture snippet above (clicking on the video will take you to the right part of the video). Light pixels have high energy, dark pixels signify low energy."
+
+# ╔═╡ a79de4e8-5dd4-11eb-03a7-eb3613e7abc2
+greedy_test = Gray.(rand(Float64, (8,10)));
+
+# ╔═╡ 893e95ee-5dd2-11eb-01d8-934ed587c113
+greedy_test
+
+# ╔═╡ 79a22a1a-5dd2-11eb-123a-9552bd49de53
+greedy_seam(greedy_test, 3)
 
 # ╔═╡ f580527e-f397-11ea-055f-bb9ea8f12015
 # try
@@ -344,11 +435,8 @@ md"Before we apply your function to our test image, let's try it out on a small 
 # 	end
 # catch end
 
-# ╔═╡ 7ddee6fc-f394-11ea-31fc-5bd665a65bef
-greedy_test = Gray.(rand(Float64, (8,10)));
-
 # ╔═╡ 6f52c1a2-f395-11ea-0c8a-138a77f03803
-md"Starting pixel: $(@bind greedy_starting_pixel Slider(1:size(greedy_test, 2); show_value=true))"
+md"Starting pixel: $(@bind greedy_starting_pixel Slider(1:(size(greedy_test, 2)+2); show_value=true))"
 
 # ╔═╡ 9945ae78-f395-11ea-1d78-cf6ad19606c8
 md"_Let's try it on the bigger image!_"
@@ -640,17 +728,6 @@ if shrink_greedy
 	greedy_carved[greedy_n]
 end
 
-# ╔═╡ d88bc272-f392-11ea-0efd-15e0e2b2cd4e
-if shrink_recursive
-	recursive_carved = shrink_n(pika, 3, recursive_seam)
-	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
-end
-
-# ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
-if shrink_recursive
-	recursive_carved[recursive_n]
-end
-
 # ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
 if shrink_dict
 	dict_carved = shrink_n(img, 200, recursive_memoized_seam)
@@ -707,6 +784,17 @@ if compute_access
 	tracked = track_access(energy(pika))
 	least_energy(tracked, 1,7)
 	tracked.accesses[]
+end
+
+# ╔═╡ d88bc272-f392-11ea-0efd-15e0e2b2cd4e
+if shrink_recursive
+	recursive_carved = shrink_n(pika, 3, recursive_seam)
+	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
+end
+
+# ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
+if shrink_recursive
+	recursive_carved[recursive_n]
 end
 
 # ╔═╡ ffc17f40-f380-11ea-30ee-0fe8563c0eb1
@@ -805,6 +893,8 @@ end
 
 # ╔═╡ f010933c-f318-11ea-22c5-4d2e64cd9629
 begin
+	# apply the horizontal and vertical edge filters to the grayscale picture
+	#   and display with red-to-green color encoding.
 	hbox(
 		float_to_color.(convolve(brightness.(img), Kernel.sobel()[1])),
 		float_to_color.(convolve(brightness.(img), Kernel.sobel()[2])))
@@ -846,6 +936,7 @@ bigbreak
 # ╠═e799be82-f317-11ea-3ae4-6d13ece3fe10
 # ╟─c075a8e6-f382-11ea-2263-cd9507324f4f
 # ╠═9cced1a8-f326-11ea-0759-0b2f22e5a1db
+# ╠═13ce8f9e-5dc0-11eb-1f1b-a1549ee98fca
 # ╟─c086bd1e-f384-11ea-3b26-2da9e24360ca
 # ╟─1d893998-f366-11ea-0828-512de0c44915
 # ╟─59991872-f366-11ea-1036-afe313fb4ec1
@@ -856,7 +947,7 @@ bigbreak
 # ╟─9e149cd2-f367-11ea-28ef-b9533e8a77bb
 # ╟─e3519118-f387-11ea-0c61-e1c2de1c24c1
 # ╟─ba1619d4-f389-11ea-2b3f-fd9ba71cf7e3
-# ╠═e49235a4-f367-11ea-3913-f54a4a6b2d6b
+# ╟─e49235a4-f367-11ea-3913-f54a4a6b2d6b
 # ╟─145c0f58-f384-11ea-2b71-09ae83f66da2
 # ╟─837c43a4-f368-11ea-00a3-990a45cb0cbd
 # ╠═90a22cc6-f327-11ea-1484-7fda90283797
@@ -872,30 +963,37 @@ bigbreak
 # ╟─318a2256-f369-11ea-23a9-2f74c566549b
 # ╟─7a44ba52-f318-11ea-0406-4731c80c1007
 # ╠═6c7e4b54-f318-11ea-2055-d9f9c0199341
+# ╠═2eb1fa40-5dc7-11eb-1266-3f74a6a6fa8a
+# ╠═86814fbe-5dc7-11eb-2c0d-7597e26c7539
 # ╠═74059d04-f319-11ea-29b4-85f5f8f5c610
 # ╟─0b9ead92-f318-11ea-3744-37150d649d43
+# ╠═02358466-5dca-11eb-3f88-6b7855eee411
+# ╠═6c24fcb2-5dca-11eb-3d12-bdea400f7002
+# ╠═547b79b6-5dc9-11eb-044c-3b1a2147ee81
 # ╠═d184e9cc-f318-11ea-1a1e-994ab1330c1a
 # ╠═cdfb3508-f319-11ea-1486-c5c58a0b9177
 # ╠═f010933c-f318-11ea-22c5-4d2e64cd9629
-# ╟─5fccc7cc-f369-11ea-3b9e-2f0eca7f0f0e
+# ╠═5fccc7cc-f369-11ea-3b9e-2f0eca7f0f0e
 # ╠═6f37b34c-f31a-11ea-2909-4f2079bf66ec
 # ╠═9fa0cd3a-f3e1-11ea-2f7e-bd73b8e3f302
-# ╟─f7eba2b6-f388-11ea-06ad-0b861c764d61
+# ╠═f7eba2b6-f388-11ea-06ad-0b861c764d61
 # ╟─87afabf8-f317-11ea-3cb3-29dced8e265a
 # ╟─8ba9f5fc-f31b-11ea-00fe-79ecece09c25
 # ╟─f5a74dfc-f388-11ea-2577-b543d31576c6
 # ╟─c3543ea4-f393-11ea-39c8-37747f113b96
-# ╟─2f9cbea8-f3a1-11ea-20c6-01fd1464a592
+# ╠═2f9cbea8-f3a1-11ea-20c6-01fd1464a592
 # ╠═abf20aa0-f31b-11ea-2548-9bea4fab4c37
 # ╟─5430d772-f397-11ea-2ed8-03ee06d02a22
-# ╟─f580527e-f397-11ea-055f-bb9ea8f12015
-# ╟─6f52c1a2-f395-11ea-0c8a-138a77f03803
-# ╟─2a7e49b8-f395-11ea-0058-013e51baa554
-# ╟─7ddee6fc-f394-11ea-31fc-5bd665a65bef
-# ╟─980b1104-f394-11ea-0948-21002f26ee25
+# ╠═a79de4e8-5dd4-11eb-03a7-eb3613e7abc2
+# ╠═893e95ee-5dd2-11eb-01d8-934ed587c113
+# ╠═79a22a1a-5dd2-11eb-123a-9552bd49de53
+# ╠═f580527e-f397-11ea-055f-bb9ea8f12015
+# ╠═6f52c1a2-f395-11ea-0c8a-138a77f03803
+# ╠═2a7e49b8-f395-11ea-0058-013e51baa554
+# ╠═980b1104-f394-11ea-0948-21002f26ee25
 # ╟─9945ae78-f395-11ea-1d78-cf6ad19606c8
-# ╟─87efe4c2-f38d-11ea-39cc-bdfa11298317
-# ╟─f6571d86-f388-11ea-0390-05592acb9195
+# ╠═87efe4c2-f38d-11ea-39cc-bdfa11298317
+# ╠═f6571d86-f388-11ea-0390-05592acb9195
 # ╟─f626b222-f388-11ea-0d94-1736759b5f52
 # ╟─52452d26-f36c-11ea-01a6-313114b4445d
 # ╠═2a98f268-f3b6-11ea-1eea-81c28256a19e
