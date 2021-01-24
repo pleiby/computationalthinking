@@ -403,11 +403,9 @@ function greedy_seam(energies, starting_pixel::Int)
 	# push!(seam, clamp(starting_pixel, 1, nc)) # junk
 	for r in 2:nr
 		# use clamp to avoid search off 1st & last col - may be inefficient
-		coptions = clamp.((-1:1).+last(seam), 1, nc) # nearby allowed columns
-		cmin = argmax(energies[r, coptions]) # returns 1, 2, 3 as index to the max
-		cmin = coptions[cmin] # convert 1:3 to assoc column number
-		# cmin = argmax(energies[r, clamp(last(seam)-1, 1,nc):clamp(last(seam)+1, 1,nc)]) # returns 1, 2, 3 as index to the max
-		# cmin = clamp(last(seam) + (cmin-2), 1,nc) # convert 1:3 to -1:1
+		cnextoptions = clamp.((-1:1).+last(seam), 1, nc) # nearby allowed columns
+		cmin = argmin(energies[r, cnextoptions]) # returns 1, 2, 3 as index to the min
+		cmin = cnextoptions[cmin] # convert 1:3 to assoc column number
 		push!(seam, cmin)
 	end
 	return(seam)
@@ -490,15 +488,28 @@ Return these two values in a tuple.
 """
 
 # ╔═╡ 8ec27ef8-f320-11ea-2573-c97b7b908cb7
-## returns lowest possible sum energy at pixel (i, j), and the column to jump to in row i+1.
+"""
+	least_energy(energies, i, j)
+
+Return two values in a tuple.
+Returns lowest possible sum energy for a seam starting at pixel (i, j), 
+and the column to jump to in row i+1 in (j-1:j+1), up to boundary conditions.
+"""
 function least_energy(energies, i, j)
+	(nr, nc) = size(energies)
+	
 	# base case
-	# if i == something
-	#    return energies[...] # no need for recursive computation in the base case!
-	# end
+	if i == nr
+	    return (energies[i,j], j) # no need for recursive computation in base case!
+	end
 	#
 	# induction
 	# combine results from recursive calls to `least_energy`.
+	cnextoptions = clamp.((-1:1).+j, 1, nc) # nearby allowed next columns
+	le = [least_energy(energies, i+1, c)[1] for c in cnextoptions] # just get the energy from the tuple
+	cmin = argmin(le) # index of min, returns 1, 2, 3 as index to the min
+	return(energies[i,j]+le[cmin], cnextoptions[cmin]) # convert 1:3 to assoc column number
+	
 end
 
 # ╔═╡ a7f3d9f8-f3bb-11ea-0c1a-55bbb8408f09
@@ -534,11 +545,26 @@ This will give you the method used in the lecture to perform [exhaustive search 
 """
 
 # ╔═╡ 85033040-f372-11ea-2c31-bb3147de3c0d
+"""
+	function recursive_seam(energies, starting_pixel)
+
+takes the energies matrix and a starting pixel, and computes the seam with the lowest energy from that starting pixel
+"""
 function recursive_seam(energies, starting_pixel)
-	m, n = size(energies)
+	nr, nc = size(energies)
+
 	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+	# [rand(1:starting_pixel) for i=1:m]
+	seam = [clamp(starting_pixel, 1, nc)] # start at the starting_pixel, clamp to ncols
+
+	for r in 1:nr-1 # add the next efficient column for the first to next-to-last row
+		push!(seam, least_energy(energies, r, last(seam))[2])
+	end
+	return(seam)
 end
+
+# ╔═╡ 8fdb362a-5ddf-11eb-0f12-1bd8ee35776d
+
 
 # ╔═╡ 1d55333c-f393-11ea-229a-5b1e9cabea6a
 md"Compute shrunk image: $(@bind shrink_recursive CheckBox())"
@@ -792,6 +818,9 @@ if shrink_recursive
 	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
 end
 
+# ╔═╡ e4baee98-5dde-11eb-1788-4f785887c40a
+recursive_seam(greedy_test, recursive_n) .== greedy_seam(greedy_test, recursive_n)
+
 # ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
 if shrink_recursive
 	recursive_carved[recursive_n]
@@ -994,7 +1023,7 @@ bigbreak
 # ╟─9945ae78-f395-11ea-1d78-cf6ad19606c8
 # ╠═87efe4c2-f38d-11ea-39cc-bdfa11298317
 # ╠═f6571d86-f388-11ea-0390-05592acb9195
-# ╟─f626b222-f388-11ea-0d94-1736759b5f52
+# ╠═f626b222-f388-11ea-0d94-1736759b5f52
 # ╟─52452d26-f36c-11ea-01a6-313114b4445d
 # ╠═2a98f268-f3b6-11ea-1eea-81c28256a19e
 # ╟─32e9a944-f3b6-11ea-0e82-1dff6c2eef8d
@@ -1009,6 +1038,8 @@ bigbreak
 # ╟─cbf29020-f3ba-11ea-2cb0-b92836f3d04b
 # ╟─8bc930f0-f372-11ea-06cb-79ced2834720
 # ╠═85033040-f372-11ea-2c31-bb3147de3c0d
+# ╠═8fdb362a-5ddf-11eb-0f12-1bd8ee35776d
+# ╠═e4baee98-5dde-11eb-1788-4f785887c40a
 # ╠═1d55333c-f393-11ea-229a-5b1e9cabea6a
 # ╠═d88bc272-f392-11ea-0efd-15e0e2b2cd4e
 # ╠═e66ef06a-f392-11ea-30ab-7160e7723a17
