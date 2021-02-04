@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.12
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -47,6 +47,138 @@ md"One-hot vectors:  Numbers and images
 
 # ╔═╡ b5177f70-f60b-11ea-14a9-f5a574cc5185
 Pkg.activate(mktempdir())
+
+# ╔═╡ 173587fc-65cd-11eb-0142-19d01d740764
+v0 = ones(Int, 10)
+
+# ╔═╡ 69be79ca-65cd-11eb-2e2e-a593a853c073
+v0[4]=3
+
+# ╔═╡ 74d66748-65cd-11eb-0a6b-c5c6cd3f4d55
+v0
+
+# ╔═╡ 20deb2ae-65cf-11eb-1c95-0b32b76762b8
+v0[6:7] .= 2
+
+# ╔═╡ 5d287d76-65cf-11eb-14ee-c1fd1da1ad1e
+w = @view v0[3:5]
+
+# ╔═╡ 01c5435a-65d0-11eb-2324-5fba7a350c29
+typeof(w)
+
+# ╔═╡ 96835a14-65cf-11eb-11a0-8f8eae632308
+w[1] = 7
+
+# ╔═╡ 9ee5c03e-65cf-11eb-2eeb-cd070a5cb183
+v0
+
+# ╔═╡ 4e00f836-65d0-11eb-1b4e-17fb3f317cb7
+M0 = [5i + 2j for i in 1:4, j in 1:3]
+
+# ╔═╡ 8963ea8c-65d0-11eb-1983-9bcb2970d6e4
+M1 = reshape(M0, 2,6)	# turns out this is a view o M0!
+
+# ╔═╡ a475f8c4-65d0-11eb-26af-575217377b47
+M1[2, 3:4] .= -5
+
+# ╔═╡ b968962e-65d0-11eb-372c-c9925c2ceeb9
+M1
+
+# ╔═╡ be07c93e-65d0-11eb-1f75-e70a55647d7a
+M0
+
+# ╔═╡ de0062d2-65d0-11eb-16a2-0b9d2293625d
+vv0 = vec(M0) # not column major ordering
+
+# ╔═╡ 032d9d22-65d1-11eb-1f38-9b887f27bfd6
+vv0[6] = -10
+
+# ╔═╡ 12df4d06-65d1-11eb-2925-e34340ca83dd
+M0 # vec is also a view!
+
+# ╔═╡ da8c55d4-65d5-11eb-19a5-ab8d0a441d88
+md"### Defining New Types | Week 3 | 18.S191 MIT Fall 2020"
+
+# ╔═╡ 0b86bbd2-65d3-11eb-1814-7f5998184a28
+struct Rectangle
+	height::Float64
+	width::Float64
+end
+
+# ╔═╡ 5f87f9a8-65d3-11eb-0356-2be63dd430da
+r = Rectangle(3, 4)
+
+# ╔═╡ aa878ea0-65d3-11eb-209e-bdce0640d960
+r.height
+
+# ╔═╡ f2728092-65d5-11eb-0d17-235e9bc5dcab
+md"### Functions and Types - Multiple Dipatch | Week 3 | 18.S191 MIT Fall 2020"
+
+# ╔═╡ 06341b04-65d6-11eb-086b-cd2871ead5a5
+
+
+# ╔═╡ c65ec13e-65d3-11eb-1abb-a7a078ce4590
+width(rect::Rectangle) = rect.width
+
+# ╔═╡ d72d5fe8-65d3-11eb-09f5-954b1df751e4
+width(r)
+
+# ╔═╡ f0ba416a-65d3-11eb-21a1-7539e41d7789
+area(rect::Rectangle) = rect.width * rect.height
+
+# ╔═╡ f041537c-65d3-11eb-0f1e-f12b66d8f739
++
+
+# ╔═╡ bfdc328c-65d4-11eb-1341-9fd0b516e810
+cc = 3 + 4im
+
+# ╔═╡ efcb02e2-65d3-11eb-04f8-b3652fdf61f6
+@which cc + cc
+
+# ╔═╡ ca89bb84-65d5-11eb-3f41-471abd811a48
+md"### Introduction to macros | Week 3 | 18.S191 MIT Fall 2020"
+
+# ╔═╡ 265605ce-65d5-11eb-0565-4545092fcd28
+peakflops()
+
+# ╔═╡ 261b7c4c-65d5-11eb-37eb-b133fe08709e
+@elapsed peakflops()
+
+# ╔═╡ 25f094c8-65d5-11eb-302d-d7915457963f
+@macroexpand @elapsed peakflops()
+
+# ╔═╡ 931d370e-65d5-11eb-0125-39e6c0b17eff
+Base.remove_linenums!(@macroexpand @elapsed peakflops())
+
+# ╔═╡ 42d52ee0-65d6-11eb-2ecc-a1b8d1b54c93
+md"##### Expressions | Week 3 | 18.S191 MIT Fall 2020"
+
+# ╔═╡ 321f9284-65d6-11eb-3862-fd064484a3bc
+# write expressions by "quoting" the code
+expr0 = :(1 + 2)
+
+# ╔═╡ 78a9474a-65d6-11eb-1680-ffcfd2d11c09
+expr1 = quote
+	1 + 2
+end
+
+# ╔═╡ c1648f4c-65d6-11eb-0808-7fcd36b0a15e
+dump(expr1)
+
+# ╔═╡ 0d454f44-65db-11eb-1cf3-7f75cbc37b83
+md"#### Structure | Week3 | 18.S191 MIT Fall 2020"
+
+# ╔═╡ 41128fc0-65dc-11eb-2402-bdd073b147b6
+cs0 = distinguishable_colors(100)
+
+# ╔═╡ 5eb8cfdc-65dd-11eb-3529-8102930afe06
+
+
+# ╔═╡ 4b68e428-65dd-11eb-10b0-5f6909a916a8
+
+
+# ╔═╡ 25a70ee8-65d5-11eb-36e2-cdd3773ef92c
+md"### Introduction to macros | Week 3 | 18.S191 MIT Fall 2020"
 
 # ╔═╡ ef8f44b2-f5fc-11ea-1e4d-bd873cd39d6c
 @bind nn Slider(1:20, show_value=true)
@@ -320,6 +452,26 @@ v4 .* [1, 5, 6]'
 # ╔═╡ 5d767290-f5dd-11ea-2189-81198fd216ce
 outer(v, w) = [x * y for x in v, y in w]  # just a multiplication table
 
+# ╔═╡ b51607a0-65da-11eb-3e51-4f61010cf19c
+A = sum(outer(rand(3), rand(3)) for i=1:2)
+
+# ╔═╡ f6e8c26a-65da-11eb-3c68-cf11f5fca718
+U, Σ, V = svd(A)
+
+# ╔═╡ 4d5ab1d2-65db-11eb-22f7-854756cc49a1
+# approximate original matric with outer product of cols of SVD mats
+outer(U[:,1], V[:,1]) * Σ[1]
+
+# ╔═╡ 8257aa70-65db-11eb-32d8-cd68bb4988d9
+# Increasingly good approx
+outer(U[:,1], V[:,1]) * Σ[1] + outer(U[:,2], V[:,2]) * Σ[2]
+
+# ╔═╡ 9e82860c-65db-11eb-0940-8d1d8f38337a
+(outer(U[:,1], V[:,1]) * Σ[1] + outer(U[:,2], V[:,2]) * Σ[2]) ./ A
+
+# ╔═╡ 18445dda-65dc-11eb-0b00-f93944578fb5
+flag0 = outer([1, 1, 1, 2, 2, 2, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1])
+
 # ╔═╡ 5a493052-f601-11ea-2f5f-f940412905f2
 begin
 	v6 = rand(3)
@@ -369,8 +521,14 @@ md"Toeplitz in hw"
 # ╔═╡ 21bbb60a-f5df-11ea-2c1b-dd716a657df8
 cs = distinguishable_colors(100)
 
+# ╔═╡ 8c4f5342-65dc-11eb-1c93-0f39330be8e2
+cs[flag0]
+
 # ╔═╡ a5d637ea-f5de-11ea-3b70-877e876bc9c9
 flag = outer([1, 1, 1, 2, 2, 2, 1, 1, 1], ones(Int, 9))
+
+# ╔═╡ 8c1938f2-65dc-11eb-2f5e-85b5b2cb386d
+cs[flag + flag']
 
 # ╔═╡ 2668e100-f5df-11ea-12b0-073a578a5edb
 cs[flag]
@@ -425,11 +583,29 @@ begin
 	image = image[1:5:end, 1:5:end]
 end
 
+# ╔═╡ 8be53660-65dc-11eb-39eb-4d1f34979be5
+begin
+	image0 = load("tree.jpg")
+	image0 = image[1:3:end, 1:3:end] # reduce size by skippind pixels
+end
+
+# ╔═╡ 826c52c0-65dd-11eb-3bd0-452c558e8a0d
+size(image0)
+
+# ╔═╡ 5f5b70cc-65dd-11eb-251f-1dadf109365f
+picture0 = Float64.(channelview(image0));
+
+# ╔═╡ 5f273f3a-65dd-11eb-21b9-a97cbcdf2d81
+size(picture0)
+
+# ╔═╡ 4b96e328-65dd-11eb-1a86-f17e9085fa1c
+size(image0)
+
 # ╔═╡ f7e38aaa-f5f8-11ea-002f-09dd1fa21181
 reds = [Float64(c.r) for c in image]
 
 # ╔═╡ 29062f7a-f5f9-11ea-2682-1374e7694e32
-picture = Float64.(channelview(image))
+picture = Float64.(channelview(image));
 
 # ╔═╡ 6156fd1e-f5f9-11ea-06a9-211c7ab813a4
 pr, pg, pb = eachslice(picture, dims=1)
@@ -531,6 +707,61 @@ end
 # ╟─261c4df2-f5d2-11ea-2c72-7d4b09c46098
 # ╠═ae24c8b2-f60b-11ea-2c7a-03857d1217b2
 # ╠═b5177f70-f60b-11ea-14a9-f5a574cc5185
+# ╠═173587fc-65cd-11eb-0142-19d01d740764
+# ╠═69be79ca-65cd-11eb-2e2e-a593a853c073
+# ╠═74d66748-65cd-11eb-0a6b-c5c6cd3f4d55
+# ╠═20deb2ae-65cf-11eb-1c95-0b32b76762b8
+# ╠═5d287d76-65cf-11eb-14ee-c1fd1da1ad1e
+# ╠═01c5435a-65d0-11eb-2324-5fba7a350c29
+# ╠═96835a14-65cf-11eb-11a0-8f8eae632308
+# ╠═9ee5c03e-65cf-11eb-2eeb-cd070a5cb183
+# ╠═4e00f836-65d0-11eb-1b4e-17fb3f317cb7
+# ╠═8963ea8c-65d0-11eb-1983-9bcb2970d6e4
+# ╠═a475f8c4-65d0-11eb-26af-575217377b47
+# ╠═b968962e-65d0-11eb-372c-c9925c2ceeb9
+# ╠═be07c93e-65d0-11eb-1f75-e70a55647d7a
+# ╠═de0062d2-65d0-11eb-16a2-0b9d2293625d
+# ╠═032d9d22-65d1-11eb-1f38-9b887f27bfd6
+# ╠═12df4d06-65d1-11eb-2925-e34340ca83dd
+# ╠═da8c55d4-65d5-11eb-19a5-ab8d0a441d88
+# ╠═0b86bbd2-65d3-11eb-1814-7f5998184a28
+# ╠═5f87f9a8-65d3-11eb-0356-2be63dd430da
+# ╠═aa878ea0-65d3-11eb-209e-bdce0640d960
+# ╠═f2728092-65d5-11eb-0d17-235e9bc5dcab
+# ╠═06341b04-65d6-11eb-086b-cd2871ead5a5
+# ╠═c65ec13e-65d3-11eb-1abb-a7a078ce4590
+# ╠═d72d5fe8-65d3-11eb-09f5-954b1df751e4
+# ╠═f0ba416a-65d3-11eb-21a1-7539e41d7789
+# ╠═f041537c-65d3-11eb-0f1e-f12b66d8f739
+# ╠═bfdc328c-65d4-11eb-1341-9fd0b516e810
+# ╠═efcb02e2-65d3-11eb-04f8-b3652fdf61f6
+# ╠═ca89bb84-65d5-11eb-3f41-471abd811a48
+# ╠═265605ce-65d5-11eb-0565-4545092fcd28
+# ╠═261b7c4c-65d5-11eb-37eb-b133fe08709e
+# ╠═25f094c8-65d5-11eb-302d-d7915457963f
+# ╠═931d370e-65d5-11eb-0125-39e6c0b17eff
+# ╠═42d52ee0-65d6-11eb-2ecc-a1b8d1b54c93
+# ╠═321f9284-65d6-11eb-3862-fd064484a3bc
+# ╠═78a9474a-65d6-11eb-1680-ffcfd2d11c09
+# ╠═c1648f4c-65d6-11eb-0808-7fcd36b0a15e
+# ╠═0d454f44-65db-11eb-1cf3-7f75cbc37b83
+# ╠═b51607a0-65da-11eb-3e51-4f61010cf19c
+# ╠═f6e8c26a-65da-11eb-3c68-cf11f5fca718
+# ╠═4d5ab1d2-65db-11eb-22f7-854756cc49a1
+# ╠═8257aa70-65db-11eb-32d8-cd68bb4988d9
+# ╠═9e82860c-65db-11eb-0940-8d1d8f38337a
+# ╠═18445dda-65dc-11eb-0b00-f93944578fb5
+# ╠═41128fc0-65dc-11eb-2402-bdd073b147b6
+# ╠═8c4f5342-65dc-11eb-1c93-0f39330be8e2
+# ╠═8c1938f2-65dc-11eb-2f5e-85b5b2cb386d
+# ╠═8be53660-65dc-11eb-39eb-4d1f34979be5
+# ╠═826c52c0-65dd-11eb-3bd0-452c558e8a0d
+# ╠═5f5b70cc-65dd-11eb-251f-1dadf109365f
+# ╠═5f273f3a-65dd-11eb-21b9-a97cbcdf2d81
+# ╠═5eb8cfdc-65dd-11eb-3529-8102930afe06
+# ╠═4b96e328-65dd-11eb-1a86-f17e9085fa1c
+# ╠═4b68e428-65dd-11eb-10b0-5f6909a916a8
+# ╠═25a70ee8-65d5-11eb-36e2-cdd3773ef92c
 # ╠═bc14fc1a-f60b-11ea-207a-91b967f28076
 # ╠═ef8f44b2-f5fc-11ea-1e4d-bd873cd39d6c
 # ╠═fd9211c0-f5fc-11ea-1745-7f2dae88af9e
