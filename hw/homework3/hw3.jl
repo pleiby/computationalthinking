@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -33,6 +33,12 @@ begin
 	using LinearAlgebra
 end
 
+# ╔═╡ 342c70b6-68a5-11eb-362b-0fde43a83739
+begin
+	Pkg.add("Pipe")
+	using Pipe
+end
+
 # ╔═╡ e6b6760a-f37f-11ea-3ae1-65443ef5a81a
 md"_homework 3, version 3_"
 
@@ -52,7 +58,7 @@ Feel free to ask questions!
 # ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -87,6 +93,17 @@ String(rand(Char, 40))
 md"""
 Instead, let's define an _alphabet_, and only use those letters to sample from. To keep things simple, we ignore punctuation, capitalization, etc, and only use these 27 characters:
 """
+
+# ╔═╡ 0437efcc-6832-11eb-17f2-49dc9da48660
+md"Note: following a range specification with a semicolon is a way to 'collect' it into an array: 
+```julia
+[1:3 ;]
+# vs
+[1:3]
+# note this is true:
+collect(1:3) == [1:3;]
+```
+"
 
 # ╔═╡ 4efc051e-f92e-11ea-080e-bde6b8f9295a
 alphabet = ['a':'z' ; ' ']   # includes the space character
@@ -149,7 +166,7 @@ md"👉 Use `filter` to extract just the characters from our alphabet out of `me
 messy_sentence_1 = "#wow 2020 ¥500 (blingbling!)"
 
 # ╔═╡ 75694166-f998-11ea-0428-c96e1113e2a0
-cleaned_sentence_1 = missing
+cleaned_sentence_1 = filter(isinalphabet, messy_sentence_1)
 
 # ╔═╡ 05f0182c-f999-11ea-0a52-3d46c65a049e
 md"""
@@ -165,7 +182,19 @@ md"👉 Use the function `lowercase` to convert `messy_sentence_2` into a lower 
 messy_sentence_2 = "Awesome! 😍"
 
 # ╔═╡ d3a4820e-f998-11ea-2a5c-1f37e2a6dd0a
-cleaned_sentence_2 = missing
+cleaned_sentence_2 = filter(isinalphabet, map(lowercase, messy_sentence_2))
+
+# ╔═╡ 229194a4-6836-11eb-1cea-cb76c47959bc
+md"Repeating this tasks with pipes (note base pipes only work with single-value functions of single args):"
+
+# ╔═╡ eea0f2d2-6835-11eb-3683-b74dc5e80600
+map_lc(x) = map(lowercase, x)
+
+# ╔═╡ 071787d8-6836-11eb-1098-f573bcc1f2af
+filter_inal(x) = filter(isinalphabet, x)
+
+# ╔═╡ b52714fc-6835-11eb-2a85-ed65c2684558
+messy_sentence_2 |> map_lc |> filter_inal
 
 # ╔═╡ aad659b8-f998-11ea-153e-3dae9514bfeb
 md"""
@@ -182,6 +211,8 @@ import Unicode
 
 # ╔═╡ 734851c6-f92d-11ea-130d-bf2a69e89255
 """
+	unaccent(str)
+
 Turn `"áéíóúüñ asdf"` into `"aeiouun asdf"`.
 """
 unaccent(str) = Unicode.normalize(str, stripmark=true)
@@ -216,14 +247,20 @@ $(html"<br>")
 # ╔═╡ 4affa858-f92e-11ea-3ece-258897c37e51
 function clean(text)
 	# we turn everything to lowercase to keep the number of letters small
-	missing
+	text |> unaccent |> map_lc |> filter_inal
 end
 
 # ╔═╡ e00d521a-f992-11ea-11e0-e9da8255b23b
 clean("Crème brûlée est mon plat préféré.")
 
+# ╔═╡ 0ae50ef6-6838-11eb-0b15-457a646abfca
+first(5:7)
+
 # ╔═╡ 2680b506-f9a3-11ea-0849-3989de27dd9f
 first_sample = clean(first(samples))
+
+# ╔═╡ 86fa5ab4-6838-11eb-197a-a5c4694a4b96
+string.(alphabet)
 
 # ╔═╡ 571d28d6-f960-11ea-1b2e-d5977ecbbb11
 function letter_frequencies(txt)
@@ -260,8 +297,15 @@ $(html"<br>")
 
 # ╔═╡ 92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
 unused_letters = let
-	['a', 'b']
+	filter(x -> sample_freqs[index_of_letter(x)]==0, alphabet)# ['a', 'b']
 end
+
+# ╔═╡ ace9402c-6839-11eb-0069-69c8e2fd320a
+[sample_freqs[i] == 0 for i = 1:length(sample_freqs)]
+
+# ╔═╡ 9f5b2eec-683a-11eb-066d-11a4135d76e5
+# following works if you remember to broadcast == (can index by Boolean array)
+alphabet[sample_freqs .== 0]
 
 # ╔═╡ 01215e9a-f9a9-11ea-363b-67392741c8d4
 md"""
@@ -289,21 +333,42 @@ function rand_sample_letter(frequencies)
 	alphabet[rand_sample(frequencies)]
 end
 
+# ╔═╡ bc37ad46-688b-11eb-3102-b360f7cdc11f
+# this function combines string formats of all args into a single string
+string("a", 2)
+
+# ╔═╡ 9fd2af60-6896-11eb-1b2c-2f0e2711016e
+md"Note: This is an amazing application of array comprehension:"
+
 # ╔═╡ fbb7c04e-f92d-11ea-0b81-0be20da242c8
 function transition_counts(cleaned_sample)
-	[count(string(a, b), cleaned_sample)
-		for a in alphabet,
+	[count(string(a, b), cleaned_sample) # look for an ordered pair as a string
+		for a in alphabet, # transition from row a to col b
 			b in alphabet]
 end
 
 # ╔═╡ 80118bf8-f931-11ea-34f3-b7828113ffd8
 normalize_array(x) = x ./ sum(x)
 
+# ╔═╡ 31dfd392-6897-11eb-1f76-4504bb24a09a
+# function composition `∘` (entered with "\circ<tab>") seems equivalent to pipe
+#   i.e. function nesting/chaining, but only defining the composed function
+#   and not applying it
+
+# ╔═╡ 165068c2-6899-11eb-3f74-8338ac50e423
+# composing more than two this way works, but not sure about ordering
+transition_frequencies_alt = normalize_array ∘ transition_counts ∘ identity
+
 # ╔═╡ 7f4f6ce4-f931-11ea-15a4-b3bec6a7e8b6
-transition_frequencies = normalize_array ∘ transition_counts;
+transition_frequencies = normalize_array ∘ transition_counts
 
 # ╔═╡ d40034f6-f9ab-11ea-3f65-7ffd1256ae9d
 transition_frequencies(first_sample)
+
+# ╔═╡ a25404e6-689b-11eb-1734-ddde05e15f77
+# transition_frequencies_pipe = transition_counts |> normalize_array # does not work
+# but this is equivalent to the previous two operations
+first_sample |> transition_counts |> normalize_array
 
 # ╔═╡ 689ed82a-f9ae-11ea-159c-331ff6660a75
 md"What we get is a **27 by 27 matrix**. Each entry corresponds to a character pair. The _row_ corresponds to the first character, the _column_ is the second character. Let's visualize this:"
@@ -328,21 +393,38 @@ end
 md"""👉 What is the frequency of the combination `"th"`?"""
 
 # ╔═╡ 1b4c0c28-f9ab-11ea-03a6-69f69f7f90ed
-th_frequency = missing
+"""
+	transition_frequency(a, b)
+
+return frequency of transition from letter a to letter b
+"""
+transition_frequency(a::Char, b::Char) = sample_freq_matrix[index_of_letter(a), index_of_letter(b)]
+
+# ╔═╡ bb9108ea-689c-11eb-0a28-59ffb6a0c74e
+th_frequency = sample_freq_matrix[index_of_letter('t'), index_of_letter('h')]
 
 # ╔═╡ 1f94e0a2-f9ab-11ea-1347-7dd906ebb09d
 md"""👉 What about `"ht"`?"""
 
 # ╔═╡ 41b2df7c-f931-11ea-112e-ede3b16f357a
-ht_frequency = missing
+ht_frequency = transition_frequency('h', 't')
 
 # ╔═╡ 1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
 md"""
 👉 Which le**tt**ers appeared double in our sample?
 """
 
+# ╔═╡ a0d77baa-689d-11eb-0e9a-d14a9704d26d
+double_frequencies = [transition_frequency(ltr, ltr) for ltr in alphabet]
+
+# ╔═╡ c41baae4-689f-11eb-2249-5b4a5f5af83a
+double_letters = alphabet[double_frequencies .> 0 ]
+
+# ╔═╡ dd3a7d48-689f-11eb-10c6-8ff7f1fedac7
+md"Or:"
+
 # ╔═╡ 65c92cac-f930-11ea-20b1-6b8f45b3f262
-double_letters = ['x', 'y']
+double_letters_alt = alphabet[[transition_frequency(ltr, ltr) > 0 for ltr in alphabet]]
 
 # ╔═╡ 4582ebf4-f930-11ea-03b2-bf4da1a8f8df
 md"""
@@ -350,7 +432,7 @@ md"""
 """
 
 # ╔═╡ 7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-most_likely_to_follow_w = 'x'
+most_likely_to_follow_w = alphabet[argmax(sample_freq_matrix[index_of_letter('w'), :])] # 'x'
 
 # ╔═╡ 458cd100-f930-11ea-24b8-41a49f6596a0
 md"""
@@ -358,22 +440,41 @@ md"""
 """
 
 # ╔═╡ bc401bee-f931-11ea-09cc-c5efe2f11194
-most_likely_to_precede_w = 'x'
+most_likely_to_precede_w = alphabet[argmax(sample_freq_matrix[:, index_of_letter('w')])] # 'x'
+
+# ╔═╡ e53f48de-68a4-11eb-2b44-e1fbf62d5920
+# Can this be done more clealy with a chain of operations or a pipe?
+#   see https://juliapackages.com/p/pipe
+most_likely_to_precede_w_alt = @pipe sample_freq_matrix |> 
+	_[:,index_of_letter('w')] |>
+	argmax(_) |>
+	alphabet[_]
 
 # ╔═╡ 45c20988-f930-11ea-1d12-b782d2c01c11
 md"""
 👉 What is the sum of each row? What is the sum of each column? How can we interpret these values?"
 """
 
+# ╔═╡ 6e74c76a-68a9-11eb-0927-e16388261171
+# sum array across 2nd dimension (yields column vector of row sums)
+freq_startchar = sum(sample_freq_matrix, dims=2)
+
+# ╔═╡ 1443e8d0-68aa-11eb-38e9-0bf135b64223
+# sum array across 1st dimension (yields row vector of column sums)
+freq_endchar = sum(sample_freq_matrix, dims=1)
+
 # ╔═╡ cc62929e-f9af-11ea-06b9-439ac08dcb52
 row_col_answer = md"""
-
+These row and column sum values indicate the likelihood of a 2-letter sequence beginning or ending with each letter, respectively.
 """
 
 # ╔═╡ 2f8dedfc-fb98-11ea-23d7-2159bdb6a299
 md"""
 We can use the measured transition frequencies to generate text in a way that it has **the same transition frequencies** as our original sample. Our generated text is starting to look like real language!
 """
+
+# ╔═╡ 65833a06-68b8-11eb-084f-63426e8fe551
+md"First add a language selector (Note: This uses the `Select` PlutoUI widget.):"
 
 # ╔═╡ b7446f34-f9b1-11ea-0f39-a3c17ba740e5
 @bind ex23_sample Select([v => String(k) for (k,v) in zip(fieldnames(typeof(samples)), samples)])
@@ -393,7 +494,18 @@ md"""
 **Random letters at the correct transition frequencies:**
 """
 
+# ╔═╡ 06e7e804-68bb-11eb-3931-0df770bd9081
+md"Note: Define the `sample_text()` fn:"
+
 # ╔═╡ 0e465160-f937-11ea-0ebb-b7e02d71e8a8
+"""
+	function sample_text(A, n)
+
+Take letter-transition matrix `A` expressed as
+joint probabilities of ordered pairs. 
+Generate `n` sequential letters from the `alphabet`.
+Start with letter based on marginal (rowsum) probs in `A`.
+"""
 function sample_text(A, n)
 	
 	first_index = rand_sample(vec(sum(A, dims=1)))
@@ -419,12 +531,22 @@ This is not a difficult task - you can get dictionaries for both languages, and 
 
 # ╔═╡ 7eed9dde-f931-11ea-38b0-db6bfcc1b558
 html"<h4 id='mystery-detect'>Mystery sample</h4>
-<p>Enter some text here -- we will detect in which language it is written!</p>" # dont delete me
+<p>Enter some text here -- we will detect in which language it is written!</p>
+" # dont delete me
+
+# ╔═╡ ddc0d68e-68ba-11eb-2fb2-db7a8632fb3c
+md"(Note: This uses the `TextField` PlutoUI widget.)"
 
 # ╔═╡ 7e3282e2-f931-11ea-272f-d90779264456
 @bind mystery_sample TextField((70,8), default="""
 Small boats are typically found on inland waterways such as rivers and lakes, or in protected coastal areas. However, some boats, such as the whaleboat, were intended for use in an offshore environment. In modern naval terms, a boat is a vessel small enough to be carried aboard a ship. Anomalous definitions exist, as lake freighters 1,000 feet (300 m) long on the Great Lakes are called "boats". 
 """)
+
+# ╔═╡ 6054f3cc-68c1-11eb-2db4-9545ce9d0969
+mystery_sample
+
+# ╔═╡ 7a3703ec-68c2-11eb-2018-65bdbc4c7d38
+
 
 # ╔═╡ 7df55e6c-f931-11ea-33b8-fdc3be0b6cfa
 mystery_sample
@@ -452,7 +574,7 @@ The only question left is: How do we compare two matrices? When two matrices are
 
 # ╔═╡ 13c89272-f934-11ea-07fe-91b5d56dedf8
 function matrix_distance(A, B)
-	missing # do something with A .- B
+	sum(abs.(A.-B)) # do something with A .- B
 end
 
 # ╔═╡ 7d60f056-f931-11ea-39ae-5fa18a955a77
@@ -463,7 +585,7 @@ end
 # ╔═╡ 7d1439e6-f931-11ea-2dab-41c66a779262
 try
 	@assert !ismissing(distances.English)
-	"""<h2>It looks like this text is **$(argmin(distances))**!</h2>""" |> HTML
+	"""<h2>It looks like this text is **$(argmin(distances))**!</h2><h3>With a score of  **$(round(distances[argmin(distances)]; digits=3))**!</h3>""" |> HTML
 catch
 end
 
@@ -502,6 +624,8 @@ emma = let
 end;
 
 # ╔═╡ cc42de82-fb5a-11ea-3614-25ef961729ab
+"""
+eliminates extra whitespace"""
 function splitwords(text)
 	# clean up whitespace
 	cleantext = replace(text, r"\s+" => " ")
@@ -567,8 +691,16 @@ ngrams([1, 2, 3, 42], 2) == bigrams([1, 2, 3, 42])
 """
 
 # ╔═╡ 7be98e04-fb6b-11ea-111d-51c48f39a4e9
+"""
+	function ngrams(words, n)
+
+that takes an array `words` and a number `n`, and 
+returns array od all subsequences of length `n`
+"""
 function ngrams(words, n)
-	missing
+	map(1:length(words)-(n-1)) do i
+		words[i:i+n-1]
+	end
 end
 
 # ╔═╡ 052f822c-fb7b-11ea-382f-af4d6c2b4fdb
@@ -635,11 +767,22 @@ Dict(
 """
 
 # ╔═╡ 8ce3b312-fb82-11ea-200c-8d5b12f03eea
+"""
+	function word_counts(words::Vector)
+
+takes an array of `words`, and 
+returns a Dict with entries `word => number_of_occurences`.
+"""
 function word_counts(words::Vector)
 	counts = Dict()
 	
-	# your code here
-	
+	for word in words
+		if ! haskey(counts, word)
+			counts[word] = 1
+		else
+			counts[word] += 1
+		end
+	end
 	return counts
 end
 
@@ -652,7 +795,22 @@ How many times does `"Emma"` occur in the book?
 """
 
 # ╔═╡ 953363dc-fb84-11ea-1128-ebdfaf5160ee
-emma_count = missing
+begin
+	# count just "Emma" directly
+	# emma_count = length(filter(w -> w=="Emma", emma_words))
+	# or count all words first
+	book_word_counts_dict = word_counts(emma_words)
+	emma_count = book_word_counts_dict["Emma"]
+end
+
+# ╔═╡ 082d43a2-6984-11eb-23e5-5b5560187ec9
+# can also find other words
+book_word_counts_dict["stop"]
+
+# ╔═╡ 9686bbe2-6984-11eb-2dda-efe6dd25bfb3
+# we can sort the dictionary of word counts (a bit awkward) to find most common ones
+# dictionary1
+sort(collect(book_word_counts_dict), by=x->x[2], rev=true) |> first
 
 # ╔═╡ 294b6f50-fb84-11ea-1382-03e9ab029a2d
 md"""
@@ -679,13 +837,30 @@ If the same ngram occurs multiple times (e.g. "said Emma laughing"), then the la
 """
 
 # ╔═╡ b726f824-fb5e-11ea-328e-03a30544037f
+"""
+	completions_cache(grams)
+
+Taking an array `grams`  of ngrams (i.e. an array of arrays of words),
+Returns a completions cache. This is a dictionary where the keys are (n-1)-grams, and the values are all found words that complete it to an n-gram. 
+"""
 function completions_cache(grams)
 	cache = Dict()
 	
-	# your code here
-	
-	cache
-end
+	for gram in grams
+		nminus1_gram = gram[1:end-1]
+		if ! haskey(cache, nminus1_gram) # new one?
+			cache[nminus1_gram] = [gram[end]]
+		else
+			push!(cache[nminus1_gram], gram[end]) # add an ending
+		end
+	end
+	return cache
+end	# your code here
+
+
+# ╔═╡ 683b4936-6986-11eb-1d5d-39a748a457d9
+# test operation, extending an array
+push!(["to", "be", "or", "not", "to", "be"][1:end-1], "doggie")
 
 # ╔═╡ 18355314-fb86-11ea-0738-3544e2e3e816
 let
@@ -700,14 +875,22 @@ md"""
 We have everything we need to generate our own novel! The final step is to sample random ngrams, in a way that each next ngram overlaps with the previous one. We've done this in the function `generate_from_ngrams` below - feel free to look through the code, or to implement your own version.
 """
 
+# ╔═╡ c00ccf4e-6989-11eb-2977-b1e730533bcc
+import Random
+
+# ╔═╡ 4a223240-6989-11eb-090b-6ff5136bf1a3
+# Note setting the seed allows reproducibility
+# uppercase `String` works on array of chars, lc `string` on each element of array?
+Random.seed!(3); rand(alphabet, 10) |> String 
+
 # ╔═╡ a72fcf5a-fb62-11ea-1dcc-11451d23c085
 """
 	generate_from_ngrams(grams, num_words)
 
-Given an array of ngrams (i.e. an array of arrays of words), generate a sequence of `num_words` words by sampling random ngrams.
+Given an array of `grams` ngrams (i.e. an array of arrays of n words), generate a sequence of `num_words` words by sampling random ngrams.
 """
 function generate_from_ngrams(grams, num_words)
-	n = length(first(grams))
+	n = length(first(grams)) # all grams will be of this length
 	cache = completions_cache(grams)
 	
 	# we need to start the sequence with at least n-1 words.
@@ -720,6 +903,7 @@ function generate_from_ngrams(grams, num_words)
 		tail = sequence[end-(n-2):end]
 		
 		# possible next words
+		# Q: this is guaranteed to be in cache by construction UNLESS it is the tail of the last ngram in the original sample in the cache.
 		completions = cache[tail]
 		
 		choice = rand(completions)
@@ -727,6 +911,23 @@ function generate_from_ngrams(grams, num_words)
 	end
 	sequence
 end
+
+# ╔═╡ a1370d78-698c-11eb-3dba-d39501c496b0
+md"Note: This `function generate_from_ngrams` has an off-by-one bug if the randomly sampled ngram, or completion, comes from the final ngram in the text sample. There may be any ensuing completion in the cache"
+
+# ╔═╡ 9e75c0f2-698c-11eb-2054-a18724bbc537
+# Demonstration:
+begin
+	trigrams = ngrams(split("to be or not to be that is the question", " "), 3)
+	test_n = length(first(trigrams))
+	test_cache = completions_cache(trigrams)
+	test_sequence = last(trigrams)
+	tail = test_sequence[end-(test_n-2):end]
+	completions = cache[tail]
+end
+
+# ╔═╡ 13ada3c6-698d-11eb-27ae-d31882f23f30
+md"Oops - now I see this is to be addressed with circular `ngrams_circular`"
 
 # ╔═╡ f83991c0-fb7c-11ea-0e6f-1f80709d00c1
 "Compute the ngrams of an array of words, but add the first n-1 at the end, to ensure that every ngram ends in the the beginning of another ngram."
@@ -744,7 +945,7 @@ completions_cache(ngrams_circular(forest_words, 3))
 Given a source text, generate a `String` that "looks like" the original text by satisfying the same ngram frequency distribution as the original.
 """
 function generate(source_text::AbstractString, s; n=3, use_words=true)
-	preprocess = if use_words
+	preprocess = if use_words # this defines a function variable (function selector)
 		splitwords
 	else
 		collect
@@ -752,7 +953,7 @@ function generate(source_text::AbstractString, s; n=3, use_words=true)
 	
 	words = preprocess(source_text)
 	if length(words) < n
-		""
+		"Error: need at least $n words."
 	else
 		grams = ngrams_circular(words, n)
 		result = generate_from_ngrams(grams, s)
@@ -788,7 +989,7 @@ Uncomment the cell below to generate some Jane Austen text:
 """
 
 # ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
-# generate(emma, 100; n=4) |> Quote
+# generate(emma, 100; n=5) |> Quote
 
 # ╔═╡ cc07f576-fbf3-11ea-2c6f-0be63b9356fc
 if student.name == "Jazzy Doe"
@@ -1143,6 +1344,7 @@ bigbreak
 # ╟─6f9df800-f92d-11ea-2d49-c1aaabd2d012
 # ╠═b61722cc-f98f-11ea-22ae-d755f61f78c3
 # ╟─f457ad44-f990-11ea-0e2d-2bb7627716a8
+# ╠═0437efcc-6832-11eb-17f2-49dc9da48660
 # ╠═4efc051e-f92e-11ea-080e-bde6b8f9295a
 # ╟─38d1ace8-f991-11ea-0b5f-ed7bd08edde5
 # ╠═ddf272c8-f990-11ea-2135-7bf1a6dca0b7
@@ -1151,7 +1353,7 @@ bigbreak
 # ╟─a094e2ac-f92d-11ea-141a-3566552dd839
 # ╠═27c9a7f4-f996-11ea-1e46-19e3fc840ad9
 # ╟─f2a4edfa-f996-11ea-1a24-1ba78fd92233
-# ╟─5c74a052-f92e-11ea-2c5b-0f1a3a14e313
+# ╠═5c74a052-f92e-11ea-2c5b-0f1a3a14e313
 # ╠═dcc4156c-f997-11ea-3e6f-057cd080d9db
 # ╟─129fbcfe-f998-11ea-1c96-0fd3ccd2dcf8
 # ╠═3a5ee698-f998-11ea-0452-19b70ed11a1d
@@ -1162,24 +1364,32 @@ bigbreak
 # ╠═d3c98450-f998-11ea-3caf-895183af926b
 # ╠═d3a4820e-f998-11ea-2a5c-1f37e2a6dd0a
 # ╟─cee0f984-f9a0-11ea-2c3c-53fe26156ea4
+# ╠═229194a4-6836-11eb-1cea-cb76c47959bc
+# ╠═eea0f2d2-6835-11eb-3683-b74dc5e80600
+# ╠═071787d8-6836-11eb-1098-f573bcc1f2af
+# ╠═b52714fc-6835-11eb-2a85-ed65c2684558
 # ╟─aad659b8-f998-11ea-153e-3dae9514bfeb
 # ╠═d236b51e-f997-11ea-0c55-abb11eb35f4d
 # ╠═a56724b6-f9a0-11ea-18f2-991e0382eccf
-# ╟─24860970-fc48-11ea-0009-cddee695772c
-# ╟─734851c6-f92d-11ea-130d-bf2a69e89255
+# ╠═24860970-fc48-11ea-0009-cddee695772c
+# ╠═734851c6-f92d-11ea-130d-bf2a69e89255
 # ╟─8d3bc9ea-f9a1-11ea-1508-8da4b7674629
 # ╠═4affa858-f92e-11ea-3ece-258897c37e51
 # ╠═e00d521a-f992-11ea-11e0-e9da8255b23b
 # ╟─ddfb1e1c-f9a1-11ea-3625-f1170272e96a
 # ╟─eaa8c79e-f9a2-11ea-323f-8bb2bd36e11c
+# ╠═0ae50ef6-6838-11eb-0b15-457a646abfca
 # ╠═2680b506-f9a3-11ea-0849-3989de27dd9f
-# ╟─571d28d6-f960-11ea-1b2e-d5977ecbbb11
+# ╠═86fa5ab4-6838-11eb-197a-a5c4694a4b96
+# ╠═571d28d6-f960-11ea-1b2e-d5977ecbbb11
 # ╠═6a64ab12-f960-11ea-0d92-5b88943cdb1a
 # ╟─603741c2-f9a4-11ea-37ce-1b36ecc83f45
-# ╟─b3de6260-f9a4-11ea-1bae-9153a92c3fe5
+# ╠═b3de6260-f9a4-11ea-1bae-9153a92c3fe5
 # ╠═a6c36bd6-f9a4-11ea-1aba-f75cecc90320
 # ╟─6d3f9dae-f9a5-11ea-3228-d147435e266d
 # ╠═92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
+# ╠═ace9402c-6839-11eb-0069-69c8e2fd320a
+# ╠═9f5b2eec-683a-11eb-066d-11a4135d76e5
 # ╟─95b81778-f9a5-11ea-3f51-019430bc8fa8
 # ╟─7df7ab82-f9ad-11ea-2243-21685d660d71
 # ╟─dcffd7d2-f9a6-11ea-2230-b1afaecfdd54
@@ -1191,10 +1401,15 @@ bigbreak
 # ╟─b5b8dd18-f938-11ea-157b-53b145357fd1
 # ╟─0e872a6c-f937-11ea-125e-37958713a495
 # ╟─77623f3e-f9a9-11ea-2f46-ff07bd27cd5f
+# ╠═bc37ad46-688b-11eb-3102-b360f7cdc11f
+# ╠═9fd2af60-6896-11eb-1b2c-2f0e2711016e
 # ╠═fbb7c04e-f92d-11ea-0b81-0be20da242c8
 # ╠═80118bf8-f931-11ea-34f3-b7828113ffd8
+# ╠═31dfd392-6897-11eb-1f76-4504bb24a09a
+# ╠═165068c2-6899-11eb-3f74-8338ac50e423
 # ╠═7f4f6ce4-f931-11ea-15a4-b3bec6a7e8b6
 # ╠═d40034f6-f9ab-11ea-3f65-7ffd1256ae9d
+# ╠═a25404e6-689b-11eb-1734-ddde05e15f77
 # ╟─689ed82a-f9ae-11ea-159c-331ff6660a75
 # ╠═ace3dc76-f9ae-11ea-2bee-3d0bfa57cfbc
 # ╟─0b67789c-f931-11ea-113c-35e5edafcbbf
@@ -1202,35 +1417,48 @@ bigbreak
 # ╟─39152104-fc49-11ea-04dd-bb34e3600f2f
 # ╟─e91c6fd8-f930-11ea-01ac-476bbde79079
 # ╠═1b4c0c28-f9ab-11ea-03a6-69f69f7f90ed
+# ╠═bb9108ea-689c-11eb-0a28-59ffb6a0c74e
 # ╟─1f94e0a2-f9ab-11ea-1347-7dd906ebb09d
 # ╠═41b2df7c-f931-11ea-112e-ede3b16f357a
 # ╟─489fe282-f931-11ea-3dcb-35d4f2ac8b40
-# ╟─1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
+# ╠═1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
+# ╠═a0d77baa-689d-11eb-0e9a-d14a9704d26d
+# ╠═c41baae4-689f-11eb-2249-5b4a5f5af83a
+# ╟─dd3a7d48-689f-11eb-10c6-8ff7f1fedac7
 # ╠═65c92cac-f930-11ea-20b1-6b8f45b3f262
-# ╟─671525cc-f930-11ea-0e71-df9d4aae1c05
+# ╠═671525cc-f930-11ea-0e71-df9d4aae1c05
 # ╟─4582ebf4-f930-11ea-03b2-bf4da1a8f8df
-# ╟─7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-# ╟─a5fbba46-f931-11ea-33e1-054be53d986c
+# ╠═7898b76a-f930-11ea-2b7e-8126ec2b8ffd
+# ╠═a5fbba46-f931-11ea-33e1-054be53d986c
 # ╟─458cd100-f930-11ea-24b8-41a49f6596a0
 # ╠═bc401bee-f931-11ea-09cc-c5efe2f11194
-# ╟─ba695f6a-f931-11ea-0fbb-c3ef1374270e
+# ╠═342c70b6-68a5-11eb-362b-0fde43a83739
+# ╠═e53f48de-68a4-11eb-2b44-e1fbf62d5920
+# ╠═ba695f6a-f931-11ea-0fbb-c3ef1374270e
 # ╟─45c20988-f930-11ea-1d12-b782d2c01c11
+# ╠═6e74c76a-68a9-11eb-0927-e16388261171
+# ╠═1443e8d0-68aa-11eb-38e9-0bf135b64223
 # ╠═cc62929e-f9af-11ea-06b9-439ac08dcb52
 # ╟─d3d7bd9c-f9af-11ea-1570-75856615eb5d
 # ╟─2f8dedfc-fb98-11ea-23d7-2159bdb6a299
-# ╟─b7446f34-f9b1-11ea-0f39-a3c17ba740e5
+# ╟─65833a06-68b8-11eb-084f-63426e8fe551
+# ╠═b7446f34-f9b1-11ea-0f39-a3c17ba740e5
 # ╟─4f97b572-f9b0-11ea-0a99-87af0797bf28
-# ╟─46c905d8-f9b0-11ea-36ed-0515e8ed2621
+# ╠═46c905d8-f9b0-11ea-36ed-0515e8ed2621
 # ╟─4e8d327e-f9b0-11ea-3f16-c178d96d07d9
-# ╟─489b03d4-f9b0-11ea-1de0-11d4fe4e7c69
+# ╠═489b03d4-f9b0-11ea-1de0-11d4fe4e7c69
 # ╟─d83f8bbc-f9af-11ea-2392-c90e28e96c65
-# ╟─fd202410-f936-11ea-1ad6-b3629556b3e0
-# ╟─0e465160-f937-11ea-0ebb-b7e02d71e8a8
-# ╟─6718d26c-f9b0-11ea-1f5a-0f22f7ddffe9
+# ╠═fd202410-f936-11ea-1ad6-b3629556b3e0
+# ╟─06e7e804-68bb-11eb-3931-0df770bd9081
+# ╠═0e465160-f937-11ea-0ebb-b7e02d71e8a8
+# ╠═6718d26c-f9b0-11ea-1f5a-0f22f7ddffe9
 # ╟─141af892-f933-11ea-1e5f-154167642809
 # ╟─7eed9dde-f931-11ea-38b0-db6bfcc1b558
-# ╟─7e3282e2-f931-11ea-272f-d90779264456
-# ╟─7d1439e6-f931-11ea-2dab-41c66a779262
+# ╟─ddc0d68e-68ba-11eb-2fb2-db7a8632fb3c
+# ╠═7e3282e2-f931-11ea-272f-d90779264456
+# ╠═6054f3cc-68c1-11eb-2db4-9545ce9d0969
+# ╠═7d1439e6-f931-11ea-2dab-41c66a779262
+# ╠═7a3703ec-68c2-11eb-2018-65bdbc4c7d38
 # ╠═7df55e6c-f931-11ea-33b8-fdc3be0b6cfa
 # ╟─292e0384-fb57-11ea-0238-0fbe416fc976
 # ╠═7dabee08-f931-11ea-0cb2-c7d5afd21551
@@ -1242,7 +1470,7 @@ bigbreak
 # ╟─568f0d3a-fb54-11ea-0f77-171718ef12a5
 # ╟─82e0df62-fb54-11ea-3fff-b16c87a7d45b
 # ╠═b7601048-fb57-11ea-0754-97dc4e0623a1
-# ╟─cc42de82-fb5a-11ea-3614-25ef961729ab
+# ╠═cc42de82-fb5a-11ea-3614-25ef961729ab
 # ╠═d66fe2b2-fb5a-11ea-280f-cfb12b8296ac
 # ╠═4ca8e04a-fb75-11ea-08cc-2fdef5b31944
 # ╟─6f613cd2-fb5b-11ea-1669-cbd355677649
@@ -1265,14 +1493,22 @@ bigbreak
 # ╟─a9ffff9a-fb83-11ea-1efd-2fc15538e52f
 # ╟─808abf6e-fb84-11ea-0785-2fc3f1c4a09f
 # ╠═953363dc-fb84-11ea-1128-ebdfaf5160ee
+# ╠═082d43a2-6984-11eb-23e5-5b5560187ec9
+# ╠═9686bbe2-6984-11eb-2dda-efe6dd25bfb3
 # ╟─294b6f50-fb84-11ea-1382-03e9ab029a2d
 # ╠═b726f824-fb5e-11ea-328e-03a30544037f
+# ╠═683b4936-6986-11eb-1d5d-39a748a457d9
 # ╠═18355314-fb86-11ea-0738-3544e2e3e816
 # ╠═abe2b862-fb69-11ea-08d9-ebd4ba3437d5
 # ╟─3d105742-fb8d-11ea-09b0-cd2e77efd15c
-# ╟─a72fcf5a-fb62-11ea-1dcc-11451d23c085
-# ╟─f83991c0-fb7c-11ea-0e6f-1f80709d00c1
-# ╟─4b27a89a-fb8d-11ea-010b-671eba69364e
+# ╠═c00ccf4e-6989-11eb-2977-b1e730533bcc
+# ╠═4a223240-6989-11eb-090b-6ff5136bf1a3
+# ╠═a72fcf5a-fb62-11ea-1dcc-11451d23c085
+# ╠═a1370d78-698c-11eb-3dba-d39501c496b0
+# ╠═9e75c0f2-698c-11eb-2054-a18724bbc537
+# ╠═13ada3c6-698d-11eb-27ae-d31882f23f30
+# ╠═f83991c0-fb7c-11ea-0e6f-1f80709d00c1
+# ╠═4b27a89a-fb8d-11ea-010b-671eba69364e
 # ╟─d7b7a14a-fb90-11ea-3e2b-2fd8f379b4d8
 # ╟─1939dbea-fb63-11ea-0bc2-2d06b2d4b26c
 # ╟─70169682-fb8c-11ea-27c0-2dad2ff3080f
