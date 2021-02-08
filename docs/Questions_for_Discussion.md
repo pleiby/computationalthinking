@@ -181,10 +181,12 @@ Int64
 - [A layman's introduction to principal component analysis](https://www.youtube.com/watch?v=BfTMmoDFXyE&feature=emb_logo)
 - [tutorial8.pdf Principal Component Analysis](https://www.cs.toronto.edu/~urtasun/courses/CSC411/tutorial8.pdf)
 
-- **`do` function syntax**: What do you think of the "do" syntax for function definition, how do you read it?
+- **`do` function syntax**: What do you think of the "`do block" syntax for function definition, how do you read it?
+    - https://docs.julialang.org/en/v1/manual/functions/
+    - is it mainly for applications of multiline anonymous functions by `map`?
+    - particularly in the case of a multi-arg function
 
-- Found this playlist, but not sure how to add it to YouTube so that YouTube will play the lectures in order.
-
+- Found this playlist, and figured how to add it to YouTube so that YouTube will play the lectures in order.
 https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 
 #### Comments on HW3
@@ -269,7 +271,50 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 		completions = cache[tail]
     ```
     - Oops - now I see this is to be addressed with circular ngrams_circular!
-    
+
+### Comments on HW4
+- Julia packages: did you `import` or `using` any?
+    - `StatsBase`
+- Pluto help:
+    - wish that the source package of functions was indicated
+    - links to full docmentation would be great (e.g. `bar`)
+- I found the specification of docstrings for all functions defined to be very helpful in building the simulation
+- In Ex. 3.1
+    - what is `run_basic_sir`
+    - important distinction between scope of variables in `function`, `begin`, `let`:
+        - "So like `begin`, `let` is just a block of code, but like `function`, it has a local variable scope."
+        - Q: is a `let` good for anything but side effects (nothing is returned from `let` block)
+
+- In Ex 3.2, 
+    - this null `map` over an iteration index, rather than `for` was interesting:
+    ```julia
+    map(1:num_simulations) do _
+		simulation(N, T, infection)
+    end
+    ```
+    - advantage over for loop: it returns an array of the iteration results
+    ```julia
+    map(1:10) do _
+	    rand()
+    end
+    ## Float64[0.553734, 0.447052, 0.919346, 0.86072, 0.451468, 0.460716, 0.342783, 0.9844, 0.802388, 0.727907]
+    for i in (1:10)
+	    rand()
+    end
+    ## # (returns nothing)
+    ```
+- How did your error-bar graph look?
+- Ex 4.2 Qualitative behavior with Reinfection model of AbstractInfection
+    - new model required only the 
+        - new `Refinfection::AbstractInfection` type definition, 
+        - new method for the `interact!` function and 
+        - different call to `RepeatSimulations`, which is cool:
+    ```julia
+    repeat_simulations(100, 1000, Reinfection(p_infection, p_recovery), 20)
+    ```
+
+
+
 ### Supplemental Information
 - [MIT 6.0002 Introduction to Computational Thinking and Data Science](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/)
 Instructor(s) Prof. Eric Grimson, Prof. John Guttag, Dr. Ana Bell, MIT Course Number 6.0002. As Taught In Fall 2016
