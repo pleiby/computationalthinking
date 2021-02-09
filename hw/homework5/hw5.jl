@@ -78,7 +78,7 @@ Feel free to ask questions!
 # ╔═╡ 1f299cc6-0970-11eb-195b-3f951f92ceeb
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -233,7 +233,12 @@ Possible steps:
 
 # ╔═╡ edf86a0e-0a68-11eb-2ad3-dbf020037019
 """
-"""function trajectory(w::Coordinate, n::Int)
+	trajectory(w::Coordinate, n::Int)
+
+Use `rand(possible_moves, n)` to generate a vector of n random moves.
+Returns the trajectory as a Each possible move will be equally likely.
+"""
+function trajectory(w::Coordinate, n::Int)
 	delta_x = rand(possible_moves, n)
 	return accumulate(+, delta_x, init=w)
 end
@@ -242,6 +247,13 @@ end
 test_trajectory = trajectory(Coordinate(4,4), 30) # uncomment to test
 
 # ╔═╡ 478309f4-0a31-11eb-08ea-ade1755f53e0
+"""
+	plot_trajectory!(p::Plots.Plot, trajectory::Vector; kwargs...)
+
+takes a plot `p` and `trajectory` array of points,
+and returns modified plot with trajectory points
+connected by lines
+"""
 function plot_trajectory!(p::Plots.Plot, trajectory::Vector; kwargs...)
 	plot!(p, make_tuple.(trajectory); 
 		label=nothing, 
@@ -258,14 +270,17 @@ try
 catch
 end
 
-# ╔═╡ 51788e8e-0a31-11eb-027e-fd9b0dc716b5
-# 	let
-# 		long_trajectory = trajectory(Coordinate(4,4), 1000)
+# ╔═╡ 8e39d594-6a67-11eb-3d11-dd2e8628826c
+md"Uncomment the following to plot a long trajectory."
 
-# 		p = plot(ratio=1)
-# 		plot_trajectory!(p, long_trajectory)
-# 		p
-# 	end
+# ╔═╡ 51788e8e-0a31-11eb-027e-fd9b0dc716b5
+#let
+#	long_trajectory = trajectory(Coordinate(4,4), 1000)
+#
+#	p = plot(ratio=1)
+#	plot_trajectory!(p, long_trajectory)
+#	p
+#end
 
 # ^ uncomment to visualize a trajectory
 
@@ -291,7 +306,16 @@ end
 """
 
 # ╔═╡ dcefc6fe-0a3f-11eb-2a96-ddf9c0891873
+# Plot 10 trajectories of length 1000 on a single figure, all starting at the origin. 
+let
+	long_trajectory = trajectory(Coordinate(4,4), 1000)
 
+	p = plot(ratio=1)
+	for i = 1:10
+		plot_trajectory!(p, trajectory(Coordinate(0,0), 1000))
+	end
+	p
+end
 
 # ╔═╡ b4d5da4a-09a0-11eb-1949-a5807c11c76c
 md"""
@@ -306,10 +330,34 @@ One relatively simple boundary condition is a **collision boundary**:
 """
 
 # ╔═╡ 0237ebac-0a69-11eb-2272-35ea4e845d84
-# function collide_boundary(c::Coordinate, L::Number)
+begin
+	"""
+		collide_boundary(c::Coordinate, L::Number)
 	
-# 	return missing
-# end
+	takes a Coordinate `c` and a size`L`, and returns a new coordinate that lies inside the box (i.e. [-L,L] x [-L,L]), but is closest to c.
+	"""
+	function collide_boundary(c::Coordinate, L::Number)
+
+		return missing
+	end
+
+	function myclamp(x::Number, lobnd = 0, upbnd = 1)
+		return ((x > upbnd) ? upbnd :
+			(x < lobnd) ? lobnd : x)
+	end
+
+	"""
+		extend_mat(M::AbstractMatrix, i, j)
+
+	takes a matrix `M` and indices `i` and `j`, and returns the closest element of the matrix.
+	"""
+	function extend_mat(M::AbstractMatrix, i, j)
+
+		num_rows, num_columns = size(M)
+
+		return M[clamp(i, 1, num_rows), clamp(j, 1, num_columns)]
+	end
+end
 
 # ╔═╡ ad832360-0a40-11eb-2857-e7f0350f3b12
 # collide_boundary(Coordinate(12,4), 10) # uncomment to test
@@ -962,13 +1010,14 @@ bigbreak
 # ╠═87ea0868-0a35-11eb-0ea8-63e27d8eda6e
 # ╟─058e3f84-0a34-11eb-3f87-7118f14e107b
 # ╠═478309f4-0a31-11eb-08ea-ade1755f53e0
+# ╠═8e39d594-6a67-11eb-3d11-dd2e8628826c
 # ╠═51788e8e-0a31-11eb-027e-fd9b0dc716b5
 # ╟─3ebd436c-0954-11eb-170d-1d468e2c7a37
 # ╠═dcefc6fe-0a3f-11eb-2a96-ddf9c0891873
 # ╟─b4d5da4a-09a0-11eb-1949-a5807c11c76c
 # ╠═0237ebac-0a69-11eb-2272-35ea4e845d84
 # ╠═ad832360-0a40-11eb-2857-e7f0350f3b12
-# ╟─b4ed2362-09a0-11eb-0be9-99c91623b28f
+# ╠═b4ed2362-09a0-11eb-0be9-99c91623b28f
 # ╠═0665aa3e-0a69-11eb-2b5d-cd718e3c7432
 # ╟─ed2d616c-0a66-11eb-1839-edf8d15cf82a
 # ╟─3ed06c80-0954-11eb-3aee-69e4ccdc4f9d
