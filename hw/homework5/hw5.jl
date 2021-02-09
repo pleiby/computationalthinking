@@ -337,8 +337,10 @@ begin
 	takes a Coordinate `c` and a size`L`, and returns a new coordinate that lies inside the box (i.e. [-L,L] x [-L,L]), but is closest to c.
 	"""
 	function collide_boundary(c::Coordinate, L::Number)
-
-		return missing
+		c_lim = Coordinate(myclamp(c.x, lobnd = -L, upbnd = L), 
+			myclamp(c.y, lobnd = -L, upbnd = L))
+		
+		return c_lim
 	end
 
 	function myclamp(x::Number, lobnd = 0, upbnd = 1)
@@ -360,7 +362,7 @@ begin
 end
 
 # ╔═╡ ad832360-0a40-11eb-2857-e7f0350f3b12
-# collide_boundary(Coordinate(12,4), 10) # uncomment to test
+collide_boundary(Coordinate(12,4), 10) # uncomment to test
 
 # ╔═╡ b4ed2362-09a0-11eb-0be9-99c91623b28f
 md"""
