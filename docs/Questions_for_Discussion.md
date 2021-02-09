@@ -304,6 +304,7 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     ## # (returns nothing)
     ```
 - How did your error-bar graph look?
+    - works if one replaces `yerror` with `ribbon`
 - Ex 4.2 Qualitative behavior with Reinfection model of AbstractInfection
     - new model required only the 
         - new `Refinfection::AbstractInfection` type definition, 
@@ -312,10 +313,21 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     ```julia
     repeat_simulations(100, 1000, Reinfection(p_infection, p_recovery), 20)
     ```
-
-
+#### HW3 and HW4 Numerical Modeling notes
+- - geometric growth versus exponential growth comment:
+    - Comment: fitting exponential growth with least squares on c e to the RT will not give the same results necessarily as fitting they assumed underlying linear function log c plus TR. We can do this quickly and compare the numerical results. Speaking here of the first lecture on  COVID data analysis p
+- generators versus arrays
+    - @22:30  https://youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ 
+- randomness in a sample distribution: how close should it be to theoretical distribution
+    - @18:10 https://youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ 
+    - for random sample from any distribution you do not expect the sample to precisely conform to the distribution. So for a uniform distribution if the sample were to indeed be uniform that should be surprising. Can we compare the observed standard deviation from uniformity with the expected standard deviation given the sample size to assess whether the degree of clumpiness is in fact consistent with randomness?
+### Dataframes
+- [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
+    - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
+    - this parallels the Tidy R equivalent, and the [Data Wrangling with dplyr and tidyr Cheat Sheet](https://rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
 
 ### Supplemental Information
+
 - [MIT 6.0002 Introduction to Computational Thinking and Data Science](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/)
 Instructor(s) Prof. Eric Grimson, Prof. John Guttag, Dr. Ana Bell, MIT Course Number 6.0002. As Taught In Fall 2016
     - 6.0002 is the continuation of [6.0001 Introduction to Computer Science and Programming in Python](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0001-introduction-to-computer-science-and-programming-in-python-fall-2016) and is intended for students with little or no programming experience.
