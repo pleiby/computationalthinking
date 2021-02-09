@@ -633,6 +633,12 @@ $(html"<span id=function_begin_let></span>")
 >     returns **one object**: the object `nothing` — try it out!
 """
 
+# ╔═╡ 11c1476e-6a7f-11eb-299a-9d1572dbc45e
+let
+	z = 5
+	z^2
+end
+
 # ╔═╡ bf6fd176-04cc-11eb-008a-2fb6ff70a9cb
 md"""
 #### Exercise 3.2
@@ -743,7 +749,11 @@ function sir_mean_error_plot(simulations::Vector{<:NamedTuple})
 	μI = totI ./ N # to get average divide by num simulations
 	μR = totR ./ N # to get average divide by num simulations
 
-	# variance = E[(X - E[X])^2] = E[X^2] - (E[X])^2
+	# variance = E[(X - E[X])^2] = E[(X - E[X])(X - E[X])]
+	# = E[(X^2 - 2E[X] X + E[X]^2)]
+	# = E[(X^2] - 2 E[2E[X] X] + E[X]^2]
+	# = E[(X^2]) - 2 mu mu + mu^2]
+	# = E[X^2] - (E[X])^2
 	varS = (totSsq ./N) .- (μS .* μS)
 	varI = (totIsq ./N) .- (μI .* μI)
 	varR = (totRsq ./N) .- (μR .* μR)
@@ -754,9 +764,9 @@ function sir_mean_error_plot(simulations::Vector{<:NamedTuple})
 	# return (varS, varI, varR)
 	p = plot()
 
-	plot!(p, μS, label="Mean S", lw=3, alpha=.3, yerror=σS)
-	plot!(p, μI, label="Mean I", lw=3, alpha=.3, yerror=σI)
-	plot!(p, μR, label="Mean R", lw=3, alpha=.3, yerror=σR)
+	plot!(p, μS, label="Mean S", lw=3, alpha=.3, ribbon=σS)
+	plot!(p, μI, label="Mean I", lw=3, alpha=.3, ribbon=σI)
+	plot!(p, μR, label="Mean R", lw=3, alpha=.3, ribbon=σR)
 
 	return (p) # (totS, totI, totR)
 end
@@ -1408,8 +1418,9 @@ bigbreak
 # ╠═b92f1cec-04ae-11eb-0072-3535d1118494
 # ╠═2c62b4ae-04b3-11eb-0080-a1035a7e31a2
 # ╠═c5156c72-04af-11eb-1106-b13969b036ca
-# ╟─28db9d98-04ca-11eb-3606-9fb89fa62f36
+# ╠═28db9d98-04ca-11eb-3606-9fb89fa62f36
 # ╟─0a967f38-0493-11eb-0624-77e40b24d757
+# ╠═11c1476e-6a7f-11eb-299a-9d1572dbc45e
 # ╟─bf6fd176-04cc-11eb-008a-2fb6ff70a9cb
 # ╠═38b1aa5a-04cf-11eb-11a2-930741fc9076
 # ╠═607d1f82-69ac-11eb-2bd4-c17509fbdc3e
