@@ -119,6 +119,11 @@ We define a struct type `Coordinate` that contains integers `x` and `y`.
 """
 
 # ╔═╡ 0ebd35c8-0972-11eb-2e67-698fd2d311d2
+"""
+	Coordinate(x::Int64, y::Int64)
+
+a struct
+"""
 struct Coordinate
 	x::Int64
 	y::Int64
@@ -232,19 +237,20 @@ Possible steps:
 """
 
 # ╔═╡ edf86a0e-0a68-11eb-2ad3-dbf020037019
-"""
-	trajectory(w::Coordinate, n::Int)
+begin
+	"""
+		trajectory(w::Coordinate, n::Int)
 
-Use `rand(possible_moves, n)` to generate a vector of n random moves.
-Returns the trajectory as a Each possible move will be equally likely.
-"""
-function trajectory(w::Coordinate, n::Int)
-	delta_x = rand(possible_moves, n)
-	return accumulate(+, delta_x, init=w)
+	Uses `rand(possible_moves, n)` to generate a vector of n random moves.
+	Returns the trajectory as a vector of successive Coordinates.
+	"""
+	function trajectory(w::Coordinate, n::Int)
+		delta_x = rand(possible_moves, n)
+		return accumulate(+, delta_x, init=w)
+	end
+
+
 end
-
-# ╔═╡ 44107808-096c-11eb-013f-7b79a90aaac8
-test_trajectory = trajectory(Coordinate(4,4), 30) # uncomment to test
 
 # ╔═╡ 478309f4-0a31-11eb-08ea-ade1755f53e0
 """
@@ -262,27 +268,8 @@ function plot_trajectory!(p::Plots.Plot, trajectory::Vector; kwargs...)
 		kwargs...)
 end
 
-# ╔═╡ 87ea0868-0a35-11eb-0ea8-63e27d8eda6e
-try
-	p = plot(ratio=1, size=(650,200))
-	plot_trajectory!(p, test_trajectory; color="black", showaxis=false, axis=nothing, linewidth=4)
-	p
-catch
-end
-
 # ╔═╡ 8e39d594-6a67-11eb-3d11-dd2e8628826c
 md"Uncomment the following to plot a long trajectory."
-
-# ╔═╡ 51788e8e-0a31-11eb-027e-fd9b0dc716b5
-#let
-#	long_trajectory = trajectory(Coordinate(4,4), 1000)
-#
-#	p = plot(ratio=1)
-#	plot_trajectory!(p, long_trajectory)
-#	p
-#end
-
-# ^ uncomment to visualize a trajectory
 
 # ╔═╡ 3ebd436c-0954-11eb-170d-1d468e2c7a37
 md"""
@@ -305,18 +292,6 @@ end
 ```
 """
 
-# ╔═╡ dcefc6fe-0a3f-11eb-2a96-ddf9c0891873
-# Plot 10 trajectories of length 1000 on a single figure, all starting at the origin. 
-let
-	long_trajectory = trajectory(Coordinate(4,4), 1000)
-
-	p = plot(ratio=1)
-	for i = 1:10
-		plot_trajectory!(p, trajectory(Coordinate(0,0), 1000))
-	end
-	p
-end
-
 # ╔═╡ b4d5da4a-09a0-11eb-1949-a5807c11c76c
 md"""
 #### Exercise 1.5
@@ -332,20 +307,26 @@ One relatively simple boundary condition is a **collision boundary**:
 # ╔═╡ 0237ebac-0a69-11eb-2272-35ea4e845d84
 begin
 	"""
-		collide_boundary(c::Coordinate, L::Number)
+		myclamp(x::Number, lobnd = 0, upbnd = 1)
 	
-	takes a Coordinate `c` and a size`L`, and returns a new coordinate that lies inside the box (i.e. [-L,L] x [-L,L]), but is closest to c.
+	return `x` clamped to `lobnd <= x <= upbnd`
 	"""
-	function collide_boundary(c::Coordinate, L::Number)
-		c_lim = Coordinate(myclamp(c.x, lobnd = -L, upbnd = L), 
-			myclamp(c.y, lobnd = -L, upbnd = L))
-		
-		return c_lim
-	end
-
-	function myclamp(x::Number, lobnd = 0, upbnd = 1)
+	function myclamp(x::Number, lobnd::Number = 0, upbnd::Number = 1)
 		return ((x > upbnd) ? upbnd :
 			(x < lobnd) ? lobnd : x)
+	end
+
+	"""
+		collide_boundary(c::Coordinate, L::Number)
+	
+	takes a Coordinate `c` and a size `L`, and returns a new coordinate that lies inside the box (i.e. [-L,L] x [-L,L]), but is closest to c.
+	"""
+	function collide_boundary(c::Coordinate, L::Number)
+		c_lim = Coordinate(
+			myclamp(c.x, -L, L), 
+			myclamp(c.y, -L, L))
+		
+		return c_lim
 	end
 
 	"""
@@ -362,7 +343,7 @@ begin
 end
 
 # ╔═╡ ad832360-0a40-11eb-2857-e7f0350f3b12
-collide_boundary(Coordinate(12,4), 10) # uncomment to test
+collide_boundary(Coordinate(12,4), 9) # uncomment to test
 
 # ╔═╡ b4ed2362-09a0-11eb-0be9-99c91623b28f
 md"""
@@ -372,10 +353,95 @@ md"""
 """
 
 # ╔═╡ 0665aa3e-0a69-11eb-2b5d-cd718e3c7432
-# function trajectory(c::Coordinate, n::Int, L::Number)
+"""
+	trajectory(w::Coordinate, n::Int, L::Number)
+
+Uses `rand(possible_moves, n)` to generate a vector of n random moves,
+but constrained to stay withing square ranging `[-L, L]` in each dimension.
+Returns the trajectory as a vector of successive Coordinates.
+"""
+function trajectory(w::Coordinate, n::Int, L::Number)
+		
+	delta_x = rand(possible_moves, n)
+
+
+	# accumulate, but must both add and "reflect" (bound) at each step
 	
-# 	return missing
-# end
+	# reflective_sum(x, y) = collide_boundary(x+y, L)
+	# reflective_sum = collide_boundary(, L) ∘ +
+	# path = accumulate(reflective_sum, delta_x, init=w)
+
+	# use loop since not sure how to specify accumulate op for sum & reflect
+	currpt = w
+	path = [currpt] # starting point
+	for pt in delta_x
+		currpt = collide_boundary(currpt + pt, L) # next point with delta_x and bounded
+		push!(path, currpt)
+	end
+		
+	return path
+end
+
+# ╔═╡ 44107808-096c-11eb-013f-7b79a90aaac8
+test_trajectory = trajectory(Coordinate(4,4), 30) # uncomment to test
+
+# ╔═╡ 87ea0868-0a35-11eb-0ea8-63e27d8eda6e
+try
+	p = plot(ratio=1, size=(650,200))
+	plot_trajectory!(p, test_trajectory; color="black", showaxis=false, axis=nothing, linewidth=4)
+	p
+catch
+end
+
+# ╔═╡ 51788e8e-0a31-11eb-027e-fd9b0dc716b5
+let
+	long_trajectory = trajectory(Coordinate(4,4), 1000)
+
+	p = plot(ratio=1)
+	plot_trajectory!(p, long_trajectory)
+	p
+end
+
+# ^ uncomment to visualize a trajectory
+
+# ╔═╡ dcefc6fe-0a3f-11eb-2a96-ddf9c0891873
+# Plot 10 trajectories of length 1000 on a single figure, all starting at the origin. 
+let
+	
+	p = plot(ratio=1)
+	for i = 1:10
+		plot_trajectory!(p, trajectory(Coordinate(0,0), 1000))
+	end
+	p
+end
+
+# ╔═╡ 5690f57e-73c1-11eb-3c81-29dd31a1ed37
+# ??? Why does this fail? Is it a namespace/scoping problem for currpt
+begin
+	steps = rand(possible_moves, 5)
+	
+	currpt = Coordinate(0,0)
+	
+	path = [currpt] # starting point
+	for pt in steps
+		currpt = collide_boundary(currpt + pt, L) # next point with delta_x and bounded
+		push!(path, currpt)
+	end
+
+
+end
+
+# ╔═╡ 7e75b27c-72ff-11eb-36c2-c30458d8219d
+# Test of bounded trajectory, with "collide_boundary" at square radius 5 
+# Plot k trajectories of length 1000 on a single figure, all starting at the origin. 
+let
+	k = 1
+	p = plot(ratio=1)
+	for i = 1:k
+		plot_trajectory!(p, trajectory(Coordinate(0,0), 1000, 10))
+	end
+	p
+end
 
 # ╔═╡ 3ed06c80-0954-11eb-3aee-69e4ccdc4f9d
 md"""
@@ -393,6 +459,11 @@ Let's define a type `Agent`. `Agent` contains a `position` (of type `Coordinate`
 
 # ╔═╡ cf2f3b98-09a0-11eb-032a-49cc8c15e89c
 # define agent struct here:
+struct Agent
+	position::Coordinate
+	status::InfectionStatus
+	num_infected::Int64
+end
 
 # ╔═╡ 814e888a-0954-11eb-02e5-0964c7410d30
 md"""
@@ -1008,9 +1079,9 @@ bigbreak
 # ╠═69151ce6-0aeb-11eb-3a53-290ba46add96
 # ╟─3eb46664-0954-11eb-31d8-d9c0b74cf62b
 # ╠═edf86a0e-0a68-11eb-2ad3-dbf020037019
-# ╠═44107808-096c-11eb-013f-7b79a90aaac8
+# ╟─44107808-096c-11eb-013f-7b79a90aaac8
 # ╠═87ea0868-0a35-11eb-0ea8-63e27d8eda6e
-# ╟─058e3f84-0a34-11eb-3f87-7118f14e107b
+# ╠═058e3f84-0a34-11eb-3f87-7118f14e107b
 # ╠═478309f4-0a31-11eb-08ea-ade1755f53e0
 # ╠═8e39d594-6a67-11eb-3d11-dd2e8628826c
 # ╠═51788e8e-0a31-11eb-027e-fd9b0dc716b5
@@ -1021,6 +1092,8 @@ bigbreak
 # ╠═ad832360-0a40-11eb-2857-e7f0350f3b12
 # ╠═b4ed2362-09a0-11eb-0be9-99c91623b28f
 # ╠═0665aa3e-0a69-11eb-2b5d-cd718e3c7432
+# ╠═5690f57e-73c1-11eb-3c81-29dd31a1ed37
+# ╠═7e75b27c-72ff-11eb-36c2-c30458d8219d
 # ╟─ed2d616c-0a66-11eb-1839-edf8d15cf82a
 # ╟─3ed06c80-0954-11eb-3aee-69e4ccdc4f9d
 # ╠═35537320-0a47-11eb-12b3-931310f18dec
