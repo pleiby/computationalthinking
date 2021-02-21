@@ -62,8 +62,11 @@ if(numbers[0] > 0 || numbers[1] > 12 || numbers[2] > 1) {
 
 """
 
+# ╔═╡ 88d786a8-73f6-11eb-0540-33c0e3286eb3
+md"### Discrete-time change Geometric growth models and Continuous-time change Exponential models - close analogs"
+
 # ╔═╡ ffb5a526-73e6-11eb-25ff-017cea96b3dd
-md"Consider a geometric growth rate at `r1` fraction per unit time `t`"
+md"Consider a discrete-time model with geometric growth rate at `r1` fraction per unit time `t`"
 
 # ╔═╡ b50c8f26-73e6-11eb-128b-c34ba3b91ca0
 md"""$${(1+r)^t}$$"""
@@ -76,9 +79,6 @@ md"The discrete time multiperiod growth, from time 0 to t is"
 
 # ╔═╡ 69c5e8da-73e8-11eb-035a-e9e896ec9d1b
 md"$$A(t) = A_0 {(1+r)^t}, \forall t \in 1...T$$"
-
-# ╔═╡ 48f20160-73e9-11eb-3f5a-837134d9c669
-md"$$A(t+1) = A_0 (1+r)^{(t+1)}$$"
 
 # ╔═╡ 9c7ee6fe-73f3-11eb-39e2-5f001d3ac7d6
 md"So the single step discrete equation is:"
@@ -1431,12 +1431,12 @@ bigbreak
 # ╟─19fe1ee8-0970-11eb-2a0d-7d25e7d773c6
 # ╟─1bba5552-0970-11eb-1b9a-87eeee0ecc36
 # ╟─49567f8e-09a2-11eb-34c1-bb5c0b642fe8
+# ╠═88d786a8-73f6-11eb-0540-33c0e3286eb3
 # ╠═ffb5a526-73e6-11eb-25ff-017cea96b3dd
 # ╠═b50c8f26-73e6-11eb-128b-c34ba3b91ca0
 # ╠═ec340396-73f3-11eb-0311-6d75d4ce2e5b
 # ╠═777fccec-73f3-11eb-3727-ada098475e56
 # ╠═69c5e8da-73e8-11eb-035a-e9e896ec9d1b
-# ╠═48f20160-73e9-11eb-3f5a-837134d9c669
 # ╠═9c7ee6fe-73f3-11eb-39e2-5f001d3ac7d6
 # ╠═a2c57c58-73e9-11eb-134c-a754271920d8
 # ╠═ad8a9880-73f3-11eb-05b3-4d68e630c806
