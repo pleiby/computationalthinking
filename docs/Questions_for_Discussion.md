@@ -321,6 +321,21 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 - randomness in a sample distribution: how close should it be to theoretical distribution
     - @18:10 https://youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ 
     - for random sample from any distribution you do not expect the sample to precisely conform to the distribution. So for a uniform distribution if the sample were to indeed be uniform that should be surprising. Can we compare the observed standard deviation from uniformity with the expected standard deviation given the sample size to assess whether the degree of clumpiness is in fact consistent with randomness?
+
+### HW5
+- Doc strings for Structs: work OK. Doc strings are mean to be applicable to any Julia object
+- function overloading (extension?) in Pluto: surprising that `trajectory(w::Coordinate, n::Int, L::Number)` can be defined in separate Pluto cell from `trajectory(w::Coordinate, n::Int, L::Number)`?
+- Keyword Args in functions:
+    - R lets you designate parameters in order OR with keywords.
+        - `foo(x=1, y=2, z=3) {return} # function definition`
+        - `foo(13, 11, 9) # OK call, foo(x=13, y=11, z=9)`
+        - `foo(y=64) # OK call, foo(x=1, y=64, z=3)`
+    - Julia requires explicit use of keywords in a function call to designate their non-default value.
+- Ex. 1.6 How can one use a (2-arg) anonymous function as accumulator operation in `accumulate`
+    - Implement a 3-argument method  of `trajectory` where the third argument is a size. The trajectory returned should be within the boundary (use `collide_boundary` from above). You can still use `accumulate` with an anonymous function that makes a move and then reflects the resulting coordinate, or use a for loop.
+- Ex 3.1 in `interact!`, infected source recovers only if interact and possible transmission, or only if interact??
+- In Ex 3.2 why did `set_status!` not work in `interact!`
+
 ### Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
