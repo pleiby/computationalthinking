@@ -62,6 +62,120 @@ if(numbers[0] > 0 || numbers[1] > 12 || numbers[2] > 1) {
 
 """
 
+# ╔═╡ ffb5a526-73e6-11eb-25ff-017cea96b3dd
+md"Consider a geometric growth rate at `r1` fraction per unit time `t`"
+
+# ╔═╡ b50c8f26-73e6-11eb-128b-c34ba3b91ca0
+md"""$${(1+r)^t}$$"""
+
+# ╔═╡ ec340396-73f3-11eb-0311-6d75d4ce2e5b
+md"where each period the multiplicative factor $(1+r)$ is applied."
+
+# ╔═╡ 777fccec-73f3-11eb-3727-ada098475e56
+md"The discrete time multiperiod growth, from time 0 to t is"
+
+# ╔═╡ 69c5e8da-73e8-11eb-035a-e9e896ec9d1b
+md"$$A(t) = A_0 {(1+r)^t}, \forall t \in 1...T$$"
+
+# ╔═╡ 48f20160-73e9-11eb-3f5a-837134d9c669
+md"$$A(t+1) = A_0 (1+r)^{(t+1)}$$"
+
+# ╔═╡ 9c7ee6fe-73f3-11eb-39e2-5f001d3ac7d6
+md"So the single step discrete equation is:"
+
+# ╔═╡ a2c57c58-73e9-11eb-134c-a754271920d8
+md"$$A(t+1) = A(t){(1+r)}$$"
+
+# ╔═╡ ad8a9880-73f3-11eb-05b3-4d68e630c806
+md"And the period-to-period change equation, or _difference equation_, is"
+
+# ╔═╡ efdccf28-73e9-11eb-05c0-4b679ead8340
+md"$$\delta A(t) = A(t+1) - A(t) = A(t){(1+r)} - A(t) = r A(t)$$"
+
+# ╔═╡ d611df84-73f3-11eb-31d5-53a466ab55aa
+md"The analogous continuous growth equation is:"
+
+# ╔═╡ a426ec40-73e8-11eb-3492-57220b642f3d
+md"$$A(t) = A_0e^{+rt}$$"
+
+# ╔═╡ 313a4fcc-73f4-11eb-3b54-e9fad50c4135
+md"With the corresponding (continuous time) differential equation"
+
+# ╔═╡ 13923c60-73e9-11eb-0dba-f597850cfc1d
+md"$$\frac{dA(t)}{dt} = r A(t)$$"
+
+# ╔═╡ 44ea15b6-73f4-11eb-35eb-dd50ae9b24b1
+md"### Expectations"
+
+# ╔═╡ 57278356-73f4-11eb-39e5-1de38470af7a
+md"The expectation of a continuous random variable with probability density function $f(x)$ is defined as the integral, where possible observations x are weighted by their probability density:"
+
+# ╔═╡ 6736b886-73ea-11eb-21f0-4db431d4cbca
+md"$$E(X) = \int_\inf x f(x) dx$$"
+
+# ╔═╡ 78d9774a-73f4-11eb-39f8-c5c657ff4e17
+
+
+# ╔═╡ 2adeedbc-73eb-11eb-3042-67659cccf61c
+md"""The important features of the probability density function are non-negativity ($f(x)\ge 0$) and that the total probability density must be 1.0:
+"""
+
+# ╔═╡ 09fefab0-73f5-11eb-198c-ffa95ba77565
+md"$$\int_{-\infty}^{+\infty} f(x) dx = 1$$"
+
+# ╔═╡ 487ac29c-73f5-11eb-1d39-893544c09124
+md"The expectation of a discrete random variable $\tilde X$ with popssible values $x_i$ each with probability $p_i$ is defined as the probability-weighted sum, where possible observations $x_i$ are weighted by their probabilitie:"
+
+# ╔═╡ 9d4fdbf2-73ea-11eb-1788-83d882e68681
+md"$$E(\tilde X) = \sum_{i=1}^N x_i p_i$$"
+
+# ╔═╡ 9d68af94-73f5-11eb-1ca8-757c4869b1ed
+md"And the discrete probabilities must each be non-negative ($p_i \ge 0.0 \forall i$) and sum to 1.0:"
+
+# ╔═╡ 44c03466-73eb-11eb-0d51-d568de70f72b
+md"$$\sum_{i=1}^N p_i = 1.0$$"
+
+# ╔═╡ cdcc0096-73f5-11eb-107d-719e2fcd9c31
+md"Importantly/usefully, Expectation is a linear operator (additive constants $a$ just add to the expectation, and multiplicative constants $b$ just multiply it):"
+
+# ╔═╡ e3818dbc-73ea-11eb-0257-6d2225423c17
+md"$$E[a + b X] = a + b E[X]$$"
+
+# ╔═╡ fc617486-73f5-11eb-3901-db923b9458d1
+md"The expectation of a product of 2 random variables is the product of their expectations, _if_ they are independent:"
+
+# ╔═╡ 5945b654-73eb-11eb-3eac-49a2efbb1a81
+md"$$E[\tilde X \cdot \tilde Y] = E[\tilde X] E[\tilde Y]$$ iff independent"
+
+# ╔═╡ dadae716-73eb-11eb-3b75-d93bdda88fb1
+let
+	t = 0:1:100
+	# y = sin.(t)
+	r = 0.02
+	
+	z(time) = exp(r*time)
+	zz(t) = (1+r)^t
+	y = z.(t)
+	yy = zz.(t)
+	p = plot(t,y, label = "continuous")
+	plot!(p, t,yy, label = "discrete")
+end
+
+# ╔═╡ f78b16be-73ec-11eb-1bba-43ce6d1eb5b6
+let
+	t = 0:1:100
+	# y = sin.(t)
+	r = 0.02
+	
+	z(time) = exp(r*time)
+	zz(t) = (1+r)^t
+	y = z.(t)
+	yy = zz.(t)
+	p = plot(t,y, label = "continuous")
+	pp = plot(t,yy, label = "discrete")
+	plot(p, pp)
+end
+
 # ╔═╡ 181e156c-0970-11eb-0b77-49b143cc0fc0
 md"""
 
@@ -367,18 +481,10 @@ function trajectory(w::Coordinate, n::Int, L::Number)
 
 	# accumulate, but must both add and "reflect" (bound) at each step
 	
-	# reflective_sum(x, y) = collide_boundary(x+y, L)
-	# reflective_sum = collide_boundary(, L) ∘ +
-	# path = accumulate(reflective_sum, delta_x, init=w)
+	reflective_sum(x, y) = collide_boundary(x+y, L)
+	# reflective_sum = collide_boundary(, L) ∘ + # does not work
+	path = accumulate(reflective_sum, delta_x, init=w)
 
-	# use loop since not sure how to specify accumulate op for sum & reflect
-	currpt = w
-	path = [currpt] # starting point
-	for pt in delta_x
-		currpt = collide_boundary(currpt + pt, L) # next point with delta_x and bounded
-		push!(path, currpt)
-	end
-		
 	return path
 end
 
@@ -417,7 +523,8 @@ end
 
 # ╔═╡ 5690f57e-73c1-11eb-3c81-29dd31a1ed37
 # ??? Why does this fail? Is it a namespace/scoping problem for currpt
-begin
+# Warning: only happens with begin- end
+function testfoo(L)
 	steps = rand(possible_moves, 5)
 	
 	currpt = Coordinate(0,0)
@@ -428,8 +535,11 @@ begin
 		push!(path, currpt)
 	end
 
-
+	path
 end
+
+# ╔═╡ e5f9cd58-73f1-11eb-2b2e-5b8e22dab523
+testfoo(6)
 
 # ╔═╡ 7e75b27c-72ff-11eb-36c2-c30458d8219d
 # Test of bounded trajectory, with "collide_boundary" at square radius 5 
@@ -459,10 +569,48 @@ Let's define a type `Agent`. `Agent` contains a `position` (of type `Coordinate`
 
 # ╔═╡ cf2f3b98-09a0-11eb-032a-49cc8c15e89c
 # define agent struct here:
-struct Agent
-	position::Coordinate
-	status::InfectionStatus
-	num_infected::Int64
+begin
+	
+	mutable struct Agent
+		position::Coordinate
+		status::InfectionStatus
+		num_infected::Int64
+		num_interactions::Int64
+	end
+	
+	Agent() = Agent(Coordinate(0,0), S, 0, 0) # basic constructor
+	Agent(stat::InfectionStatus) = Agent(Coordinate(0,0), stat, 0, 0)
+end
+
+# ╔═╡ b0f78890-73c9-11eb-357c-4368669e3e3b
+# utility functions for Agents
+begin
+	# Write functions `set_status!(a)` and `set_num_infected!(a)` which modify the respective fields of an `Agent`.
+
+	function set_status!(agent::Agent, new_status::InfectionStatus)
+		agent.status = new_status
+	end
+
+	function set_num_infected!(agent::Agent, new_num::Int64)
+		agent.num_infected = new_num
+	end
+
+	function is_susceptible(agent::Agent)
+		return agent.status == S
+	end
+
+	function is_infected(agent::Agent)
+		return agent.status == I
+	end
+
+	"""
+	 	bernoulli(p)
+	
+	returns `true` with probability `p` and `false` with probability `(1 - p)`.
+	"""
+	function bernoulli(p::Number)	
+		return rand() < p
+	end
 end
 
 # ╔═╡ 814e888a-0954-11eb-02e5-0964c7410d30
@@ -473,14 +621,27 @@ md"""
 It returns a `Vector` of `N` randomly generated `Agent`s. Their coordinates are randomly sampled in the ``[-L,L] \times [-L,L]`` box, and the agents are all susceptible, except one, chosen at random, which is infectious.
 """
 
+# ╔═╡ 6e266dc4-73c7-11eb-331a-257c039be666
+# Example Agent initialization
+Agent(Coordinate(rand(-5:5),rand(-5:5)), S, 0, 0)
+
 # ╔═╡ 0cfae7ba-0a69-11eb-3690-d973d70e47f4
-# function initialize(N::Number, L::Number)
-	
-# 	return missing
-# end
+"""
+	initialize(N::Number, L::Number)
+
+Initializes a population of SIR `Agents`.
+Returns a Vector of `N` randomly generated `Agents`. 
+Their coordinates are randomly sampled in the `[-L,L] x [-L,L]` box, 
+and the agents are all susceptible, except one, chosen at random, which is infectious.
+"""
+function initialize(N::Number, L::Number)
+	pop = [Agent(Coordinate(rand(-L:L),rand(-L:L)), S, 0, 0) for n in 1:N]
+	pop[rand(1:N)].status = I # infect 1
+	return pop
+end
 
 # ╔═╡ 1d0f8eb4-0a46-11eb-38e7-63ecbadbfa20
-# initialize(3, 10)
+initialize(3, 10)
 
 # ╔═╡ e0b0880c-0a47-11eb-0db2-f760bbbf9c11
 # Color based on infection status
@@ -493,10 +654,10 @@ else
 end
 
 # ╔═╡ b5a88504-0a47-11eb-0eda-f125d419e909
-# position(a::Agent) = a.position # uncomment this line
+position(a::Agent) = a.position # uncomment this line
 
 # ╔═╡ 87a4cdaa-0a5a-11eb-2a5e-cfaf30e942ca
-# color(a::Agent) = color(a.status) # uncomment this line
+color(a::Agent) = color(a.status) # uncomment this line
 
 # ╔═╡ 49fa8092-0a43-11eb-0ba9-65785ac6a42f
 md"""
@@ -506,17 +667,43 @@ md"""
 You can use the keyword argument `c=color.(agents)` inside your call to the plotting function make the point colors correspond to the infection statuses. Don't forget to use `ratio=1`.
 """
 
+# ╔═╡ bf5718b2-73cc-11eb-3208-d386a4e2476b
+make_tuple.(position.(initialize(3,10)))
+
 # ╔═╡ 1ccc961e-0a69-11eb-392b-915be07ef38d
-# function visualize(agents::Vector, L)
-	
-# 	return missing
-# end
+"""
+	visualize(agents::Vector, L)
+
+takes a collection (Vector) of `agents` and the box size `L`,
+and plots a point for each agent at its location,
+coloured according to its status.
+"""
+function visualize(agents::Vector, L)
+	# keyword argument `c=color.(agents)` inside call to the plotting function make the point colors correspond to the infection statuses. 
+
+	# Don't forget to use `ratio=1`.
+	p = plot(ratio=1)
+
+	plot!(p, make_tuple.(position.(agents)),
+		seriestype = :scatter,
+		title = "My SIR Friends",
+		label=nothing,
+		c=color.(agents),
+		linewidth=2, # irrelevant for scatterplot
+		xlabel = "Position 1",
+		ylabel = "Position 2",
+		xlims = (-L,L),
+		ylims = (-L,L)
+		# linealpha=LinRange(1.0, 0.2, length(trajectory))
+		)
+	return p
+end
 
 # ╔═╡ 1f96c80a-0a46-11eb-0690-f51c60e57c3f
 let
 	N = 20
 	L = 10
-#	visualize(initialize(N, L), L) # uncomment this line!
+	visualize(initialize(N, L), L) # uncomment this line!
 end
 
 # ╔═╡ f953e06e-099f-11eb-3549-73f59fed8132
@@ -547,10 +734,39 @@ Write a function `interact!` that takes two `Agent`s and a `CollisionInfectionRe
 - if the first agent is infectious, it recovers with some probability
 """
 
+# ╔═╡ 2bafa020-73d1-11eb-3f61-2120861ee90a
+bernoulli(0.2)
+
 # ╔═╡ d1bcd5c4-0a4b-11eb-1218-7531e367a7ff
-#function interact!(agent::Agent, source::Agent, infection::CollisionInfectionRecovery)
-	#missing
-#end
+"""
+	interact!(agent::Agent, source::Agent, infection::CollisionInfectionRecovery)
+
+Takes an affected `agent` and `source`, both of type `Agent` and an `infection` of type `CollisionInfectionRecovery`.
+It implements a single (one-sided) interaction between two agents: 
+
+- If the `agent` is susceptible and the `source` is infectious, then the `source` infects our `agent` with the given infection probability. If the `source` successfully infects the other agent, then its `num_infected` record must be updated.
+- If the `agent` is infected then it recovers with the relevant probability.
+- Otherwise, nothing happens.
+"""
+function interact!(agent::Agent, source::Agent, infection::CollisionInfectionRecovery)
+	if agent.position == source.position # no interaction unless at same location
+		agent.num_interactions += 1
+		source.num_interactions += 1
+		if is_susceptible(agent) && is_infected(source)
+
+			if bernoulli(infection.p_infection)			
+				agent.status = I # set_status!(agent) = I
+				source.num_infected += 1 # count how many infected
+			end
+			# elseif is_infected(agent) # ???		
+		else
+			# recover only of interact and possible transmission
+			if bernoulli(infection.p_recovery)
+				agent.status = R # set_status!(agent) = R
+			end
+		end
+	end
+end
 
 # ╔═╡ 34778744-0a5f-11eb-22b6-abe8b8fc34fd
 md"""
@@ -568,11 +784,54 @@ Your turn!
 - return the array `agents` again.
 """
 
+# ╔═╡ 67b7a0b4-73d5-11eb-20e1-238933831c47
+rand(possible_moves)
+
+# ╔═╡ 0fdb9e86-73d5-11eb-208e-5df5441cd883
+function move_agent_one_step(agent::Agent, L)
+	move = rand(possible_moves) # this is single coordinate, rand(x, 1) is an array
+	agent.position = collide_boundary(agent.position + move, L) # bounded move
+	# return(agent) # not needed given passed agent by reference
+end
+
+
 # ╔═╡ 24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
-# function step!(agents::Vector, L::Number, infection::AbstractInfection)
-	
-# 	return missing
-# end
+"""
+	step!(agents::Vector, L::Number, infection::AbstractInfection)
+
+takes `agents` vector of Agents and an infection of type InfectionRecovery.
+Implements a single step of the infection dynamics as follows:
+
+- Choose a `source` Agent at random.
+- Move the `source` one step, and use `collide_boundary` to ensure that agent stays within the box.
+- For all _other_ agents, call `interact!(other_agent, source, infection)`.
+- return the array `agents` again.
+"""
+function step!(agents::Vector, L::Number, infection::AbstractInfection)
+# function step!(agents::Vector{Agent}, L::Number, infection::AbstractInfection)
+	source = rand(agents) # Choose a `source` Agent at random.
+	# Move the `source` one step
+	move_agent_one_step(source, L)
+	for agent in agents
+		if (agent != source) # does this work if two identical agents are at same place: yes if they are diff struct
+			interact!(agent, source, infection)
+		end
+	end
+	return agents
+end
+
+# ╔═╡ 35c43e5a-73ee-11eb-10be-67ec7440d460
+let
+	s = Agent()
+	t = Agent()
+	u = s
+	s.position == t.position
+	w = deepcopy(s)
+	w == s
+end
+
+# ╔═╡ cd7d9034-73ee-11eb-0cac-c989e4002940
+
 
 # ╔═╡ 1fc3271e-0a45-11eb-0e8d-0fd355f5846b
 md"""
@@ -591,22 +850,84 @@ plot(plot_before, plot_after)
 ```
 """
 
+# ╔═╡ 5d45d5aa-73d6-11eb-35b1-45107b1b1928
+"""
+	sweep!(agents::Vector{Agent},  L::Number, infection::AbstractInfection)
+
+Runs `step!`  times, where  is the number of agents.
+Returns updated population
+"""
+function sweep!(agents::Vector{Agent},  L::Number, infection::AbstractInfection)
+	for n = 1:length(agents)
+		step!(agents, L, infection)
+	end
+end
+
+# ╔═╡ 4e5592ce-73d6-11eb-0086-7db6559c0cd6
+"""
+	simulation(N::Integer, L::Number, T::Integer, infection::AbstractInfection)
+
+- Generates the `N` agents, one infected, in the box of side `2L+1`.
+- Run `sweep!` a number `T` of times. Calculate and store the total number of agents with each status at each step in variables S_counts, I_counts and R_counts.
+- Return the vectors S_counts, I_counts and R_counts in a named tuple, with keys `S, I, R)`.
+"""
+function simulation(N::Integer,  L::Number, T::Integer, infection::AbstractInfection)
+	agents = initialize(N, L)
+	S_counts = []
+	I_counts = []
+	R_counts = []
+	X_counts = [] # number of interactions
+	
+	# your code here
+	for i in 1:T
+		sweep!(agents, L, infection)
+		push!(S_counts, sum([is_susceptible(agent) for agent in agents]))
+		push!(I_counts, sum([is_infected(agent) for agent in agents]))
+		push!(R_counts, N - S_counts[i] - I_counts[i])
+		push!(X_counts, sum([agent.num_interactions for agent in agents]))
+	end
+	return (S=S_counts, I=I_counts, R=R_counts, X=X_counts)
+end
+
+
 # ╔═╡ 18552c36-0a4d-11eb-19a0-d7d26897af36
 pandemic = CollisionInfectionRecovery(0.5, 0.00001)
 
-# ╔═╡ 4e7fd58a-0a62-11eb-1596-c717e0845bd5
-@bind k_sweeps Slider(1:10000, default=1000)
+# ╔═╡ 1bac88b2-73dd-11eb-059e-e9bcb002aeeb
+md"Select p: $(@bind p_interactive Slider(0.01:0.01:1.0; default=0.01, show_value=true))"
+
+# ╔═╡ adef838a-73dd-11eb-34a7-47654619efef
+md"Select num sweeps: $(@bind k_sweeps Slider(1:10000; default=1000, show_value=true))"
+
+# ╔═╡ eb10e374-73d7-11eb-3b15-c984b62e2384
+let
+	N = 50
+ 	L = 40
+	T = k_sweeps
+	sim = simulation(N, L, T, pandemic)
+	
+	result = plot(1:T, sim.S, ylim=(0, N), label="Susceptible")
+	plot!(result, 1:T, sim.I, ylim=(0, N), label="Infectious")
+	plot!(result, 1:T, sim.R, ylim=(0, N), label="Recovered")
+	plot!(result, 1:T, sim.X/N, ylim=(0, N), label="Interactions/person")
+	
+end
 
 # ╔═╡ 778c2490-0a62-11eb-2a6c-e7fab01c6822
-# let
-# 	N = 50
-# 	L = 40
+let
+	N = 50
+ 	L = 40
 	
-# 	plot_before = plot(1:3) # replace with your code
-# 	plot_after = plot(1:3)
+	agents = initialize(N, L)
+ 	plot_before = visualize(agents::Vector, L)
 	
-# 	plot(plot_before, plot_after)
-# end
+	for i in 1:k_sweeps
+		sweep!(agents, L, pandemic)
+	end	
+	plot_after = visualize(agents::Vector, L)
+	
+	plot(plot_before, plot_after)
+end
 
 # ╔═╡ e964c7f0-0a61-11eb-1782-0b728fab1db0
 md"""
@@ -625,8 +946,16 @@ let
 	N = 50
 	L = 30
 	
-	# agents = initialize(N, L)
+	T = k_sweep_max
+	# initialize agents (initialize(N, L)) and
 	# compute k_sweep_max number of sweeps and plot the SIR
+	sim = simulation(N, L, T, pandemic)
+	
+	result = plot(1:T, sim.S, ylim=(0, N), label="Susceptible")
+	plot!(result, 1:T, sim.I, ylim=(0, N), label="Infectious")
+	plot!(result, 1:T, sim.R, ylim=(0, N), label="Recovered")
+	plot!(result, 1:T, sim.X/N, ylim=(0, N), label="Interactions/person")
+	
 end
 
 # ╔═╡ 201a3810-0a45-11eb-0ac9-a90419d0b723
@@ -656,13 +985,27 @@ md"""
 """
 
 # ╔═╡ 63dd9478-0a45-11eb-2340-6d3d00f9bb5f
-causes_outbreak = CollisionInfectionRecovery(0.5, 0.001)
+causes_outbreak = CollisionInfectionRecovery(0.04, 0.001)
 
 # ╔═╡ 269955e4-0a46-11eb-02cc-1946dc918bfa
-does_not_cause_outbreak = CollisionInfectionRecovery(0.5, 0.001)
+does_not_cause_outbreak = CollisionInfectionRecovery(0.01, 0.001)
 
 # ╔═╡ 4d4548fe-0a66-11eb-375a-9313dc6c423d
-
+let
+	N = 50
+	L = 30
+	
+	T = k_sweep_max
+	# initialize agents (initialize(N, L)) and
+	# compute k_sweep_max number of sweeps and plot the SIR
+	sim = simulation(N, L, T, causes_outbreak)
+	
+	result = plot(1:T, sim.S, ylim=(0, N), label="Susceptible")
+	plot!(result, 1:T, sim.I, ylim=(0, N), label="Infectious")
+	plot!(result, 1:T, sim.R, ylim=(0, N), label="Recovered")
+	plot!(result, 1:T, sim.X/N, ylim=(0, N), label="Interactions/person")
+	
+end
 
 # ╔═╡ 20477a78-0a45-11eb-39d7-93918212a8bc
 md"""
@@ -671,11 +1014,50 @@ md"""
 """
 
 # ╔═╡ 601f4f54-0a45-11eb-3d6c-6b9ec75c6d4a
+"""
+	repeat_simulations(N, L, T, infection, num_simulations)
 
+N = pop size
+L = dimension
+T = (time) iterations
+	
+"""
+function repeat_simulations(N, L, T, infection, num_simulations)
+	map(1:num_simulations) do _
+		simulation(N, L, T, infection)
+	end
+end
+
+
+# ╔═╡ 2e444a22-73e3-11eb-07ab-970a5c59e008
+simulations = repeat_simulations(50, 40, 1000, pandemic, 50)
+
+# ╔═╡ 5f5aa2b4-73e3-11eb-2088-dd733d084586
+begin
+	#T = length(first(simulations).I) # 
+	#N = length(simulations)
+	totI = zeros(length(first(simulations).I)) # init array for number of iterations
+	for sim in simulations
+		totI = totI .+ sim.I
+	end
+	aveI = totI ./ length(simulations) # to get average divide by num simulations
+end
+
+# ╔═╡ 218e569c-73e3-11eb-1cb9-4fa912eef6c9
+let
+	p = plot()
+	
+	for sim in simulations
+		plot!(p, 1:1000, sim.I, alpha=.5, label=nothing)
+	end
+	
+	plot!(p, 1:1000, aveI, label="Mean I", lw=3)
+	p
+end
 
 # ╔═╡ b1b1afda-0a66-11eb-2988-752405815f95
 need_different_parameters_because = md"""
-i say so
+The spatial representation implies less contagion than full-mizing-
 """
 
 # ╔═╡ 05c80a0c-09a0-11eb-04dc-f97e306f1603
@@ -1049,15 +1431,45 @@ bigbreak
 # ╟─19fe1ee8-0970-11eb-2a0d-7d25e7d773c6
 # ╟─1bba5552-0970-11eb-1b9a-87eeee0ecc36
 # ╟─49567f8e-09a2-11eb-34c1-bb5c0b642fe8
-# ╟─181e156c-0970-11eb-0b77-49b143cc0fc0
+# ╠═ffb5a526-73e6-11eb-25ff-017cea96b3dd
+# ╠═b50c8f26-73e6-11eb-128b-c34ba3b91ca0
+# ╠═ec340396-73f3-11eb-0311-6d75d4ce2e5b
+# ╠═777fccec-73f3-11eb-3727-ada098475e56
+# ╠═69c5e8da-73e8-11eb-035a-e9e896ec9d1b
+# ╠═48f20160-73e9-11eb-3f5a-837134d9c669
+# ╠═9c7ee6fe-73f3-11eb-39e2-5f001d3ac7d6
+# ╠═a2c57c58-73e9-11eb-134c-a754271920d8
+# ╠═ad8a9880-73f3-11eb-05b3-4d68e630c806
+# ╠═efdccf28-73e9-11eb-05c0-4b679ead8340
+# ╠═d611df84-73f3-11eb-31d5-53a466ab55aa
+# ╠═a426ec40-73e8-11eb-3492-57220b642f3d
+# ╠═313a4fcc-73f4-11eb-3b54-e9fad50c4135
+# ╠═13923c60-73e9-11eb-0dba-f597850cfc1d
+# ╠═44ea15b6-73f4-11eb-35eb-dd50ae9b24b1
+# ╠═57278356-73f4-11eb-39e5-1de38470af7a
+# ╠═6736b886-73ea-11eb-21f0-4db431d4cbca
+# ╠═78d9774a-73f4-11eb-39f8-c5c657ff4e17
+# ╠═2adeedbc-73eb-11eb-3042-67659cccf61c
+# ╠═09fefab0-73f5-11eb-198c-ffa95ba77565
+# ╠═487ac29c-73f5-11eb-1d39-893544c09124
+# ╠═9d4fdbf2-73ea-11eb-1788-83d882e68681
+# ╠═9d68af94-73f5-11eb-1ca8-757c4869b1ed
+# ╠═44c03466-73eb-11eb-0d51-d568de70f72b
+# ╠═cdcc0096-73f5-11eb-107d-719e2fcd9c31
+# ╠═e3818dbc-73ea-11eb-0257-6d2225423c17
+# ╠═fc617486-73f5-11eb-3901-db923b9458d1
+# ╠═5945b654-73eb-11eb-3eac-49a2efbb1a81
+# ╠═dadae716-73eb-11eb-3b75-d93bdda88fb1
+# ╠═f78b16be-73ec-11eb-1bba-43ce6d1eb5b6
+# ╠═181e156c-0970-11eb-0b77-49b143cc0fc0
 # ╠═1f299cc6-0970-11eb-195b-3f951f92ceeb
-# ╟─2848996c-0970-11eb-19eb-c719d797c322
+# ╠═2848996c-0970-11eb-19eb-c719d797c322
 # ╠═2b37ca3a-0970-11eb-3c3d-4f788b411d1a
 # ╠═2dcb18d0-0970-11eb-048a-c1734c6db842
-# ╟─69d12414-0952-11eb-213d-2f9e13e4b418
-# ╟─fcafe15a-0a66-11eb-3ed7-3f8bbb8f5809
-# ╟─3e54848a-0954-11eb-3948-f9d7f07f5e23
-# ╟─3e623454-0954-11eb-03f9-79c873d069a0
+# ╠═69d12414-0952-11eb-213d-2f9e13e4b418
+# ╠═fcafe15a-0a66-11eb-3ed7-3f8bbb8f5809
+# ╠═3e54848a-0954-11eb-3948-f9d7f07f5e23
+# ╠═3e623454-0954-11eb-03f9-79c873d069a0
 # ╠═0ebd35c8-0972-11eb-2e67-698fd2d311d2
 # ╟─027a5f48-0a44-11eb-1fbf-a94d02d0b8e3
 # ╠═b2f90634-0a68-11eb-1618-0b42f956b5a7
@@ -1093,31 +1505,44 @@ bigbreak
 # ╠═b4ed2362-09a0-11eb-0be9-99c91623b28f
 # ╠═0665aa3e-0a69-11eb-2b5d-cd718e3c7432
 # ╠═5690f57e-73c1-11eb-3c81-29dd31a1ed37
+# ╠═e5f9cd58-73f1-11eb-2b2e-5b8e22dab523
 # ╠═7e75b27c-72ff-11eb-36c2-c30458d8219d
 # ╟─ed2d616c-0a66-11eb-1839-edf8d15cf82a
 # ╟─3ed06c80-0954-11eb-3aee-69e4ccdc4f9d
 # ╠═35537320-0a47-11eb-12b3-931310f18dec
 # ╠═cf2f3b98-09a0-11eb-032a-49cc8c15e89c
+# ╠═b0f78890-73c9-11eb-357c-4368669e3e3b
 # ╟─814e888a-0954-11eb-02e5-0964c7410d30
+# ╠═6e266dc4-73c7-11eb-331a-257c039be666
 # ╠═0cfae7ba-0a69-11eb-3690-d973d70e47f4
 # ╠═1d0f8eb4-0a46-11eb-38e7-63ecbadbfa20
 # ╟─4fac0f36-0a59-11eb-03d0-632dc9db063a
 # ╠═e0b0880c-0a47-11eb-0db2-f760bbbf9c11
 # ╠═b5a88504-0a47-11eb-0eda-f125d419e909
 # ╠═87a4cdaa-0a5a-11eb-2a5e-cfaf30e942ca
-# ╟─49fa8092-0a43-11eb-0ba9-65785ac6a42f
+# ╠═49fa8092-0a43-11eb-0ba9-65785ac6a42f
+# ╠═bf5718b2-73cc-11eb-3208-d386a4e2476b
 # ╠═1ccc961e-0a69-11eb-392b-915be07ef38d
 # ╠═1f96c80a-0a46-11eb-0690-f51c60e57c3f
-# ╟─f953e06e-099f-11eb-3549-73f59fed8132
+# ╠═f953e06e-099f-11eb-3549-73f59fed8132
 # ╠═e6dd8258-0a4b-11eb-24cb-fd5b3554381b
 # ╠═de88b530-0a4b-11eb-05f7-85171594a8e8
-# ╟─80f39140-0aef-11eb-21f7-b788c5eab5c9
+# ╠═80f39140-0aef-11eb-21f7-b788c5eab5c9
+# ╠═2bafa020-73d1-11eb-3f61-2120861ee90a
 # ╠═d1bcd5c4-0a4b-11eb-1218-7531e367a7ff
 # ╟─34778744-0a5f-11eb-22b6-abe8b8fc34fd
+# ╠═67b7a0b4-73d5-11eb-20e1-238933831c47
+# ╠═0fdb9e86-73d5-11eb-208e-5df5441cd883
 # ╠═24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
+# ╠═35c43e5a-73ee-11eb-10be-67ec7440d460
+# ╠═cd7d9034-73ee-11eb-0cac-c989e4002940
 # ╟─1fc3271e-0a45-11eb-0e8d-0fd355f5846b
-# ╟─18552c36-0a4d-11eb-19a0-d7d26897af36
-# ╠═4e7fd58a-0a62-11eb-1596-c717e0845bd5
+# ╠═5d45d5aa-73d6-11eb-35b1-45107b1b1928
+# ╠═4e5592ce-73d6-11eb-0086-7db6559c0cd6
+# ╠═eb10e374-73d7-11eb-3b15-c984b62e2384
+# ╠═18552c36-0a4d-11eb-19a0-d7d26897af36
+# ╠═1bac88b2-73dd-11eb-059e-e9bcb002aeeb
+# ╠═adef838a-73dd-11eb-34a7-47654619efef
 # ╠═778c2490-0a62-11eb-2a6c-e7fab01c6822
 # ╟─e964c7f0-0a61-11eb-1782-0b728fab1db0
 # ╠═4d83dbd0-0a63-11eb-0bdc-757f0e721221
@@ -1132,6 +1557,9 @@ bigbreak
 # ╠═4d4548fe-0a66-11eb-375a-9313dc6c423d
 # ╟─20477a78-0a45-11eb-39d7-93918212a8bc
 # ╠═601f4f54-0a45-11eb-3d6c-6b9ec75c6d4a
+# ╠═2e444a22-73e3-11eb-07ab-970a5c59e008
+# ╠═5f5aa2b4-73e3-11eb-2088-dd733d084586
+# ╠═218e569c-73e3-11eb-1cb9-4fa912eef6c9
 # ╠═b1b1afda-0a66-11eb-2988-752405815f95
 # ╟─e84e0944-0a66-11eb-12d3-e12ae10f39a6
 # ╟─05c80a0c-09a0-11eb-04dc-f97e306f1603
