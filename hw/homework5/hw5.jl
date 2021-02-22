@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -62,120 +62,6 @@ if(numbers[0] > 0 || numbers[1] > 12 || numbers[2] > 1) {
 
 """
 
-# ╔═╡ 88d786a8-73f6-11eb-0540-33c0e3286eb3
-md"### Discrete-time change Geometric growth models and Continuous-time change Exponential models - close analogs"
-
-# ╔═╡ ffb5a526-73e6-11eb-25ff-017cea96b3dd
-md"Consider a discrete-time model with geometric growth rate at `r1` fraction per unit time `t`"
-
-# ╔═╡ b50c8f26-73e6-11eb-128b-c34ba3b91ca0
-md"""$${(1+r)^t}$$"""
-
-# ╔═╡ ec340396-73f3-11eb-0311-6d75d4ce2e5b
-md"where each period the multiplicative factor $(1+r)$ is applied."
-
-# ╔═╡ 777fccec-73f3-11eb-3727-ada098475e56
-md"The discrete time multiperiod growth, from time 0 to t is"
-
-# ╔═╡ 69c5e8da-73e8-11eb-035a-e9e896ec9d1b
-md"$$A(t) = A_0 {(1+r)^t}, \forall t \in 1...T$$"
-
-# ╔═╡ 9c7ee6fe-73f3-11eb-39e2-5f001d3ac7d6
-md"So the single step discrete equation is:"
-
-# ╔═╡ a2c57c58-73e9-11eb-134c-a754271920d8
-md"$$A(t+1) = A(t){(1+r)}$$"
-
-# ╔═╡ ad8a9880-73f3-11eb-05b3-4d68e630c806
-md"And the period-to-period change equation, or _difference equation_, is"
-
-# ╔═╡ efdccf28-73e9-11eb-05c0-4b679ead8340
-md"$$\delta A(t) = A(t+1) - A(t) = A(t){(1+r)} - A(t) = r A(t)$$"
-
-# ╔═╡ d611df84-73f3-11eb-31d5-53a466ab55aa
-md"The analogous continuous growth equation is:"
-
-# ╔═╡ a426ec40-73e8-11eb-3492-57220b642f3d
-md"$$A(t) = A_0e^{+rt}$$"
-
-# ╔═╡ 313a4fcc-73f4-11eb-3b54-e9fad50c4135
-md"With the corresponding (continuous time) differential equation"
-
-# ╔═╡ 13923c60-73e9-11eb-0dba-f597850cfc1d
-md"$$\frac{dA(t)}{dt} = r A(t)$$"
-
-# ╔═╡ 44ea15b6-73f4-11eb-35eb-dd50ae9b24b1
-md"### Expectations"
-
-# ╔═╡ 57278356-73f4-11eb-39e5-1de38470af7a
-md"The expectation of a continuous random variable with probability density function $f(x)$ is defined as the integral, where possible observations x are weighted by their probability density:"
-
-# ╔═╡ 6736b886-73ea-11eb-21f0-4db431d4cbca
-md"$$E(X) = \int_\inf x f(x) dx$$"
-
-# ╔═╡ 78d9774a-73f4-11eb-39f8-c5c657ff4e17
-
-
-# ╔═╡ 2adeedbc-73eb-11eb-3042-67659cccf61c
-md"""The important features of the probability density function are non-negativity ($f(x)\ge 0$) and that the total probability density must be 1.0:
-"""
-
-# ╔═╡ 09fefab0-73f5-11eb-198c-ffa95ba77565
-md"$$\int_{-\infty}^{+\infty} f(x) dx = 1$$"
-
-# ╔═╡ 487ac29c-73f5-11eb-1d39-893544c09124
-md"The expectation of a discrete random variable $\tilde X$ with popssible values $x_i$ each with probability $p_i$ is defined as the probability-weighted sum, where possible observations $x_i$ are weighted by their probabilitie:"
-
-# ╔═╡ 9d4fdbf2-73ea-11eb-1788-83d882e68681
-md"$$E(\tilde X) = \sum_{i=1}^N x_i p_i$$"
-
-# ╔═╡ 9d68af94-73f5-11eb-1ca8-757c4869b1ed
-md"And the discrete probabilities must each be non-negative ($p_i \ge 0.0 \forall i$) and sum to 1.0:"
-
-# ╔═╡ 44c03466-73eb-11eb-0d51-d568de70f72b
-md"$$\sum_{i=1}^N p_i = 1.0$$"
-
-# ╔═╡ cdcc0096-73f5-11eb-107d-719e2fcd9c31
-md"Importantly/usefully, Expectation is a linear operator (additive constants $a$ just add to the expectation, and multiplicative constants $b$ just multiply it):"
-
-# ╔═╡ e3818dbc-73ea-11eb-0257-6d2225423c17
-md"$$E[a + b X] = a + b E[X]$$"
-
-# ╔═╡ fc617486-73f5-11eb-3901-db923b9458d1
-md"The expectation of a product of 2 random variables is the product of their expectations, _if_ they are independent:"
-
-# ╔═╡ 5945b654-73eb-11eb-3eac-49a2efbb1a81
-md"$$E[\tilde X \cdot \tilde Y] = E[\tilde X] E[\tilde Y]$$ iff independent"
-
-# ╔═╡ dadae716-73eb-11eb-3b75-d93bdda88fb1
-let
-	t = 0:1:100
-	# y = sin.(t)
-	r = 0.02
-	
-	z(time) = exp(r*time)
-	zz(t) = (1+r)^t
-	y = z.(t)
-	yy = zz.(t)
-	p = plot(t,y, label = "continuous")
-	plot!(p, t,yy, label = "discrete")
-end
-
-# ╔═╡ f78b16be-73ec-11eb-1bba-43ce6d1eb5b6
-let
-	t = 0:1:100
-	# y = sin.(t)
-	r = 0.02
-	
-	z(time) = exp(r*time)
-	zz(t) = (1+r)^t
-	y = z.(t)
-	yy = zz.(t)
-	p = plot(t,y, label = "continuous")
-	pp = plot(t,yy, label = "discrete")
-	plot(p, pp)
-end
-
 # ╔═╡ 181e156c-0970-11eb-0b77-49b143cc0fc0
 md"""
 
@@ -200,7 +86,7 @@ student = (name = "Paul Leiby", kerberos_id = "pleiby")
 # ╔═╡ 1bba5552-0970-11eb-1b9a-87eeee0ecc36
 md"""
 
-Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
+Submission by: **_$(student.name)_** ($(student.kerberos_id)@gmail.com)
 """
 
 # ╔═╡ 2848996c-0970-11eb-19eb-c719d797c322
@@ -1428,39 +1314,9 @@ bigbreak
 bigbreak
 
 # ╔═╡ Cell order:
-# ╟─19fe1ee8-0970-11eb-2a0d-7d25e7d773c6
+# ╠═19fe1ee8-0970-11eb-2a0d-7d25e7d773c6
 # ╟─1bba5552-0970-11eb-1b9a-87eeee0ecc36
 # ╟─49567f8e-09a2-11eb-34c1-bb5c0b642fe8
-# ╠═88d786a8-73f6-11eb-0540-33c0e3286eb3
-# ╠═ffb5a526-73e6-11eb-25ff-017cea96b3dd
-# ╠═b50c8f26-73e6-11eb-128b-c34ba3b91ca0
-# ╠═ec340396-73f3-11eb-0311-6d75d4ce2e5b
-# ╠═777fccec-73f3-11eb-3727-ada098475e56
-# ╠═69c5e8da-73e8-11eb-035a-e9e896ec9d1b
-# ╠═9c7ee6fe-73f3-11eb-39e2-5f001d3ac7d6
-# ╠═a2c57c58-73e9-11eb-134c-a754271920d8
-# ╠═ad8a9880-73f3-11eb-05b3-4d68e630c806
-# ╠═efdccf28-73e9-11eb-05c0-4b679ead8340
-# ╠═d611df84-73f3-11eb-31d5-53a466ab55aa
-# ╠═a426ec40-73e8-11eb-3492-57220b642f3d
-# ╠═313a4fcc-73f4-11eb-3b54-e9fad50c4135
-# ╠═13923c60-73e9-11eb-0dba-f597850cfc1d
-# ╠═44ea15b6-73f4-11eb-35eb-dd50ae9b24b1
-# ╠═57278356-73f4-11eb-39e5-1de38470af7a
-# ╠═6736b886-73ea-11eb-21f0-4db431d4cbca
-# ╠═78d9774a-73f4-11eb-39f8-c5c657ff4e17
-# ╠═2adeedbc-73eb-11eb-3042-67659cccf61c
-# ╠═09fefab0-73f5-11eb-198c-ffa95ba77565
-# ╠═487ac29c-73f5-11eb-1d39-893544c09124
-# ╠═9d4fdbf2-73ea-11eb-1788-83d882e68681
-# ╠═9d68af94-73f5-11eb-1ca8-757c4869b1ed
-# ╠═44c03466-73eb-11eb-0d51-d568de70f72b
-# ╠═cdcc0096-73f5-11eb-107d-719e2fcd9c31
-# ╠═e3818dbc-73ea-11eb-0257-6d2225423c17
-# ╠═fc617486-73f5-11eb-3901-db923b9458d1
-# ╠═5945b654-73eb-11eb-3eac-49a2efbb1a81
-# ╠═dadae716-73eb-11eb-3b75-d93bdda88fb1
-# ╠═f78b16be-73ec-11eb-1bba-43ce6d1eb5b6
 # ╠═181e156c-0970-11eb-0b77-49b143cc0fc0
 # ╠═1f299cc6-0970-11eb-195b-3f951f92ceeb
 # ╠═2848996c-0970-11eb-19eb-c719d797c322
