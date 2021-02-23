@@ -137,7 +137,19 @@ md"""In terms of random variables, where the random variable taking a particular
 md"$$P(X=x|Y=y) ~= \frac{P(X=x \cap Y=y)}{P(Y=y)}$$"
 
 # ╔═╡ 83facb26-7528-11eb-2c6f-230db4bb77f4
-md"We can see now from this general expression for conditional probability, that if the events, or random variable outcomes, are not conditionally dependent on one another, "
+md"We can see now from this general expression for conditional probability, that if the events, or random variable outcomes, are not conditionally dependent on one another, then"
+
+# ╔═╡ 774c925a-756a-11eb-39c3-4b75ffce7f63
+md"$$P(X=x|Y=y) ~= \frac{P(X=x \cap Y=y)}{P(Y=y)} = P(X=x)$$"
+
+# ╔═╡ 9470ba3c-756a-11eb-0069-d7972d5eb84b
+md"so the joint probability of $(X=x)$ and $(Y=y)$ is just the product of the probabilities of the two outcomes, when they are independent."
+
+# ╔═╡ 9a0bdc10-756a-11eb-1ae0-27a1aef6dc1d
+md"$${P(X=x \cap Y=y)} = P(X=x){P(Y=y)}$$"
+
+# ╔═╡ decaace6-756a-11eb-1376-5931ccc85041
+md"This can be used to prove that, for independent variables, the expectation of the product is the product of the expectations."
 
 # ╔═╡ f248b1d4-7522-11eb-10c8-350a98dde5cb
 md"### Basic (Quick) Graphics"
@@ -212,15 +224,19 @@ end
 # ╟─dd6a013c-7522-11eb-06bb-31845e283e36
 # ╟─e1bd8eac-7522-11eb-2696-d1566d1d4558
 # ╟─e75b16f4-7522-11eb-3549-8590966b6543
-# ╠═df448886-7524-11eb-1ac2-ed1a3d36460f
+# ╟─df448886-7524-11eb-1ac2-ed1a3d36460f
 # ╟─28337ef8-7525-11eb-3745-69d762f2a999
 # ╟─9231c26a-7525-11eb-14ba-c77412ebd36e
 # ╟─0d107c2e-7526-11eb-20e4-878c41535162
 # ╟─5908df76-7527-11eb-340d-777f2516a7dd
 # ╟─eaeea734-7527-11eb-08f0-1b74c6328b45
 # ╟─314e57bc-7528-11eb-25ec-250aab2acd85
-# ╠═8148dc40-7527-11eb-0491-5f4e4ce8c0ca
-# ╠═83facb26-7528-11eb-2c6f-230db4bb77f4
+# ╟─8148dc40-7527-11eb-0491-5f4e4ce8c0ca
+# ╟─83facb26-7528-11eb-2c6f-230db4bb77f4
+# ╟─774c925a-756a-11eb-39c3-4b75ffce7f63
+# ╟─9470ba3c-756a-11eb-0069-d7972d5eb84b
+# ╟─9a0bdc10-756a-11eb-1ae0-27a1aef6dc1d
+# ╟─decaace6-756a-11eb-1376-5931ccc85041
 # ╟─f248b1d4-7522-11eb-10c8-350a98dde5cb
 # ╟─73cbae82-7526-11eb-015e-e18d579b75c0
 # ╟─56897c96-7523-11eb-3198-c946bcd2d21f
