@@ -336,6 +336,66 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 - Ex 3.1 in `interact!`, infected source recovers only if interact and possible transmission, or only if interact??
 - In Ex 3.2 why did `set_status!` not work in `interact!`
 
+
+### Notes and Comments on HW6 (and associated lectures)
+#### In the Billiard Model and Event-driven Simulations Lecture (week 8)
+- Time stepping of dynamic physical models is inefficient, so look for next intersection/collision time of objects
+    - "Event" is a collision with a boundary
+    - **Event Driven Simulation**: simulation goes from event to event, rather then time step to time step. Time between events (and identity/nature of next event) is calculated.
+- formula for determining time of colliion between point-size particle with constant velocity (linear motion) and wall was very clever, with good intuitive insight (@10:14 in video)
+    - moving particle (point-sized object) with velocity $\bold v$ and initial position $\bold x_0$ has position at time $t$ of $\bold x(t) = \bold x_0 + t \bold v$
+    - a (hyper)plane $H$ going through point $\bold p$ with normal $\bold n$ can be described by 
+    $$H(\bold p, \bold n) = \{ \bold x: \bold x \cdot \bold n = c, ~where~ c = \bold p \cdot \bold n \}$$
+        - i.e. if point $\bold p$ lies on a plane with normal $\bold n$, then all other points on the plane satisfy $(\bold x - \bold p) \cdot \bold n = 0$ (the vector from $\bold p$ to $\bold x$ must be along the plane and therefor orthogonal to the normal)
+    - so we know that a moving particle on trajectory $\bold x(t)$ will collide with the plane $H$ (be on the plane) at time $t^*$ when it satisfies the condition for points on the plane $(\bold x(t^*) - \bold p) \cdot \bold n = 0$
+        - for a linear trajectory $\bold x(t) = \bold x_0 + t \bold v$ we can solve for collision time
+        $$(\bold x_0 + t^* \bold v - \bold p) \cdot \bold n = 0$$
+        - that is, solving for $t^*$:
+        $$\bold x_0 \cdot \bold n + t^* \bold v \cdot \bold n - \bold p \cdot \bold n = 0$$
+        $$t^*  = \frac {(\bold p - \bold x_0) \cdot \bold n}{\bold v \cdot \bold n}$$
+        - This has the intuitive interpretation that time to collision is (shortest) distance to the plane in the perpendicular direction from the initial position $\bold x_0$ divided by the velocity component that is normal to the plane
+            - Detail: we did not assert that the normal vector $\bold n$ was a unit vector $|\bold n|=1$, which is necessary for $\bold v \cdot \bold n = cos(\theta) |\bold v||\bold n|$ to be the length of the velocity component normal to the plane and $(\bold p - \bold x_0) \cdot \bold n$ the distance to the plane. But in the solution for $t^*$ the length of $\bold n$ cancels out, so the interpertation of the ratio is still valid.
+
+#### Collision Reflection Modeling
+- Good discussion of reflection after collision in Wk 8 Lect 15 (@15:40)
+    - for wall/plane unit normal $\bold n$, after collision velocity vector has the same component parallel to the plane, and the negative of its previous component perpendicular/normal to the plane:
+    $$\bold v = \bold v_p + \bold v_n$$
+    $$\bold v' = \bold v_p - \bold v_n = \bold v - 2 \bold v_n$$
+    $$\bold v' = \bold v - 2 (\bold v \cdot \bold n) \bold n$$
+
+#### Deterministic Chaos in Particle Motion
+- in particle motion, in billiard ball system with stadium-shaped bounds, and particle starting at same point and direction with slightly different velocities (Lect 15 @15:46-17:12)
+    - interesting diffusion of particles when reflected off curved surface, but not when reflected off planar surface.
+        - Why? Not yet explained at that point
+    - chaotic, [ergodic](https://en.wikipedia.org/wiki/Ergodicity) system "fills the phase space" of velocities and positions
+        - "ergodicity expresses the idea that a point of a moving system, either a dynamical system or a stochastic process, will eventually visit all parts of the space that the system moves in, in a uniform and random sense." https://en.wikipedia.org/wiki/Ergodicity
+        - Sanders: "two nearby initial conditions spread out exponentially fast in time"
+    - `InteractiveChaos`, `DynamicalBilliards`, `Makie::visualize3d`
+
+- Collisions with Curved Surfaces (Spheres)
+    - def of boundary of sphere $S(\bold c, r)$ centered at $\bold c$ with radius r:
+        $$S(\bold c, r) = \{\bold x: ||\bold x - \bold c|| = r \}$$
+        $$S(\bold c, r) = \{\bold x: (\bold x - \bold c) \cdot (\bold x - \bold c) = r^2 \}$$
+    - collision of point particle in linear motion $\bold x(t) =  \bold x_0 + t \bold v$ occurs when $\bold x(t)$ is on boundary of sphere $S(\bold c, r)$
+        $$(\bold x(t^*) - \bold c) \cdot (\bold x(t^*) - \bold c) = r^2$$
+        $$(\bold x_0 + t^* \bold v - \bold c) \cdot (\bold x_0 + t^* \bold v - \bold c) = r^2$$
+    - solving for $t^*$
+        $$(\bold x_0 - \bold c) \cdot (\bold x_0 - \bold c) - r^2 -2 t^* \bold v \cdot (\bold x_0 - \bold c) +  (t^*)^2 (\bold v \cdot \bold v)  = 0$$
+        - solve for roots of this quadratic equation in $t^*$: $a t^2 + b t + c = 0$
+            - $a = (\bold v \cdot \bold v)$
+            - $b = -2 \bold v \cdot (\bold x_0 - \bold c)$
+            - $c = ((\bold x_0 - \bold c) \cdot (\bold x_0 - \bold c) - r^2)$
+
+
+
+
+
+
+
+
+
+
+
 ### Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
