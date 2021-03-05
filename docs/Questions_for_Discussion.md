@@ -336,8 +336,30 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 - Ex 3.1 in `interact!`, infected source recovers only if interact and possible transmission, or only if interact??
 - In Ex 3.2 why did `set_status!` not work in `interact!`
 
-
 ### Notes and Comments on HW6 (and associated lectures)
+- in HW6, `function euler_integrate_step`
+    - I'm confused by the problem statement
+    - why is solution `fa + fprime(a+h)*h` rather than `fa + fprime(a)*h` (the latter being the classical Euler Method)
+    - apparently this is a common error
+- in HW6,   `euler_test` of `euler_integrate`, got error
+
+        euler_test
+        InexactError: Int64(0.012000000000000004)
+
+    - "InexactError happens when you try to convert a value to an exact type (like integer types, but unlike floating-point types) in which the original value cannot be exactly represented."
+    - got this because I did not properly initialize the type of the storage array (pythonic error)
+    - Broad insight: If you need a (possibly local) variable or vector Y of the same type and dimension as another X, use
+
+        `Y = similar(X)`
+
+        similar(array, [element_type=eltype(array)], [dims=size(array)])
+
+        Create an _uninitialized_ mutable array with the given element type and size, based upon the given source array. The second and third arguments are both optional, defaulting to the given array's eltype and size. The dimensions may be specified either as a single tuple argument or as a series of integer arguments.
+
+    
+- awkward programming in function `function euler_SIR`
+
+### Notes and Comments on HW7 (and associated lectures)
 #### In the Billiard Model and Event-driven Simulations Lecture (week 8)
 - Time stepping of dynamic physical models is inefficient, so look for next intersection/collision time of objects
     - "Event" is a collision with a boundary
