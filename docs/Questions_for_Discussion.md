@@ -3,7 +3,7 @@ Questions for Discussion - Computational Thinking
 
 #### Re MIT Course 18.S181 Computational Thinking, Fall 2020
 
-### Comments on Pluto file format
+## Comments on Pluto file format
 - note every cell begins with comment, a special symbol sequence, and cell hash number
     `# ╔═╡ 6aa73286-ede7-11ea-232b-63e052222ecd`
 - content ordering in display vs. text (.jl) file
@@ -43,7 +43,7 @@ Questions for Discussion - Computational Thinking
         - editor file save is replace by the execution of any Pluto cell
         - Pluto _only_ reexecutes cells that are dependent on the recently changed cell
 - Note on Debugging: I like that stack traces show line number with hyperlink to code line
-### Questions on Course 18.S181 HW 1
+## Questions on Course 18.S181 HW 1
 - HW1 Ex.  Ex 1.1, why isapprox test fail:
     ```julia
     mean(demean(copy_of_random_vect)) ≈ 0
@@ -103,7 +103,8 @@ Questions for Discussion - Computational Thinking
     - For Sobel Edge - did you detect edge for each color/channel separately?
     - Re julia docstrings:
         - https://docs.julialang.org/en/v1/manual/documentation/
-#### Notes on Lecture 3 Seam Carving
+
+## Notes on Lecture 3 Seam Carving
 - does seam cutting bias the presernvatoin of info in a particular (vertical) direction?
 - re convolution: in what sense is convolution kernel "flipped," as Grant Sanderson says?
 - re Dynamic Programming: this is closely related to graph shortest paths, and the Bellman Optimality Principle (subsections of shortest paths are also shortest paths between their origin and dest)
@@ -113,7 +114,7 @@ Questions for Discussion - Computational Thinking
 - arrays in Julia are column major
 - Julia macros @ are really powerful, but somewhat cryptic
 
-#### Notes on HW2
+## Notes on HW2
 - in `function remove_in_each_row`, very interesting that `vcat` is used rather than `hcat`
     - any slice that returns all or part of a single _row_, returns a _column_ vector
     - any slice that returns a 2-D object maintains original orientation
@@ -174,7 +175,7 @@ julia> typeof(1)
 Int64
 ```
 
-#### PCA
+### PCA
 - returned type from indexing by integer rater than range https://youtu.be/Pt8Iz4Udg2E  at 8:45
 - PCA as directions along which the data vary the most and very the least colon this is not seem to describe what I believed PCA does. Does it not identify an orthogonal directions which most completely capture the variation in all dimensions?
     - https://youtu.be/KrQV6mZ8hvI  at 19:30
@@ -189,7 +190,7 @@ Int64
 - Found this playlist, and figured how to add it to YouTube so that YouTube will play the lectures in order.
 https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 
-#### Comments on HW3
+### Comments on HW3
 - **pipe**
     - Ex 1.2 the `clean` function (a series of maps and filters, i.e. unaccent, isinalphabet, tolower) is a great example of utility of pipe operator
 
@@ -313,8 +314,8 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     ```julia
     repeat_simulations(100, 1000, Reinfection(p_infection, p_recovery), 20)
     ```
-#### HW3 and HW4 Numerical Modeling notes
-- - geometric growth versus exponential growth comment:
+### HW3 and HW4 Numerical Modeling notes
+-  geometric growth versus exponential growth comment:
     - Comment: fitting exponential growth with least squares on c e to the RT will not give the same results necessarily as fitting they assumed underlying linear function log c plus TR. We can do this quickly and compare the numerical results. Speaking here of the first lecture on  COVID data analysis p
 - generators versus arrays
     - @22:30  https://youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ 
@@ -359,7 +360,172 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     
 - awkward programming in function `function euler_SIR`
 
-### Notes and Comments on HW7 (and associated lectures)
+## Notes and Comments on HW7 (and associated lectures)
+
+#### Light Propagation, Relection and Refraction
+- Index of refraction, $n = IOR$ and the speed of light in a medium
+    - for any medium *i*, the speed of light in the medium is equal to *c*, the speed of light in a vacuum, divided by the Index of Refraction for medium *i*
+        - $v_i = c/n_i = v_{vacuum}/n_i$
+        - The index of refraction for a vacuum is 1.0, and for air it is close to 1.0
+            - for water, the index of refraction is greater than 1 (light is slower than *c*)
+    $$n_{air}  s_{air} = n_{water} s_{water}$$
+    - more generally
+    $$n_{air}  s_{air} = n_{water} s_{water}$$
+    $$n_{x}  s_{x} = n_{y} s_{y}$$
+    - for $s_i$ the speed of light in the mdium
+- stepwise simulation/advancement of a ray
+
+    ```julia
+    mutable struct Ray
+        l::Vector{Float64} # ray direction velocity vector
+        p::Vector{Float64} # ray position
+        ior::Float64 # index of refraction
+    end
+
+
+    function step!(ray::Ray, dt)
+        ray.p .+= ray.l .* dt /ray.ior
+    end
+    ```
+
+    ```julia
+    """
+        propagate!(rays::Vector{Ray}, positions, n, dt)
+
+    `n` is the number of steps the rays are to be propagated
+    `positions` is an array for length(rays) x n-steps x d-dimension position coordinates
+    (the positions of all rays at all steps in the propagation)
+    """
+    function propagate!(rays::Vector{Ray}, positions, n, dt)
+        ior = 1.0
+        for i = 1:n
+            for j = 1:length(rays)
+                step!(rays[j], dt)
+                positions[j, i, :] .= rays[j].p
+            end
+        end
+    end
+
+    function parallel_propagate(ray_num, n; filename = "check.png", dt = 0.1)
+        rays = [ray([1, 0], # velocity l
+            [0.1, float(i)], # position p
+            1.0) for i in 1:ray_num] # ior
+        positions = zeros[ray_num, n, 2] # storage for 2-d positions of ray_num rays for n steps
+
+        propagate(rays, positions, n, dt) # move
+
+        plot_rays(positions, filename) # display paths
+
+        return(rays)
+    end
+    ```
+
+- Reflection of a ray
+    - Dot product: $\bold a \cdot \bold b$ is the projection of $\bold a$ onto $\bold b$.
+        - $\bold a \cdot \bold b = |a| |b| cos(\theta)$ - what is the intuition?
+    
+    ```julia
+    """
+        reflect!(ray, n)
+
+    returns `ray` reflected off plane with normal `n`
+    """
+    function reflect!(ray, n)
+        # just subtract 2 times component of ray along normal (parallel component unchanged)
+        ray.l = ray.l - 2 * dot(ray.l, n) .* n # this is the same as reversing the sign of the normal component
+        # ray.l .-= 2 * dot(ray.l, n) .* n # equivalently
+    end
+    ```
+
+- Refraction of a ray
+    - $c = s_i n_i$ for light speed $s_i$ in medium $i$ with index of refraction $ior = n_i$
+    - so the ratio of the index of refraction of two media is equal to the inverse ratio of the speeds in the two media
+    $$\frac {n_i}{n_j} = \frac {s_j}{s_i}$$
+    - **Snell's law** says, further that the ratio of speeds is equal to the ratio of sines of the angles (from normal) in each medium
+    $$\frac {n_i}{n_j} = \frac {s_j}{s_i} = \frac {sin(\theta_j)}{sin(\theta_i)}$$
+    - We wish to solve for the refracted angle in the second medium, $\theta_j$ given the indices of refraction, $n_i, n_j$ and the angle of incidence at the boundary (w.r.t. normal $\hat n$) of $\theta_i$
+    $$\frac {n_i}{n_j} = \frac {sin(\theta_j)}{sin(\theta_i)}$$
+    $${sin(\theta_j)} = \frac {n_i}{n_j} {sin(\theta_i)}$$
+    $$\theta_j = sin^{-1} \left ( \frac {n_i}{n_j} {sin(\theta_i)} \right )$$
+    - But, more usefully we also know the trig identity
+    $$cos(\theta_j) = \sqrt {1 - sin^2(\theta_j)}$$
+        - this allows us to eliminate refs to $sin$ with $cos$ expressions, and then replace references $cos$ with vector dot-product expressions.
+    - so we can solve for $cos(\theta_j)$, substituting Snells law into the trig identity
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} sin(\theta_i) \right)^2}$$
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 (1- cos(\theta_i)^2)}$$
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 ( 1- (l_i \cdot \hat n |l_i| |\hat n|)^2)}$$
+    - if both the normal vector and the direction vector $l_j$ are standardized/normalized to unit length (which is the case here).
+        $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 (1 - (l_i \cdot \hat n)^2}$$
+    - c.f the result shown @20:33 (what is $l$ here - its the vector, and it's the unit directional vector in water $w$, $\vec l_w$, right?s)
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 (1- cos(\theta_i)^2)} = -\hat n \cdot \vec l_w$$
+
+    - puzzling at 15:35 in lecture 1 Wk 8 "Ray Tracing in 2D"
+        - ??? says "$l_w = -n/cos(\theta_w)$"
+            - he seems to be confusing vectors and their lengths in the notation, and confusing $l_w$ with its component along the normal ($n$).
+        - ???but "$cos(\theta_w) = -n/l_w$ (@15:57) only in $n$ and $l_w$ are lengths, not vectors, and if $n$ is the length of the projection of $l_w$ along $n$ (i.e. they are opposite and adjacent sides of a right triangle). I thought $n$ was the unit-length normal?
+            - in the definition of `Ray` (@3:16, and as shown @11:08), `Ray.l` is the (2D direction vector). 
+                - Apparently also, something I missed, the direction vector $l$ also is meant to be of unit magnitude (speed, or the magnitude of motion in the direction $l$, is simple $c/n_i$ for light). Later, when the ray motion is not for light, the objects should ave different speeds.
+                - given the both $l$ and $n$ are defined to be of unit length (note they are not drawn as such), it is true the *projection of $l_w$ along $n$* is $cos(\theta_w) |l_w| = (l \cdot n)/|n|$.
+        - draws line and restsarts at @16:30, for air and water
+        - now confusing vector normal $n_i$ and scalar Index of Refraction $n_i$, ugh, for which we will use $\eta_i$
+            - Note: the "hat" symbol is usually used to indicate the _unit-length_ vector $\hat x: |\hat x| =1$, and either bold or a little arrow above is used to denote a vector of arbitrary length ($\bold x$ or $\vec x$ = $\overrightarrow x$)
+                - a normal vector is orthogonal (normal to the surface), and may, or may not be a unit normal (orthogonal and of length 1.0)
+                    - e.g. "a normal vector can be divided by its length to get a unit normal vector." http://sites.math.washington.edu/~king/coursedir/m445w04/notes/vector/normals-planes.html
+                    - @19:30 says "if A and B are normalized and therefor [of length] 1": note/warning: "normalized" length is not the same a "normal"
+                - but the hat doesn't help: I still dont see that $l_w = - \hat n / cos(\theta_w$, because the adjacent over hypotenuse interpretation of cos only applies for vector magnitudes, and now he has an explict vector term on the RHS.)
+        - says (Eq PX): $\eta_w l_w = \eta_a l_a + (\eta_a cos(\theta_a) - \eta_w cos(\theta_w) \cdot n$
+            - Explanation???
+            - $\eta_a cost(\theta_a) \hat n$ is a projection onto the normal above (the water in the air), and 
+            - $-\eta_w cost(\theta_w) \hat n$ is a projection onto the normal below (in the water) 
+            - to solve this (for $cos(\theta_w$ or $l_w$), need to know $l_w$ or $cos(\theta_w$)
+        - @18:12 "We can't use any wishy-washy math to kind of wave them away like a lot of physicists do." Ouch
+
+    - define this *cos* of refracted $\theta_j$ as $u$ (James Schloss proposes $c$, but that is speed of light)
+            $$u \equiv cos(\theta_j) = -\hat n \cdot \vec l_w$$
+    - define: ratio of index of refration in incident media over refracted media 
+            $$r \equiv \eta_i/\eta_j = \eta_a/\eta_w$$
+    - From Eq. PX: (this equation also uses "dot" for the scalar mult of a vector - ugh)
+        - $\eta_w \vec l_w = \eta_a \vec l_a + (\eta_a cos(\theta_a) - \eta_w cos(\theta_w) \hat n$
+        - $\vec l_w = \frac {\eta_a} {\eta_w } \vec l_a + (\frac {\eta_a} {\eta_w } cos(\theta_a) - cos(\theta_w) \hat n$
+        - $\vec l_w = r \vec l_a + (r cos(\theta_a) -  cos(\theta_w) \hat n$
+    - and James S. says (but the algebra looks sketchy) that the final equation to solve for refracted $l_w$ is
+        - $\vec l_w = r \vec l_a + (r u -  \sqrt {1 - r^2 u^2}) \hat n$
+        - this does not match the equation used below in the code snippet (which uses $(1-u^2)$ vs $u^2$).
+        - its pretty clear that $u = cos(\theta_a)$, the *cos* of the incident angle w.r.t. normal, not what he has written @21:38 
+
+    - in code
+
+        ```julia
+        """
+            refract!(ray, n)
+
+        ray::Ray is incident ray 
+        n is a 2-D vector normal to incident surface
+        """ 
+        refract!(ray, n)
+            u = - dot(ray.l, n) # cos of incident angle
+            d = 1.0 - ior^2 * (1-u^2)) # ior is the ratio of incident to refracting media refractive indices
+            if (d < 0.0) # need to check the sign of the discriminant from the quadratic eqn
+                # Note this corresponds to complete reflection (total internal reflection),
+                #  for large incidence angle (u~0) or big increase in refractive index (low ratio)
+                return zeros(2); # why the semicolon? 
+            end
+            ray.l = ior * ray.l + (ior * u - sqrt(d)) * n
+        end 
+        ```
+
+#### Lenses: Spherical Lenses
+- treat entering and leaving the refracting medium (lens) separately
+- whether ray is entering or leaving is indicated by the direction of the normal
+- convention for defining the normal based on the difference between the Ray position (tip) and lens position (center):
+    $$\hat n = normalized(Ray.p - lens.p)$$
+    - this convention means normal is projected outward from the refracting medium at both surfaces, entering and exiting
+    - thus $sign(\hat n \cdot \vec l)$, dot product of normal with ray _direction_ $l$ indicates whether ray entering (<0) or leaving (> 0)
+
+
+
+
+
 #### In the Billiard Model and Event-driven Simulations Lecture (week 8)
 - Time stepping of dynamic physical models is inefficient, so look for next intersection/collision time of objects
     - "Event" is a collision with a boundary
@@ -408,6 +574,18 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
             - $b = -2 \bold v \cdot (\bold x_0 - \bold c)$
             - $c = ((\bold x_0 - \bold c) \cdot (\bold x_0 - \bold c) - r^2)$
 
+### Notes on HW7 itself
+- in the lectures and in the homework, they blur the [distinction between a "normal vector" and a "unit normal" vector.](https://www.khanacademy.org/math/multivariable-calculus/integrating-multivariable-functions/flux-in-3d-articles/a/unit-normal-vector-of-a-surface) That is, the do computations that imply the normal (orthogonal) vector has length 1, but that is not part of the definition of a normal vector.
+    - in the initialization of `Wall.normal` in the `struct Wall`, they call the function `normalize(normal)` which "normalizes" or standardizes the length of a vector to 1.0, but that function does _not_ make the vector `normal` orthogonal to anything. So this is a bit confusing.
+    - [Etymology of the word “normal” (perpendicular)](https://math.stackexchange.com/questions/328662/etymology-of-the-word-normal-perpendicular)
+
+    ```julia
+    # note that the function `normalize` just rescales a vector/array to unit length
+    #  (nothing to do with normal-as-in-orthogonal)
+    transpose(normalize([3,1]))*normalize([3,1]) ≈ 1.0 # true
+    # or
+    dot(normalize([3,1]), normalize([3,1]))y ≈ 1.0 # true
+    ```
 
 
 
@@ -416,14 +594,12 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 
 
 
-
-
-### Dataframes
+## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
     - this parallels the Tidy R equivalent, and the [Data Wrangling with dplyr and tidyr Cheat Sheet](https://rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
 
-### Supplemental Information
+## Supplemental Information
 
 - [MIT 6.0002 Introduction to Computational Thinking and Data Science](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/)
 Instructor(s) Prof. Eric Grimson, Prof. John Guttag, Dr. Ana Bell, MIT Course Number 6.0002. As Taught In Fall 2016
