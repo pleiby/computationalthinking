@@ -27,6 +27,9 @@ using ForwardDiff
 # ╔═╡ c2aa1236-7dcb-11eb-2216-c36ae99f3a8a
 md"# Test `ForwardDiff`"
 
+# ╔═╡ 66a78772-7ef0-11eb-1b61-ad286594b939
+md"Paul N. Leiby"
+
 # ╔═╡ 3af050c0-7dcc-11eb-0f5e-a9e2d51acbfa
 md"""See: [JuliaCon 2016 | ForwardDiff.jl: Fast Derivatives Made Easy | Jarrett Revels](https://www.youtube.com/watch?v=r2hhRSHiQwY) The "Complex Step Method" @4:30 is so clever! The graph @8:45 has some very interesting insights."""
 
@@ -159,6 +162,7 @@ ForwardDiff.derivative(sin, pi) # Woohoo!
 
 # ╔═╡ Cell order:
 # ╟─c2aa1236-7dcb-11eb-2216-c36ae99f3a8a
+# ╟─66a78772-7ef0-11eb-1b61-ad286594b939
 # ╟─3af050c0-7dcc-11eb-0f5e-a9e2d51acbfa
 # ╟─12b41de4-7568-11eb-0869-adbc597546cf
 # ╟─47246f1e-7568-11eb-2c3e-5d4ee2ad133f
