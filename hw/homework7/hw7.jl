@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.6
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -76,7 +76,7 @@ Feel free to ask questions!
 # ╔═╡ 1e202680-19c4-11eb-29a7-99061b886b3c
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby@gmail.com")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -109,11 +109,18 @@ abstract type Object end
 # ╔═╡ 99c61b74-1941-11eb-2323-2bdb7c120a28
 struct Wall <: Object
 	"Position"
-	position::Vector{Float64}
+	position::Vector{Float64} # any point on the wall/plane
 
 	"Normal vector"
 	normal::Vector{Float64}
+	# all points in wall are on plane orthog to normal vec n and through p:
+	#  H(x) = x: x dot n = x dot p
 end
+
+# ╔═╡ 9d56ceee-7fac-11eb-1327-23f5dd1376a1
+# note that the function `normalize` just rescales a vector/array to unit length
+#  (nothing to do with normal-as-in-orthogonal)
+dot(normalize([3,1]), normalize([3,1])) ≈ 1.0
 
 # ╔═╡ 0906b340-19d3-11eb-112c-e568f69deb5d
 test_wall = Wall(
@@ -122,20 +129,53 @@ test_wall = Wall(
 )
 
 # ╔═╡ 6de1bafc-1a01-11eb-3d67-c9d9b6c3cea8
+"""
+	plot_object!(p, wall::Wall)
+
+Adds a `Wall` object to plot `p`, shown as a line,
+where the line is defined by a normal vector and a point position.
+"""
 function plot_object!(p, wall::Wall)
 	# old_xlims = xlims(p)
 	# old_ylims = ylims(p)
 	
-	adjacent = [wall.normal[2], -wall.normal[1]]
+	# construct wall as sum of `position` point p multiples of _parallel_ vector.
+	# the parallel vector (`adjacent`) is orthogonal to the wall `normal`
+	adjacent = [wall.normal[2], -wall.normal[1]] # dot(adjacent, normal) = 0
+	
+	# proposition: for plane in an N-dim space, there are N-1 independent
+	#.  adjacent vectors that are orthogonal to the normal and that define the plane
 	
 	a = wall.position + adjacent * 20
 	b = wall.position - adjacent * 20
 	
-	line = [a, b]
+	line = [a, b] # define line with 2 (2-D) points
 	
 	plot!(p, first.(line), last.(line), label="Wall")
 	# xlims!(p, old_xlims)
 	# xlims!(p, old_xlims)
+end
+
+# ╔═╡ 7ae13c68-84a6-11eb-1226-b556e1d9ec56
+struct Ray <: Object
+	"Position"
+	position::Vector{Float64} # any point on the wall/plane
+
+	"Direction"
+	direction::Vector{Float64}
+end
+
+# ╔═╡ 4e56a408-84a6-11eb-31e5-efbdcf9cebf7
+r = Ray(
+
+# ╔═╡ 3424a486-84a6-11eb-3fed-7d3eabc8340d
+function plot_object!(p, r::Ray; arrowlength=2)
+	line = [r.position, r.position .+ arrowlength*r.direction]
+	
+	plot!(p, first.(line), last.(line); lw=2, arrow=true, color=:blue, label=nothing)
+	# draw the dot at position (start) of normal
+	# Note: position[1:1] is a vector (Array), position[1] is a scalar
+	scatter!(p, r.position[1:1], r.position[2:2]; color=:blue, markersize=3, label=nothing)
 end
 
 # ╔═╡ 5f551588-1ac4-11eb-1f86-197442f1ef1d
@@ -145,6 +185,7 @@ In our simulations, we will enclose our scene in a box of **four walls**, to mak
 
 # ╔═╡ ac9bafaa-1ac4-11eb-16c4-0df8133f9c98
 box_scene = [
+	 # note that the (unit) normals all point in toward the center. This is arbitrary
 	Wall(
 		[10,0],
 		[-1,0]
@@ -157,13 +198,56 @@ box_scene = [
 		[0,-10],
 		[0,1]
 		),
-	# your code here
+	Wall( # your code here
+		[0,10],
+		[0,-1]
+		)		
 	]
+
+# ╔═╡ 074e7a5c-84a8-11eb-1f73-737215a238f8
+wall_normals_scene = [Ray(w.position, normalize(w.normal)) for w in box_scene]
+
+# ╔═╡ 0f8915c8-84a9-11eb-30a3-f307ce752476
+
+
+# ╔═╡ 01eceeb2-84a4-11eb-0aaf-7f78807a2ef4
+function plot_wall_normal!(p, w::Wall, arrowlength=2; kwargs...)
+	line = [w.position, w.position .+ arrowlength*w.normal]
+	
+	plot!(p, first.(line), last.(line); lw=2, arrow=true, color=:blue, kwargs..., label=nothing)
+	# draw the dot at position (start) of normal
+	# Note: position[1:1] is a vector (Array), position[1] is a scalar
+	scatter!(p, w.position[1:1], w.position[2:2]; color=:blue, markersize=3, label=nothing, kwargs...)
+end
 
 # ╔═╡ 293776f8-1ac4-11eb-21db-9d023c09e89f
 md"""
 👉 Modify the definition of `box_scene` to be a vector of 4 walls, instead of 3. The fourth wall should be positioned at `[0,10]`, and point downwards.
 """
+
+# ╔═╡ 0b5e1df0-7fb2-11eb-209b-8f41db673f3a
+# varian box has same appearance
+box2_scene = [
+	Wall(
+		[10,0],
+		[1,0]
+		),
+	Wall(
+		[-10,0],
+		[-1,0]
+		),
+	Wall(
+		[0,-10],
+		[0,-1]
+		),
+	Wall(
+		[0,10],
+		[0,1] # note that the (unit) normals all point out from the center.
+		)		
+	]
+
+# ╔═╡ 6c95c198-84a5-11eb-2588-8daaba15abd9
+wall_normals2_scene = [Ray(w.position, normalize(w.normal)) for w in box2_scene]
 
 # ╔═╡ e5ed6098-1c70-11eb-0b58-31d1830b9a10
 md"""
@@ -171,6 +255,13 @@ In the next exercise, we will find the intersection of a ray of light and a wall
 """
 
 # ╔═╡ 24b0d4ba-192c-11eb-0f66-e77b544b0510
+"""
+	struct Photon
+
+Photon is a Ray (position `p` and unit direction `l` vectors)
+with a index of refraction `ior` for the current
+media it travels through.
+"""
 struct Photon
 	"Position vector"
 	p::Vector{Float64}
@@ -186,8 +277,8 @@ end
 test_photon = Photon([-1, 2], normalize([1,-.8]), 1.0)
 
 # ╔═╡ eabca8ce-1c73-11eb-26ad-271f6eba889b
-function plot_photon_arrow!(p, photon::Photon, length=2; kwargs...)
-	line = [photon.p, photon.p .+ length*photon.l]
+function plot_photon_arrow!(p, photon::Photon, arrowlength=2; kwargs...)
+	line = [photon.p, photon.p .+ arrowlength*photon.l]
 	
 	plot!(p, first.(line), last.(line); lw=2, arrow=true, color=:darkred, kwargs..., label=nothing)
 	scatter!(p, photon.p[1:1], photon.p[2:2]; color=:darkred, markersize=3, label=nothing, kwargs...)
@@ -203,9 +294,23 @@ Our function will return one of two possible types: a `Miss` or a `Intersection`
 """
 
 # ╔═╡ 8acef4b0-1a09-11eb-068d-79a259244ed1
+"""
+	struct Miss
+
+`Miss` 
+is a struct with _no fields_. It does not contain any information, except the fact that it is a `Miss`.
+"""
 struct Miss end
 
 # ╔═╡ 8018fbf0-1a05-11eb-3032-95aae07ca78f
+"""
+	struct Intersection{T<:Object}
+
+`Intersection` is a **parametric type**. 
+The first field (`object`) is of type `T`, and `T` is a subtype of `Object`. 
+What's special about parametric types is that `T` becomes "part of the type",
+and can be used later.
+"""
 struct Intersection{T<:Object}
 	object::T
 	distance::Float64
@@ -257,9 +362,16 @@ where $p$ is the position, $\hat \ell$ is the direction of the light, and $\hat 
 """
 
 # ╔═╡ abe3de54-1ca0-11eb-01cd-11fe798bfb97
+"""
+	intersection_distance(photon::Photon, wall::Wall)
+
+distance is the normal component of the vector from
+the Photon position to the object (wall) position, 
+divided by the component of direction toward the wall.
+Note "distance" is really an intersection time for velocity `photon.l`
+"""
 function intersection_distance(photon::Photon, wall::Wall)
-	
-	return missing
+	return -dot((photon.p .- wall.position), wall.normal)/dot(photon.l, wall.normal)
 end
 
 # ╔═╡ 42d65f56-1aca-11eb-1079-e32f85554349
@@ -279,14 +391,8 @@ If $D$ is _negative_ (or zero), then the wall is _behind_ the photon - we should
 We are using _floating points_ (`Float64`) to store positions, distances, etc., which means that we need to account for small errors. Like in the lecture, we will not check for `D > 0`, but `D > ϵ` with `ϵ = 1e-3`.
 """
 
-# ╔═╡ a5847264-1ca0-11eb-0b45-eb5388f6e688
-function intersection(photon::Photon, wall::Wall; ϵ=1e-3)
-	
-	return missing
-end
-
 # ╔═╡ 7f286ccc-1c75-11eb-1270-95a87840b300
-@bind dizzy_angle Slider(0:0.0001:2π, default=2.2)
+@bind dizzy_angle Slider(0:0.0001:2π, default=2.2, show_value=true)
 
 # ╔═╡ 6544be90-19d3-11eb-153c-218025f738c6
 dizzy = Photon([0, 1], normalize([cos(dizzy_angle + π),sin(dizzy_angle + π)]), 1.0)
@@ -349,15 +455,6 @@ By taking the minimum, we have found our closest hit! Let's turn this into a fun
 👉 Write a function `closest_hit` that takes a `photon` and a vector of objects. Calculate the vector of `Intersection`s/`Miss`es, and return the `minimum`.
 """
 
-# ╔═╡ 19cf420e-1c7c-11eb-1cb8-dd939fee1276
-function closest_hit(photon::Photon, objects::Vector{<:Object})
-	
-	return missing
-end
-
-# ╔═╡ b8cd4112-1c7c-11eb-3b2d-29170ad9beb5
-test_closest = closest_hit(philip, ex_1_scene)
-
 # ╔═╡ e9c6a0b8-1ad0-11eb-1606-0319caf0948a
 md"""
  $(html"<br><br><br><br>")
@@ -391,7 +488,11 @@ md"""
 """
 
 # ╔═╡ 79532662-1c7e-11eb-2edf-57e7cfbc1eda
-
+let
+	l1 = [1,1] # 45 degree angle
+	n = [0,1] # vertical up (90) normal, so describes horizontal plane
+	reflect(l1, n)
+end
 
 # ╔═╡ b6614d80-194b-11eb-1edb-dba3c29672f8
 md"""
@@ -402,10 +503,18 @@ Our event-driven simulation is a stepping method, but instead of taking small st
 👉 Write a function `interact` that takes a photon and a `hit::Intersection{Wall}` and returns a new `Photon` at the next step. The new photon is located at the hit point, its direction is reflected off the wall's normal and the `photon.ior` is reused.
 """
 
+# ╔═╡ 15cc8c6c-86b6-11eb-189e-673e8b7ae091
+fieldnames(Intersection{Wall})
+# fields of Intersection{Wall} include object, distance and intersection point
+
 # ╔═╡ 2c6defd0-1ca1-11eb-17db-d5cb498f3265
 function interact(photon::Photon, hit::Intersection{Wall})
+	p = Photon(
+		hit.point, # p.intersection = photon.p + D .* photon.l
+		reflect(photon.l, hit.object.normal), # new direction
+		photon.ior)
 	
-	return missing
+	return p
 end
 
 # ╔═╡ 3f727a2c-1c80-11eb-3608-e55ccb9786d9
@@ -425,14 +534,8 @@ md"""
 👉 Write a function `trace` that takes an initial `Photon`, a vector of `Object`s and `N`, the number of steps to make. Return a vector of `Photon`s. Try to use `accumulate`.
 """
 
-# ╔═╡ 1a43b70c-1ca3-11eb-12a5-a94ebbba0e86
-function trace(photon::Photon, scene::Vector{<:Object}, N)
-	
-	return missing
-end
-
 # ╔═╡ 3cd36ac0-1a09-11eb-1818-75b36e67594a
-@bind mirror_test_ray_N Slider(1:30; default=4)
+@bind mirror_test_ray_N Slider(1:30; default=4, show_value=true)
 
 # ╔═╡ 7478330a-1c81-11eb-2f9f-099f1111032c
 md"""
@@ -445,8 +548,9 @@ Our main character is a `Photon`, which bounces around a scene made up of `Wall`
 2. Our scene is just a `Vector` or objects, and we compute the intersection between the photon and every object.
 3. By adding `Base.isless` methods we have told Julia how to compare hit/miss results, and we get the closest one using `minimum(all_intersections)`.
 4. We wrote a function `interact(photon, hit::Intersection{Wall})` that returns a new photon after interacting with a wall collision.
-
-We repeat these four steps to trace a ray through the scene.
+5. With iterative calls to function `step_ray` we repeat these four steps to trace a ray (`Photon`) through the scene. `step_ray(photon::Photon, objects::Vector{<:Object})` advances the Photon `photon` one event step. It Calls `closest_hit` to find intersection with all objects in `objects` vector, determines the closest/next to be hit,
+and returns the resulting Photon after `interact`ing
+the current photon and that next object.
 
 ---
 
@@ -465,6 +569,12 @@ Now that we know how to bounce light around mirrors, we want to simulate a _sphe
 """
 
 # ╔═╡ 3aa539ce-193f-11eb-2a0f-bbc6b83528b7
+"""
+	struct Sphere <: Object
+
+Sphere has position vector `center`,
+and real `radius`, and index of refraction `ior`
+"""
 struct Sphere <: Object
 	# Position
 	center::Vector{Float64}
@@ -487,7 +597,17 @@ function plot_object!(p::Plots.Plot, sphere::Sphere)
 	p
 end
 
+# ╔═╡ ef1e8d9c-84a6-11eb-0ff8-fda5d7c46f7c
+methods(plot_object!)
+
 # ╔═╡ eff9329e-1a05-11eb-261f-734127d36750
+"""
+	plot_scene(objects::Vector{<:Object}; kwargs...)
+
+plot a vector of objects in `objects`,
+with supplemental plot args in `kwargs`.
+Returns the plot.
+"""
 function plot_scene(objects::Vector{<:Object}; kwargs...)
 	p = plot(aspect_ratio=:equal; kwargs...)
 	
@@ -499,9 +619,6 @@ end
 
 # ╔═╡ e45e1d36-1a12-11eb-2720-294c4be6e9fd
 plot_scene([test_wall], size=(400,200))
-
-# ╔═╡ 0393dd3a-1a06-11eb-18a9-494ae7a26bc0
-plot_scene(box_scene, legend=false, size=(400,200))
 
 # ╔═╡ 76d4351c-1c78-11eb-243f-5f6f5e485d5d
 let
@@ -516,32 +633,39 @@ let
 	plot_photon_arrow!(p, philip, 5)
 end
 
-# ╔═╡ a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
-let
-	p = plot_scene(ex_1_scene)
+# ╔═╡ c2e35672-84a8-11eb-11fc-db0cc76aa519
+"""
+	plot_scene!(p, objects::Vector{<:Object}; kwargs...)
+
+modify a plot `p` 
+by adding plots of a vector of objects in `objects`,
+with supplemental plot args in `kwargs`.
+Returns the plot.
+"""
+function plot_scene!(p, objects::Vector{<:Object}; kwargs...)
+	# p = plot(aspect_ratio=:equal; kwargs...)
 	
-	plot_photon_arrow!(p, philip, 4; label="Philip")
-	
-	scatter!(p, test_closest.point[1:1], test_closest.point[2:2], label="Closest hit")
-	
-	p |> as_svg
+	for o in objects
+		plot_object!(p, o)
+	end
+	p
 end
 
-# ╔═╡ 1ee0787e-1a08-11eb-233b-43a654f70117
+# ╔═╡ 0393dd3a-1a06-11eb-18a9-494ae7a26bc0
+let 
+	p = plot_scene(box_scene, legend=false, size=(400,200), title="20 x 20 box, normals point inward")
+	plot_scene!(p, wall_normals_scene)
+end
+	
+
+# ╔═╡ 1e2c50dc-7fb2-11eb-2108-0f4dfdce18ba
 let
-	p = plot_scene(ex_1_scene, legend=false, xlim=(-11,11), ylim=(-11,11))
-	
-	path = trace(philip, ex_1_scene, mirror_test_ray_N)
-	
-	
-	line = [philip.p, [r.p for r in path]...]
-	plot!(p, first.(line), last.(line), lw=5, color=:pink)
-	
-	plot_photon_arrow!(p, philip)
-	plot_photon_arrow!.([p], path)
-	
+	p = plot_scene(box2_scene, legend=false, size=(400,200), title="20 x 20 box, normals point outward")
+	# plot_wall_normal!(p, box2_scene[1], 7)
+	plot_scene!(p, wall_normals2_scene)
 	p
-end |> as_svg
+end
+
 
 # ╔═╡ e5c0e960-19cc-11eb-107d-39b397a783ab
 example_sphere = Sphere(
@@ -587,7 +711,7 @@ $(\mathbf{R} - \mathbf{S})\cdot(\mathbf{R} - \mathbf{S}) = r^2,$
 
 where $\mathbf{R}$ and $\mathbf{S}$ are the $x$, $y$, and $z$ location of the photon and sphere, respectively.
 
-Returning to the timestepping example from above, we know that our ray is moving forward with time such that $\mathbf{R} = \mathbf{R}_0 + v dt = \mathbf{R}_0 + \ell t$. We now need to ask ourselves if there is any time when our ray interacts with the sphere. Plugging this in to the dot product from above, we get
+Returning to the timestepping example from above, we know that our ray is moving forward with time such that $\mathbf{R}(t) = \mathbf{R}_0 + v dt = \mathbf{R}_0 + \ell t$. We now need to ask ourselves if there is any time when our ray interacts with the sphere. Plugging this in to the dot product from above, we get
 
 $(\mathbf{R}_0 + \ell t - \mathbf{S})\cdot(\mathbf{R}_0 + \ell t - \mathbf{S}) = r^2$
 
@@ -595,13 +719,13 @@ To solve this for $t$, we first need to reorder everything into the form of a po
 
 $t^2(\ell\cdot\ell)+2t\ell\cdot(\mathbf{R_0}-\mathbf{S})+(\mathbf{R}_0-\mathbf{S})\cdot(\mathbf{R}_0-\mathbf{S}) - r^2=0.$
 
-This can be solved with the good ol' fashioned quadratic equation:
+This can be solved for $t$ with the good ol' fashioned quadratic equation:
 
 $\frac{-b\pm\sqrt{b^2-4ac}}{2a},$
 
 where $a = \ell\cdot\ell$, $b = 2\ell\cdot(\mathbf{R}_0-\mathbf{S})$, and $c=(\mathbf{R}_0-\mathbf{S})\cdot(\mathbf{R}_0-\mathbf{S}) - r^2$
 
-If the quadratic equation returns no roots, there is no intersection. If it returns 1 root, the ray just barely hits the edge of the sphere. If it returns 2 roots, it goes right through!
+If the quadratic equation returns no (real) roots, there is no intersection. If it returns 1 root, the ray just barely hits the edge of the sphere. If it returns 2 roots, it goes right through!
 
 The easiest way to check this is by looking at the discriminant $d = b^2-4ac$.
 
@@ -622,10 +746,73 @@ With all this said, we are ready to write some code.
 👉 Write a new method `intersection` that takes a `Photon` and a `Sphere`, and returns either a `Miss` or an `Intersection`, using the method described above. Go back to Exercise 1.3 where we defined the first method, and see how we adapt it to a sphere.
 """
 
+# ╔═╡ e1dee94e-86bb-11eb-32b8-93a3701fc495
+function intersection_distance(photon::Photon, sphere::Sphere)
+	return -dot((photon.p .- wall.position), wall.normal)/dot(photon.l, wall.normal)
+end
+
+# ╔═╡ a5847264-1ca0-11eb-0b45-eb5388f6e688
+"""
+	intersection(photon::Photon, wall::Wall; ϵ=1e-3)
+
+takes a `photon` and a `wall`, and returns either a `Miss` or a future `Intersection`, based on the result of `intersection_distance(photon, wall) = D`.
+"""
+function intersection(photon::Photon, wall::Wall; ϵ=1e-3)
+	D = intersection_distance(photon, wall)
+	if D > ϵ # will be an intersection
+		# intersection point, based on photon position and velocity (direction) l
+		p_intersection = photon.p + D .* photon.l
+		# what object will be intersected, distance/time to go D and intersection point
+		return Intersection(wall, D, p_intersection)
+	else
+		return Miss()
+	end
+end
+
+# ╔═╡ 6ea22e4c-872b-11eb-06ab-bf0d8956b52c
+sign(-0) # test sign function/operator
+
 # ╔═╡ 392fe192-1ca1-11eb-36c4-f9bd2b01a5e5
+"""
+	intersection(photon::Photon, sphere::Sphere; ϵ=1e-3)
+
+takes a `photon` and a `wall`, and returns either a `Miss` or a future `Intersection`, based on the result of `intersection_distance(photon, wall) = D`.
+"""
 function intersection(photon::Photon, sphere::Sphere; ϵ=1e-3)
+	R_0 = photon.p
+	S = sphere.center
+	# coeficients of the quadratic eqn for intersection time t
+	a = dot(photon.l, photon.l)
+	b = 2 * dot(photon.l, R_0 .- S)
+	c = dot(R_0 .- S, R_0 .- S) - sphere.radius^2
+	discriminant = (b*b - a * c)
 	
-	return missing
+	if sign(discriminant) == 1
+		numroots = 2
+	elseif sign(discriminant) == 0 # discriminant is 0
+		numroots = 1
+	else # sign(discriminant) == -1, negative
+		numroots = 0
+	end
+	
+	if numroots > 0
+		# take the smaller of the two roots (intersection times)
+		#  (know a>0, and discriminant is non-negative)
+		t_intersection = (-b - sqrt(discriminant))/(2*a)
+	else
+		t_intersection = Inf
+	end
+	
+	# D = intersection_distance(photon, sphere)
+	if t_intersection > ϵ # will be an intersection
+		# intersection point, based on photon position and velocity (direction) l
+		p_intersection = photon.p + t_intersection .* photon.l
+		# what object will be intersected, distance/time to go, and intersection point
+		return Intersection(sphere, t_intersection, p_intersection)
+	else
+		return Miss()
+	end
+
 end
 
 # ╔═╡ a306e880-19eb-11eb-0ff1-d7ef49777f63
@@ -634,7 +821,7 @@ test_intersection = intersection(dizzy, test_wall)
 # ╔═╡ 3663bf80-1a06-11eb-3596-8fbbed28cc38
 let
 	p = plot_scene([test_wall])
-	plot_photon_arrow!(p, dizzy, 4; label="Philip")
+	plot_photon_arrow!(p, dizzy, 4; label="PhilipTheCorgi")
 	
 	try
 		scatter!(p, test_intersection.point[1:1], test_intersection.point[2:2], label="Intersection point")
@@ -665,6 +852,31 @@ sort(all_intersections)
 
 # ╔═╡ 63ef21c6-1c7a-11eb-2f3c-c5ac16bc289f
 minimum(all_intersections)
+
+# ╔═╡ 09762e56-86b5-11eb-2e39-cfd71b0c6ab7
+nearest_object = minimum(all_intersections)
+
+# ╔═╡ 16b295f0-86b5-11eb-050d-395e6b3b98f5
+fieldnames(typeof(nearest_object)) # field of an Intersection{Wall}
+
+# ╔═╡ 19cf420e-1c7c-11eb-1cb8-dd939fee1276
+function closest_hit(photon::Photon, objects::Vector{<:Object})
+	return minimum([intersection(photon, o) for o in objects])
+end
+
+# ╔═╡ b8cd4112-1c7c-11eb-3b2d-29170ad9beb5
+test_closest = closest_hit(philip, ex_1_scene)
+
+# ╔═╡ a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
+let
+	p = plot_scene(ex_1_scene)
+	
+	plot_photon_arrow!(p, philip, 4; label="PhilipTheCorgi")
+	
+	scatter!(p, test_closest.point[1:1], test_closest.point[2:2], label="Closest hit")
+	
+	p |> as_svg
+end
 
 # ╔═╡ af5c6bea-1c9c-11eb-35ae-250337e4fc86
 test_sphere = Sphere(
@@ -815,11 +1027,63 @@ let
 end
 
 # ╔═╡ 76ef6e46-1a06-11eb-03e3-9f40a86dc9aa
+"""
+	step_ray(photon::Photon, objects::Vector{<:Object})
+
+Advances the Photon `photon` one event step. 
+Calls `closest_hit` to find intersection with all objects in
+`objects` vector, determines the closest/next to be hit,
+and returns the resulting Photon after `interact`ing
+the current photon and that next object.
+"""
 function step_ray(photon::Photon, objects::Vector{<:Object})
 	hit = closest_hit(photon, objects)
 	
 	interact(photon, hit)
 end
+
+# ╔═╡ 1a43b70c-1ca3-11eb-12a5-a94ebbba0e86
+function trace_iterate(photon::Photon, scene::Vector{<:Object}, N)
+	photon_vec = Photon[]
+	push!(photon_vec, photon)
+	for step in 2:N
+		photon = step_ray(photon, scene) # advance the photon one step (interact once)
+		push!(photon_vec, photon)
+	end
+	
+	# accum_op(p:Photon, p_last:Photon) 
+	# photon_vec = accumulate(accum_op, scene)
+	
+	return photon_vec
+end
+
+# ╔═╡ 015cb0b8-86b9-11eb-2539-6169be70ead6
+function trace_accumulate(photon::Photon, scene::Vector{<:Object}, N)
+	
+	accum_op(p::Photon, _)::Photon = step_ray(p, scene)
+	photon_vec = accumulate(accum_op, 1:N, init=photon)
+	
+	return photon_vec
+end
+
+# ╔═╡ 57b62652-86ba-11eb-313c-df0a1011b2fd
+trace = trace_accumulate
+
+# ╔═╡ 1ee0787e-1a08-11eb-233b-43a654f70117
+let
+	p = plot_scene(ex_1_scene, legend=false, xlim=(-11,11), ylim=(-11,11))
+	
+	path = trace(philip, ex_1_scene, mirror_test_ray_N)
+	
+	
+	line = [philip.p, [r.p for r in path]...]
+	plot!(p, first.(line), last.(line), lw=5, color=:pink)
+	
+	plot_photon_arrow!(p, philip)
+	plot_photon_arrow!.([p], path)
+	
+	p
+end |> as_svg
 
 # ╔═╡ dced1fd0-1c9e-11eb-3226-17dc1e09e018
 md"""
@@ -1043,26 +1307,38 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─1df82c20-19c4-11eb-0959-8543a0d5630d
 # ╟─1e01c912-19c4-11eb-269a-9796cccdf274
 # ╟─1e109620-19c4-11eb-013e-1bc95c14c2ba
-# ╟─1e202680-19c4-11eb-29a7-99061b886b3c
+# ╠═1e202680-19c4-11eb-29a7-99061b886b3c
 # ╟─1e2cd0b0-19c4-11eb-3583-0b82092139aa
 # ╠═c3e52bf2-ca9a-11ea-13aa-03a4335f2906
 # ╟─92290e54-1940-11eb-1a24-5d1eaee9f6ca
 # ╠═d851a202-1ca0-11eb-3da0-51fcb656783c
 # ╠═99c61b74-1941-11eb-2323-2bdb7c120a28
+# ╠═9d56ceee-7fac-11eb-1327-23f5dd1376a1
 # ╠═0906b340-19d3-11eb-112c-e568f69deb5d
 # ╠═e45e1d36-1a12-11eb-2720-294c4be6e9fd
-# ╟─6de1bafc-1a01-11eb-3d67-c9d9b6c3cea8
-# ╟─eff9329e-1a05-11eb-261f-734127d36750
+# ╠═6de1bafc-1a01-11eb-3d67-c9d9b6c3cea8
+# ╠═7ae13c68-84a6-11eb-1226-b556e1d9ec56
+# ╠═4e56a408-84a6-11eb-31e5-efbdcf9cebf7
+# ╠═3424a486-84a6-11eb-3fed-7d3eabc8340d
+# ╠═ef1e8d9c-84a6-11eb-0ff8-fda5d7c46f7c
+# ╠═eff9329e-1a05-11eb-261f-734127d36750
+# ╠═c2e35672-84a8-11eb-11fc-db0cc76aa519
 # ╟─5f551588-1ac4-11eb-1f86-197442f1ef1d
 # ╠═ac9bafaa-1ac4-11eb-16c4-0df8133f9c98
+# ╠═074e7a5c-84a8-11eb-1f73-737215a238f8
 # ╠═0393dd3a-1a06-11eb-18a9-494ae7a26bc0
+# ╠═0f8915c8-84a9-11eb-30a3-f307ce752476
+# ╠═01eceeb2-84a4-11eb-0aaf-7f78807a2ef4
 # ╟─293776f8-1ac4-11eb-21db-9d023c09e89f
 # ╟─0e9a240c-1ac5-11eb-1a7e-b3c43c459484
+# ╠═0b5e1df0-7fb2-11eb-209b-8f41db673f3a
+# ╠═6c95c198-84a5-11eb-2588-8daaba15abd9
+# ╠═1e2c50dc-7fb2-11eb-2108-0f4dfdce18ba
 # ╟─e5ed6098-1c70-11eb-0b58-31d1830b9a10
 # ╠═24b0d4ba-192c-11eb-0f66-e77b544b0510
 # ╠═925e98d4-1c78-11eb-230d-994518f0060e
-# ╟─76d4351c-1c78-11eb-243f-5f6f5e485d5d
-# ╟─eabca8ce-1c73-11eb-26ad-271f6eba889b
+# ╠═76d4351c-1c78-11eb-243f-5f6f5e485d5d
+# ╠═eabca8ce-1c73-11eb-26ad-271f6eba889b
 # ╟─aa43ef1c-1941-11eb-04de-552719a08da0
 # ╠═8acef4b0-1a09-11eb-068d-79a259244ed1
 # ╠═8018fbf0-1a05-11eb-3032-95aae07ca78f
@@ -1080,8 +1356,8 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─038d5e88-1ac7-11eb-2020-a9d7e19feebc
 # ╟─6544be90-19d3-11eb-153c-218025f738c6
 # ╠═a306e880-19eb-11eb-0ff1-d7ef49777f63
-# ╟─3663bf80-1a06-11eb-3596-8fbbed28cc38
-# ╟─7f286ccc-1c75-11eb-1270-95a87840b300
+# ╠═3663bf80-1a06-11eb-3596-8fbbed28cc38
+# ╠═7f286ccc-1c75-11eb-1270-95a87840b300
 # ╟─d70380a4-1ad0-11eb-1184-f7e9b84a83ad
 # ╠═55187168-1c78-11eb-1182-ab4336b577a4
 # ╟─2158a356-1a05-11eb-3f5b-4dfa810fc602
@@ -1096,10 +1372,12 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═c3090e4a-1a09-11eb-0f32-d3bbfd9992e0
 # ╟─55f475a8-1c7a-11eb-377e-91d07fa0bdb6
 # ╠═63ef21c6-1c7a-11eb-2f3c-c5ac16bc289f
+# ╠═09762e56-86b5-11eb-2e39-cfd71b0c6ab7
+# ╠═16b295f0-86b5-11eb-050d-395e6b3b98f5
 # ╟─6cf7df1a-1c7a-11eb-230b-df1333f191c7
 # ╠═19cf420e-1c7c-11eb-1cb8-dd939fee1276
 # ╠═b8cd4112-1c7c-11eb-3b2d-29170ad9beb5
-# ╟─a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
+# ╠═a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
 # ╟─e9c6a0b8-1ad0-11eb-1606-0319caf0948a
 # ╟─522e6b22-194d-11eb-167c-052e65f6b703
 # ╟─dad5acfa-194c-11eb-27f9-01f40342a681
@@ -1107,6 +1385,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─70b8401e-1c7e-11eb-16b2-d54d8f66d71a
 # ╠═79532662-1c7e-11eb-2edf-57e7cfbc1eda
 # ╟─b6614d80-194b-11eb-1edb-dba3c29672f8
+# ╠═15cc8c6c-86b6-11eb-189e-673e8b7ae091
 # ╠═2c6defd0-1ca1-11eb-17db-d5cb498f3265
 # ╟─ad5a7420-1c7f-11eb-042f-115a9ef4c676
 # ╠═0b03316c-1c80-11eb-347c-1b5c9a0ae379
@@ -1116,9 +1395,11 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─a45e1012-194d-11eb-3252-bb89daed3c8d
 # ╟─7ba5dda0-1ad1-11eb-1c4e-2391c11f54b3
 # ╠═1a43b70c-1ca3-11eb-12a5-a94ebbba0e86
-# ╟─3cd36ac0-1a09-11eb-1818-75b36e67594a
+# ╠═015cb0b8-86b9-11eb-2539-6169be70ead6
+# ╠═57b62652-86ba-11eb-313c-df0a1011b2fd
+# ╠═3cd36ac0-1a09-11eb-1818-75b36e67594a
 # ╟─1ee0787e-1a08-11eb-233b-43a654f70117
-# ╟─7478330a-1c81-11eb-2f9f-099f1111032c
+# ╠═7478330a-1c81-11eb-2f9f-099f1111032c
 # ╟─ba0a869a-1ad1-11eb-091f-916e9151f052
 # ╠═3aa539ce-193f-11eb-2a0f-bbc6b83528b7
 # ╟─caa98732-19cd-11eb-04ce-2f018275cf01
@@ -1126,7 +1407,9 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═2a2b7284-1ade-11eb-3b71-d17fe2ca638a
 # ╟─e2a8d1d6-1add-11eb-0da1-cda1492a950c
 # ╟─337918f4-194f-11eb-0b45-b13fef3b23bf
-# ╟─492b257a-194f-11eb-17fb-f770b4d3da2e
+# ╠═492b257a-194f-11eb-17fb-f770b4d3da2e
+# ╠═e1dee94e-86bb-11eb-32b8-93a3701fc495
+# ╠═6ea22e4c-872b-11eb-06ab-bf0d8956b52c
 # ╠═392fe192-1ca1-11eb-36c4-f9bd2b01a5e5
 # ╠═251f0262-1a0c-11eb-39a3-09be67091dc8
 # ╟─83aa9cea-1a0c-11eb-281d-699665da2b4f
