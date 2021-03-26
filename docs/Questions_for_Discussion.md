@@ -360,18 +360,18 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     
 - awkward programming in function `function euler_SIR`
 
-## Notes and Comments on HW7 (and associated lectures)
+## Notes and Comments on HW7 Raytracing in 2D (and associated lectures)
 
 #### Light Propagation, Relection and Refraction
-- Index of refraction, $n = IOR$ and the speed of light in a medium
-    - for any medium *i*, the speed of light in the medium is equal to *c*, the speed of light in a vacuum, divided by the Index of Refraction for medium *i*
-        - $v_i = c/n_i = v_{vacuum}/n_i$
+- Index of refraction, $\eta = IOR$ and the speed of light in a medium
+    - for any medium *i*, the speed of light in the medium $s_i$ is equal to *c*, the speed of light in a vacuum, divided by the Index of Refraction for medium *i*
+        - $s_i = c/\eta_i = s_{vacuum}/\eta_i$
         - The index of refraction for a vacuum is 1.0, and for air it is close to 1.0
             - for water, the index of refraction is greater than 1 (light is slower than *c*)
-    $$n_{air}  s_{air} = n_{water} s_{water}$$
-    - more generally
-    $$n_{air}  s_{air} = n_{water} s_{water}$$
-    $$n_{x}  s_{x} = n_{y} s_{y}$$
+    $$\eta_{air}  s_{air} = \eta_{water} s_{water}$$
+    - more generally, the speed of light in a medium is inversely proportional to the index of refraction in the medium
+    $$\eta_{air}  s_{air} = \eta_{water} s_{water}$$
+    $$\eta_{x}  s_{x} = \eta_{y} s_{y}$$
     - for $s_i$ the speed of light in the mdium
 - stepwise simulation/advancement of a ray
 
@@ -392,9 +392,9 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     """
         propagate!(rays::Vector{Ray}, positions, n, dt)
 
-    `n` is the number of steps the rays are to be propagated
     `positions` is an array for length(rays) x n-steps x d-dimension position coordinates
     (the positions of all rays at all steps in the propagation)
+    `n` is the number of steps the rays are to be propagated
     """
     function propagate!(rays::Vector{Ray}, positions, n, dt)
         ior = 1.0
@@ -406,11 +406,11 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
         end
     end
 
-    function parallel_propagate(ray_num, n; filename = "check.png", dt = 0.1)
+    function parallel_propagate(num_rays, n; filename = "check.png", dt = 0.1)
         rays = [ray([1, 0], # velocity l
             [0.1, float(i)], # position p
-            1.0) for i in 1:ray_num] # ior
-        positions = zeros[ray_num, n, 2] # storage for 2-d positions of ray_num rays for n steps
+            1.0) for i in 1:num_rays] # ior
+        positions = zeros[num_rays, n, 2] # storage for 2-d positions of num_rays rays for n steps
 
         propagate(rays, positions, n, dt) # move
 
@@ -422,7 +422,8 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 
 - Reflection of a ray
     - Dot product: $\bold a \cdot \bold b$ is the projection of $\bold a$ onto $\bold b$.
-        - $\bold a \cdot \bold b = |a| |b| cos(\theta)$ - what is the intuition?
+        - $\bold a \cdot \bold b = |a| |b| cos(\theta)$ 
+        - what is the intuition?
     
     ```julia
     """
@@ -438,33 +439,37 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     ```
 
 - Refraction of a ray
-    - $c = s_i n_i$ for light speed $s_i$ in medium $i$ with index of refraction $ior = n_i$
+    - $c = s_i \eta_i$ for light speed $s_i$ in medium $i$ with index of refraction $ior = \eta_i$
+        - speed $s_i$ in medium $i$ is inversely proportional to the index of refraction $s_i = c/\eta_i ~\propto ~ 1/\eta_i$
     - so the ratio of the index of refraction of two media is equal to the inverse ratio of the speeds in the two media
-    $$\frac {n_i}{n_j} = \frac {s_j}{s_i}$$
+    $$\frac {\eta_i}{\eta_j} = \frac {s_j}{s_i}$$
     - **Snell's law** says, further that the ratio of speeds is equal to the ratio of sines of the angles (from normal) in each medium
-    $$\frac {n_i}{n_j} = \frac {s_j}{s_i} = \frac {sin(\theta_j)}{sin(\theta_i)}$$
-    - We wish to solve for the refracted angle in the second medium, $\theta_j$ given the indices of refraction, $n_i, n_j$ and the angle of incidence at the boundary (w.r.t. normal $\hat n$) of $\theta_i$
-    $$\frac {n_i}{n_j} = \frac {sin(\theta_j)}{sin(\theta_i)}$$
-    $${sin(\theta_j)} = \frac {n_i}{n_j} {sin(\theta_i)}$$
-    $$\theta_j = sin^{-1} \left ( \frac {n_i}{n_j} {sin(\theta_i)} \right )$$
+    $$\frac {\eta_i}{\eta_j} = \frac {s_j}{s_i} = \frac {sin(\theta_j)}{sin(\theta_i)}$$
+        - Intuition: as the light passes through the more refractive medium, it is bent toward the normal, and the lateral (parallel to the surface) component of its velocity/direction is foreshortened. Thus, with the direction as the hypotenuse and the normal as one side, the parallel component is to opposite side, and its shortening is proportional to $sin(\theta)$
+            - this would imply that it is not all components of the speed, but the speed in the lateral direction parallel to the surface, that is reduced in proportion to the `IOR`, $\eta_j$
+            - 
+    - We wish to solve for the refracted angle in the second medium, $\theta_j$ given the indices of refraction, $\eta_i, \eta_j$ and the angle of incidence at the boundary (w.r.t. normal $\hat n$) of $\theta_i$
+    $$\frac {\eta_i}{\eta_j} = \frac {sin(\theta_j)}{sin(\theta_i)}$$
+    $${sin(\theta_j)} = \frac {\eta_i}{\eta_j} {sin(\theta_i)}$$
+    $$\theta_j = sin^{-1} \left ( \frac {\eta_i}{\eta_j} {sin(\theta_i)} \right )$$
     - But, more usefully we also know the trig identity
     $$cos(\theta_j) = \sqrt {1 - sin^2(\theta_j)}$$
         - this allows us to eliminate refs to $sin$ with $cos$ expressions, and then replace references $cos$ with vector dot-product expressions.
     - so we can solve for $cos(\theta_j)$, substituting Snells law into the trig identity
-    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} sin(\theta_i) \right)^2}$$
-    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 (1- cos(\theta_i)^2)}$$
-    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 ( 1- (l_i \cdot \hat n |l_i| |\hat n|)^2)}$$
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {\eta_i}{\eta_j} sin(\theta_i) \right)^2}$$
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {\eta_i}{\eta_j} \right)^2 (1- cos(\theta_i)^2)}$$
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {\eta_i}{\eta_j} \right)^2 ( 1- (l_i \cdot \hat n |l_i| |\hat n|)^2)}$$
     - if both the normal vector and the direction vector $l_j$ are standardized/normalized to unit length (which is the case here).
-        $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 (1 - (l_i \cdot \hat n)^2}$$
+        $$cos(\theta_j) = \sqrt {1 - \left (\frac {\eta_i}{\eta_j} \right)^2 (1 - (l_i \cdot \hat n)^2}$$
     - c.f the result shown @20:33 (what is $l$ here - its the vector, and it's the unit directional vector in water $w$, $\vec l_w$, right?s)
-    $$cos(\theta_j) = \sqrt {1 - \left (\frac {n_i}{n_j} \right)^2 (1- cos(\theta_i)^2)} = -\hat n \cdot \vec l_w$$
+    $$cos(\theta_j) = \sqrt {1 - \left (\frac {\eta_i}{\eta_j} \right)^2 (1- cos(\theta_i)^2)} = -\hat n \cdot \vec l_w$$
 
     - puzzling at 15:35 in lecture 1 Wk 8 "Ray Tracing in 2D"
         - ??? says "$l_w = -n/cos(\theta_w)$"
             - he seems to be confusing vectors and their lengths in the notation, and confusing $l_w$ with its component along the normal ($n$).
-        - ???but "$cos(\theta_w) = -n/l_w$ (@15:57) only in $n$ and $l_w$ are lengths, not vectors, and if $n$ is the length of the projection of $l_w$ along $n$ (i.e. they are opposite and adjacent sides of a right triangle). I thought $n$ was the unit-length normal?
-            - in the definition of `Ray` (@3:16, and as shown @11:08), `Ray.l` is the (2D direction vector). 
-                - Apparently also, something I missed, the direction vector $l$ also is meant to be of unit magnitude (speed, or the magnitude of motion in the direction $l$, is simple $c/n_i$ for light). Later, when the ray motion is not for light, the objects should ave different speeds.
+        - ??? but "$cos(\theta_w) = -n/l_w$ (@15:57) only if $n$ and $l_w$ are lengths, not vectors, and if $n$ is the length of the projection of $l_w$ along $n$ (i.e. they are opposite and adjacent sides of a right triangle). I thought $n$ was the unit-length normal?
+            - in the definition of `Ray` (@3:16, and as shown @11:08), `Ray.l` is the (2D) direction vector. 
+                - Apparently also, something I missed, the direction vector $l$ also is meant to be of unit magnitude (speed, or the magnitude of motion in the direction $l$, is simply $c/n_i$ for light). Later, when the ray motion is not for light, the objects should have different speeds.
                 - given the both $l$ and $n$ are defined to be of unit length (note they are not drawn as such), it is true the *projection of $l_w$ along $n$* is $cos(\theta_w) |l_w| = (l \cdot n)/|n|$.
         - draws line and restsarts at @16:30, for air and water
         - now confusing vector normal $n_i$ and scalar Index of Refraction $n_i$, ugh, for which we will use $\eta_i$
