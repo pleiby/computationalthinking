@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.7
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -56,7 +56,7 @@ Feel free to ask questions!
 # ╔═╡ 1e202680-19c4-11eb-29a7-99061b886b3c
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby@gmail")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -94,6 +94,14 @@ Outside of these changes, all functions from the previous homework can be taken 
 """
 
 # ╔═╡ 24b0d4ba-192c-11eb-0f66-e77b544b0510
+"""
+struct Photon
+
+Photon is a Ray (position `p` and unit direction `l` vectors) with a 
+color `c` and an
+index of refraction `ior` for the current
+media it travels through.
+"""
 struct Photon
 	"Position vector"
 	p::Vector{Float64}
@@ -139,17 +147,51 @@ md"""
 """
 
 # ╔═╡ 43306bd4-194d-11eb-2e30-07eabb8b29ef
+"""
+	reflect(ℓ₁::Vector, n̂::Vector)
+
+returns the (unit-length) reflected vector
+with the component normal to the surface reversed in direction
+(subtracting 2 x component along surface normal).
+"""
 reflect(ℓ₁::Vector, n̂::Vector)::Vector = normalize(ℓ₁ - 2 * dot(ℓ₁, n̂) * n̂)
 
+# ╔═╡ 5e9d35c4-8e6b-11eb-07e1-8f5a551d9c55
+md"""
+**Refraction:** Refraction of incident light ray with direction $\ell_1$ from medium 1 with index of refraction (ior) 
+${\eta_1}$ passing through medium 2 with ior ${\eta_2}$ and surface normal $\hat n$
+
+produces ray $\ell_2$
+
+$\ell_2 = r\ell_1 + \left(rc-\sqrt{1-r^2(1-c^2)}\right)\hat n.$
+
+where
+
+$r = \frac{\eta_1}{\eta_2}$
+
+and
+
+$c = -\hat n \cdot \ell_1.$
+
+(See derivation in HW7).
+"""
+
 # ╔═╡ 14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
+"""
+	refract(ℓ₁::Vector, n̂::Vector, old_ior, new_ior)
+
+Refracts incident light ray with direction ℓ₁ from medium 1 with index of refraction `old_ior` through medium with `new_ior` and surface normal n̂.
+Returns refracted, unit-normalized, direction vector \ell_2
+"""
 function refract(
 		ℓ₁::Vector, n̂::Vector,
 		old_ior, new_ior
 	)
-	
+	# Note: assumes ℓ₁ has unit length
 	r = old_ior / new_ior
 	
-	n̂_oriented = if -dot(ℓ₁, n̂) < 0
+	# account for entry and exiting of new medium with new_ior 
+ 	n̂_oriented = if -dot(ℓ₁, n̂) < 0
 		-n̂
 	else
 		n̂
@@ -157,7 +199,7 @@ function refract(
 	
 	c = -dot(ℓ₁, n̂_oriented)
 	
-	if abs(c) > 0.999
+	if abs(c) > 0.999 # incident direction parallel to normal n̂
 		ℓ₁
 	else
 		f = 1 - r^2 * (1 - c^2)
@@ -174,7 +216,33 @@ md"""
 #### Surface (new)
 """
 
+# ╔═╡ dbc195d8-8f3b-11eb-1e5c-0f0c08d464a9
+md"`Surface` is one of the properties of objects in the scene. It has reflectivity `r`, 
+transmission `t`
+color `c`
+and index of refraction `ior`."
+
+# ╔═╡ fe9ddc72-8f4c-11eb-3ef4-e9a3e8130ab8
+function Base.isapprox(n1::Nothing, n2::Nothing)
+	return true
+end
+
+# ╔═╡ f0c0477c-8f4c-11eb-2c89-29b3e5bbe392
+let
+	n1 = nothing
+	n2 = nothing
+	isapprox(n1, n1)
+end
+
 # ╔═╡ 8a4e888c-1ef7-11eb-2a52-17db130458a5
+"""
+	struct Surface
+
+has reflectivity `r`, 
+transmission `t`
+color `c`
+and index of refraction `ior`.
+"""
 struct Surface
 	# Reflectivity
 	r::Float64
@@ -182,12 +250,23 @@ struct Surface
 	# Transmission
 	t::Float64
 
-	# Color
+	# Color (RGB with alpha property)
 	c::RGBA
 
 	# index of refraction
 	ior::Float64
 
+	function Surface(in_r, in_t, in_c, in_ior)
+		if !isapprox(in_r + in_t + in_c.alpha, 1)
+			error("invalid Surface definition: RTC must total 1.0")
+		end
+		new(in_r, in_t, in_c, in_ior)
+	end
+	
+	"Constructor for color as Float vs RGBA - assume black/transparent"
+	function Surface(in_r, in_t, in_c::Float64, in_ior)
+		new(in_r, in_t, RGBA(0,0,0,0), in_ior)
+	end
 end
 
 # ╔═╡ 9c3bdb62-1ef7-11eb-2204-417510bf0d72
@@ -197,6 +276,13 @@ html"""
 """
 
 # ╔═╡ cb7ed97e-1ef7-11eb-192c-abfd66238378
+"""
+	struct Sphere <: Object
+
+has (lens) position vector `p`,
+and real radius `r`, and 
+Surface `s` (non-refracting)
+"""
 struct Sphere <: Object
 	# Lens position
 	p::Vector{Float64}
@@ -207,9 +293,50 @@ struct Sphere <: Object
 	s::Surface
 end
 
+# ╔═╡ fda4d41e-8f3e-11eb-324a-53236d6dca4e
+"""
+	Lens(p, r, ior)
+
+returns a transparent sphere (zero-reflectivity or color)
+with index-of-refraction `ior`
+at location `p` with radius `r`
+"""
+function Lens(p, r, ior)
+	Sphere(p, r, Surface(0, 1, RGBA(0,0,0,0), ior))
+end
+
+# ╔═╡ 8f414efc-8f3f-11eb-3744-9722c269ce60
+"""
+	ReflectingSphere(p, r)
+
+returns a perfectly reflecting sphere (zero-transmission/refraction or color)
+with index-of-refraction 0.0,
+at location `p` with radius `r`
+"""
+function ReflectingSphere(p, r)
+	Sphere(p, r, Surface(1, 0, RGBA(0,0,0,0), 0))
+end
+
+# ╔═╡ 48436c3c-8f40-11eb-0d44-69d240609b84
+"""
+	ReflectingSphere(p, r)
+
+returns a perfectly opaque sphere (zero-transmission/refraction or reflection),
+at location `p` with radius `r`
+"""function ColoredSphere(p, r, c::RGB)
+	Sphere(p, r, Surface(0, 0, RGBA(c), 0))
+end
+
 # ╔═╡ 6fdf613c-193f-11eb-0029-957541d2ed4d
+"""
+   function sphere_normal_at(p::Vector{Float64}, s::Sphere)
+
+return unit-normal to surface of sphere `s` at point `p`
+(actually does not check if p is one the surface - this is the 
+unit-direction from center of sphere to `p`)
+"""
 function sphere_normal_at(p::Vector{Float64}, s::Sphere)
-	normalize(p - s.p)
+	normalize(p - s.p) # this is the normalized vector from sphere center to point p
 end
 
 # ╔═╡ 452d6668-1ec7-11eb-3b0a-0b8f45b43fd5
@@ -230,13 +357,17 @@ md"""
 ### Camera
 
 For the purposes of this homework, we will constrain ourselves to a camera pointing exclusively downward.
+
+	- Q: does "downward" just mean that the 2D screen/window is a plane orthogonal to the vector from the center (`position`) of the camera sphere through the center of the aperture?
+	- Or does this just define the image plane (screen) to be parallel to the x-y plane?
+
 This is simply because camera positioning can be a bit tricky and there is no reason to make the homework more complicated than it needs to be!
 
 So, what is the purpose of the camera?
 
 Well, in reality, a camera is a device that collects the color information from all the rays of light that are refracting and reflecting off of various objects in some sort of scene.
 Because there are a nearly infinite number of rays bouncing around the scene at any time, we will actually constrain ourselves only to rays that are entering our camera.
-In poarticular, we will create a 2D screen just in front of the camera and send a ray from the camera to each pixel in the screen, as shown in the following image:
+In particular, we will create a 2D screen just in front of the camera and send a ray from the camera to each pixel in the screen, as shown in the following image:
 
 $(RemoteResource("https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Ray_trace_diagram.svg/1920px-Ray_trace_diagram.svg.png", :width=>400, :style=>"display: block; margin: auto;"))
 """
@@ -254,6 +385,14 @@ Let's start with the struct
 """
 
 # ╔═╡ 88576c6e-1ecb-11eb-3e34-830aeb433df1
+"""
+	struct Camera <: Object
+	
+`resolution::Tuple{Int64,Int64}` "Set of all pixels, counts as scene resolution"\n
+`aperture_width::Float64` 	"Physical size of aperture"
+`focal_length::Float64` 	"Camera's distance from screen"
+`p::Vector{Float64}` 		"Camera's 3D position"
+"""
 struct Camera <: Object
 	"Set of all pixels, counts as scene resolution"
 	resolution::Tuple{Int64,Int64}
@@ -261,10 +400,10 @@ struct Camera <: Object
 	"Physical size of aperture"
 	aperture_width::Float64
 
-	"Camera's distance from screen"
+	"Camera's distance from screen (<0 if camera above)"
 	focal_length::Float64
 
-	"Camera's position"
+	"Camera's position (3D)"
 	p::Vector{Float64}
 end
 
@@ -277,23 +416,39 @@ Now we need to construct some method to create each individual ray extending fro
 """
 
 # ╔═╡ 4006566e-1ecd-11eb-2ce1-9d1107186784
+"""
+	function init_rays(cam::Camera)
+
+Create an individual ray (`Photon`) extending from the camera 
+center position `cam.p` to each pixel in the image plane (`cam.aperture`).
+Returns an array of such Photons, each colored black,`ior`=1.
+"""
 function init_rays(cam::Camera)
 	
 	# Physical size of the aperture/image/grid
 	aspect_ratio = cam.resolution[1] / cam.resolution[2]
 	dim = (
-		cam.aperture_width, 
+		cam.aperture_width, # width is in Skybox-world distance units
 		cam.aperture_width / aspect_ratio
 	)
 
+	# pixed width = dim ./ resolution
+	
 	# The x, y coordinates of every pixel in our image grid
-	# relative to the image center
+	# relative to the image center (at [0, 0, cam.focal_length])
 	xs = LinRange(-0.5* dim[1], 0.5 * dim[1], cam.resolution[1])
 	ys = LinRange(0.5* dim[2], -0.5 * dim[2], cam.resolution[2])
 	
-	pixel_positions = [[x, y, cam.focal_length] for y in ys, x in xs]
+	# pixel_positions are relative to camera center,
+	#. hence they normalize to directions
+	pixel_positions = [[x, y, cam.focal_length] for x in xs, y in ys]
 	directions = normalize.(pixel_positions)
 	
+	# broadcast the Photon constructor with all photons needed for the 
+	# full aperture array with camera `resolution`
+	#.  Photons located at the camera position `p`,
+	#.  each directed to position of one pixel in the aperture,
+	#.  colored black
 	Photon.([cam.p], directions, [zero(RGB)], [1.0])
 end
 
@@ -303,7 +458,16 @@ tiny_resolution_camera = Camera((4,3), 16, -5, [0, 20, 100])
 # ╔═╡ 2838c1e4-2071-11eb-13d8-1da955fbf544
 test_rays = init_rays(tiny_resolution_camera)
 
+# ╔═╡ bca71e18-8f25-11eb-387f-1de578048acb
+md"Confirming all the rays in the aperture (image plane) start out at black."
+
 # ╔═╡ 595acf48-1ef6-11eb-0b46-934d17186e7b
+"""
+	extract_colors(rays)
+
+takes `rays`, an array of rays, and 
+returns an array of the ray colors
+"""
 extract_colors(rays) = map(ray -> ray.c, rays)
 
 # ╔═╡ b7fa4512-2089-11eb-255d-4d6de9cdfb8e
@@ -331,6 +495,14 @@ So let's start with the sky box struct
 """
 
 # ╔═╡ 9e71183c-1ef4-11eb-1802-3fc60b51ceba
+"""
+	struct SkyBox <: Object
+	
+SkyBox is a sphere with
+`p::Vector{Float64}` "skybox position";
+`r::Float64` "Skybox radius";
+`c::Function` "Color function"
+"""
 struct SkyBox <: Object
 	# Skybox position
 	p::Vector{Float64}
@@ -338,21 +510,33 @@ struct SkyBox <: Object
 	# Skybox radius
 	r::Float64
 	
-	# Color function
+	# Color function provides color at a position
 	c::Function
 end
 
 # ╔═╡ 093b9e4a-1f8a-11eb-1d32-ad1d85ddaf42
+"""
+	intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S <: Union{SkyBox, Sphere}}
+
+returns either `Miss` or `Intersection(sphere, t, point)`
+which indicates the sphere, 
+nearest intersection time ("distance) `t` and 
+location `point`.
+"""
 function intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S <: Union{SkyBox, Sphere}}
+	# coeffs of quatratic equation for photon intersection time 
+	# with surface of sphere:
+	#    a t^2 + bt + c = 0
 	a = dot(photon.l, photon.l)
 	b = 2 * dot(photon.l, photon.p - sphere.p)
 	c = dot(photon.p - sphere.p, photon.p - sphere.p) - sphere.r^2
 	
-	d = b^2 - 4*a*c
+	d = b^2 - 4*a*c # discriminant 
 	
 	if d <= 0
-		Miss()
+		Miss() # Miss if tangential (single root)
 	else
+		# quadratic roots
 		t1 = (-b-sqrt(d))/2a
 		t2 = (-b+sqrt(d))/2a
 		
@@ -361,7 +545,7 @@ function intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S <: Union{SkyB
 		elseif t2 > ϵ
 			t2
 		else
-			return Miss()
+			return Miss() # if negative or near 0 (already passed?)
 		end
 		
 		point = photon.p + t * photon.l
@@ -371,6 +555,13 @@ function intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S <: Union{SkyB
 end
 
 # ╔═╡ 89e98868-1fb2-11eb-078d-c9298d8a9970
+"""
+	closest_hit(photon::Photon, objects::Vector{<:Object})
+
+takes a `photon` and a 
+`objects` vector of objects. 
+Calculate the vector of `Intersection`s/`Miss`es, and return the `minimum`.
+"""
 function closest_hit(photon::Photon, objects::Vector{<:Object})
 	hits = intersection.([photon], objects)
 	
@@ -384,7 +575,7 @@ So for this, we will basically create a function that returns back a smooth grad
 
 For the color information, we will be assigning a color to each cardinal axis.
 That is to say that there will be a red gradient along $x$, a blue gradient along $y$, and a green gradient along $z$.
-For this, we will need to define some extent over which the gradient will be active in 'real' units.
+For this, we will need to define some extent $D$ over which the gradient will be active in 'real' units.
 From there, we can say that the gradient is
 
 $$\frac{r+D}{2D},$$
@@ -394,25 +585,39 @@ where $r$ is the ray's position when it hits the skybox, and $D$ is the extent o
 So let's get to it and write the function!
 """
 
+# ╔═╡ 86e661e4-8f27-11eb-0d94-db239128e3bb
+sb = SkyBox(
+
 # ╔═╡ c947f546-1ef5-11eb-0f02-054f4e7ae871
+"""
+	function gradient_skybox_color(position, skybox)
+
+returns color `c` at given `position` in the `skybox`
+"""
 function gradient_skybox_color(position, skybox)
 	extents = skybox.r
 	c = zero(RGB)
 	
-	if position[1] < extents && position[1] > -extents
+	if -extents < position[1] < extents 
 		c += RGB((position[1]+extents)/(2.0*extents), 0, 0)
 	end
 
-	if position[2] < extents && position[2] > -extents
+	if -extents < position[2] < extents
 		c += RGB(0,0,(position[2]+extents)/(2.0*extents))
 	end
 
-	if position[3] < extents && position[3] > -extents
+	if -extents < position[3] < extents
 		c += RGB(0,(position[3]+extents)/(2.0*extents), 0)
 	end
 
 	return c
 end
+
+# ╔═╡ 2f8f27ba-8f29-11eb-2e8b-5f37fe9d1e83
+
+
+# ╔═╡ de75a7ca-8efb-11eb-3fc8-33978482a0e2
+md"Construct the sky with a `SkyBox` constructor, and use the new function `gradient_skybox_color(position, skybox)` as the coloring function `c`"
 
 # ╔═╡ a919c880-206e-11eb-2796-55ccd9dbe619
 sky = SkyBox([0.0, 0.0, 0.0], 1000, gradient_skybox_color)
@@ -422,12 +627,15 @@ md"""
 Let's set up a basic scene and trace an image! Since our skybox is _spherical_ we can use **the same `intersect`** method as we use for `Sphere`s. Have a look at [the `intersect` method](#sphere-defs), we already added `SkyBox` as a possible type.
 """
 
+# ╔═╡ f5196d3c-8f0c-11eb-34ea-9d4b4851a77d
+md"Construct a `Camera` with given resolution, "
+
 # ╔═╡ daf80644-2070-11eb-3363-c577ae5846b3
 basic_camera = Camera((300,200), 16, -5, [0,20,100])
 
 # ╔═╡ df3f2178-1ef5-11eb-3098-b1c8c67cf136
 md"""
-To create this image, we used the ray tracing function bewlow, which takes in a camera and a set of objects / scene, and...
+To create this image, we used the ray tracing function below, which takes in a camera and a set of objects / scene, and...
 1. Initilializes all the rays
 2. Propagates the rays forward
 3. Converts everything into an image
@@ -448,9 +656,23 @@ The color that we _perceive_ for that ray is the combination both of these color
 A third possibility explored in the lecture is that the objects can also have a color associated with them and just return the color value instead of reflecting or refracting.
 
 **You can choose!** After implementing reflection, you can implement three different spheres (you can modify the existing code, create new types, add functions, and so on), a purely reflective, purely refractive or opaquely colored sphere. You can also go straight for the more photorealistic option, which is that every sphere is a combination of these three - this is what we did in the lecture.
+
+Note: In this simulation, "all rays of light stop at the skybox."
 """
 
 # ╔═╡ a9754410-204d-11eb-123e-e5c5f87ae1c5
+"""
+	interact(ray::Photon, hit::Intersection{SkyBox}, ::Any, ::Any)
+
+given a Photon `ray` and `hit`, an intersection with a SkyBox,
+return the Photon with position `p` at the hit location,
+with the same direction `l` and ior, 
+and new color `c`.
+This models absorbtion/transmission of the photon by the skybox, and 
+producing only color (no further reflection or refraction)
+
+Incidentally: drags along two other unnamed args
+"""
 function interact(ray::Photon, hit::Intersection{SkyBox}, ::Any, ::Any)
 	
 	ray_color = hit.object.c(hit.point, hit.object)
@@ -458,35 +680,15 @@ function interact(ray::Photon, hit::Intersection{SkyBox}, ::Any, ::Any)
 end
 
 # ╔═╡ 086e1956-204e-11eb-2524-f719504fb95b
+"""
+	interact(ray::Photon, ::Miss, ::Any, ::Any)
+
+given a Photon `ray` and `miss`,
+just return the `ray` unchanged.
+
+Incidentally: drags along two other unnamed args
+"""
 interact(photon::Photon, ::Miss, ::Any, ::Any) = photon
-
-# ╔═╡ 95ca879a-204d-11eb-3473-959811aa8320
-function step_ray(ray::Photon, objects::Vector{O},
-			   num_intersections) where {O <: Object}
-
-	if num_intersections == 0
-		ray
-	else
-		hit = closest_hit(ray, objects)
-		interact(ray, hit, num_intersections, objects)
-	end
-end
-
-# ╔═╡ 6b91a58a-1ef6-11eb-1c36-2f44713905e1
-function ray_trace(objects::Vector{O}, cam::Camera;
-				   num_intersections = 10) where {O <: Object}
-	rays = init_rays(cam)
-
-	new_rays = step_ray.(rays, [objects], [num_intersections])
-
-	extract_colors(new_rays)
-end
-
-# ╔═╡ a0b84f62-2047-11eb-348c-db83f4e6c39c
-let
-	scene = [sky]
-	ray_trace(scene, basic_camera; num_intersections=4)
-end
 
 # ╔═╡ d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
 md"""
@@ -494,8 +696,18 @@ Below, we create a scene with a number of balls inside of it.
 While working on your code, work in small increments, and do frequent checks to see if your code is working. Feel free to modify this test scene, or to create a simpler one.
 """
 
-# ╔═╡ 16f4c8e6-2051-11eb-2f23-f7300abea642
+# ╔═╡ cd2681a6-8f30-11eb-240d-cb980ace20a7
 main_scene = [
+	sky,
+	Sphere([0,0,-25], 20, 
+		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
+	
+	#Sphere([0,50,-100], 20, 
+	#	Surface(0.0, 1.0, RGBA(0,0,0,0.0), 1.0)),
+]
+
+# ╔═╡ 16f4c8e6-2051-11eb-2f23-f7300abea642
+main_scene_full = [
 	sky,
 	Sphere([0,0,-25], 20, 
 		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
@@ -516,12 +728,195 @@ main_scene = [
 		Surface(0.5, 0.5, RGBA(1,1,1,0), 1.5)),
 ]
 
+# ╔═╡ 2fa4e1ac-8f58-11eb-0741-615eacf823a9
+function propagate(ray::Photon, objects::Vector{O},
+			   num_intersections) where {O <: Object}
+	for i = 1:num_intersections
+		if ray.l != zeros(length(ray.l))
+			intersect_final = [Inf, Inf]
+			intersected_object = nothing
+			for object in objects
+				intersect = intersection(ray, object)
+				# look for nearest intersected object
+				if intersect != nothing &&
+					sum(intersect[:]^2) < sum(intersect_final^2)
+					intersect_final = intersect
+					intersected_object = object
+				end
+			end
+			
+			if intersect_final != nothing
+				ray = Ray(ray.l, ray.p + intersect_final, ray.c, ray.ior)
+				if typeof(intersected_object) == Sphere
+					reflected_ray = ray
+					refracted_ray = ray
+					colored_ray = ray
+					if !isapprox(intersected_object.s.t, 0) # some transmission
+						ior = 1/intersected_object.s.ior
+						if dot(ray.l,
+								sphere_normal_at(ray, intersected_object)) > 0 
+							ior = intersected_object.s.ior
+						end
+
+						refracted_ray = refract(ray, intersected_object, ior)
+						refracted_ray = propagate(refracted_ray, objects, num_intersections-1)
+					end
+
+					if !isapprox(intersected_object.s.r, 0) # some Reflection
+						n = sphere_normal_at(ray, intersected_object)
+
+						reflected_ray = reflect(ray, n)
+						reflected_ray = propagate(reflected_ray, objects, num_intersections-1)
+
+					end
+
+					if !isapprox(intersected_object.s.c.alpha, 0) # some Color response
+						ray_color = RGB(intersected_object.s.c)
+						ray_vel = zeros(length(ray.l)) # stopping photon, velocity l=0
+						colored_ray = Ray(ray_vel, ray.p, ray_color)
+						# colored ray is not propagated further
+					end
+					
+					# eventually you return from all recursive calls to propagate,
+					#. either after hitting num_intersections objects, or 
+					#. being absorbed by a colored object or the SkyBox
+					# construct weighed average color, weighted by surface t, s, c
+					# Gather all the colors from all the refracted, reflected,
+					#  and absorbed photons/rays at this level of intersection
+					ray_color = intersected_object.s.t * refracted_ray.c +
+								intersected_object.s.r * reflected_ray.c +
+								intersected_object.s.c.alpha * colored_ray.c
+
+					ray = Ray(zeros(length(ray.l)), ray.p, ray_color)
+					
+				elseif typeof(intersected_object) = SkyBox)
+					ray_color = pixel_color(ray.p, 1000)
+					ray_vel = zeros(length(ray.l)) # stopping photon, velocity l=0
+					ray = Ray(ray_val, ray.p, ray_color)
+				end # interacting with sphere or SkyBox
+						
+			end # if intersected with something, intersect_final != nothing
+		end # if ray not stopped, ray.l != zeros(length(ray.l))
+	end # i = 1:num_intersections
+end
+
+# ╔═╡ 3766ddda-8f35-11eb-3b67-e782bcfcf631
+function reflect(ray, n)
+	ray_vel = ray.l .- 2*dot(ray.l, n)
+	ray_pos = ray.p + 0.001*ray.l # advance position slightly, to avoid repeat collision
+end
+
+# ╔═╡ 95ca879a-204d-11eb-3473-959811aa8320
+begin
+	
+	function interact(ray::Photon, hit::Intersection{Sphere}, 
+			num_intersections::Int, objects::Any)
+
+		# ray_color = hit.object.c(hit.point, hit.object)
+		# Photon(hit.point, ray.l, ray_color, ray.ior)
+
+		n = sphere_normal_at(hit.point, hit.object)
+
+		if !isapprox(hit.object.s.r, 0) # non-zero reflection
+			reflected_ray = Photon(hit.point, reflect(ray.l, n), ray.c, ray.ior)
+			return step_ray(reflected_ray, objects, num_intersections - 1)	
+		else
+			return missing # need to handle absorbtion and refraction
+		end
+	end
+	
+	"""
+		step_ray(ray::Photon, objects::Vector{O},
+				   num_intersections) where {O <: Object}
+
+	Step a single Photon `ray` forward `num_intersections`
+	intersection events, given the vector of objects (scene)
+	`objects`
+
+	Return the ray after `interact` with the closest `hit`
+	"""
+	function step_ray(ray::Photon, objects::Vector{O},
+				   num_intersections) where {O <: Object}
+
+		if num_intersections == 0 # return unchanged
+			return ray
+		else
+			hit = closest_hit(ray, objects)
+			return interact(ray, hit, num_intersections, objects)
+		end
+	end
+end
+
+# ╔═╡ 6b91a58a-1ef6-11eb-1c36-2f44713905e1
+"""
+takes a vector of objects (scene) `objects`, 
+and Camera `cam`, and
+1. Initilializes all the rays
+2. Steps the rays forward to record `num_intersections` intersections,
+3. Converts everything into an image by extracting colors
+"""
+function ray_trace(objects::Vector{O}, cam::Camera;
+				   num_intersections = 10) where {O <: Object}
+	rays = init_rays(cam)
+
+	new_rays = step_ray.(rays, [objects], [num_intersections])
+
+	extract_colors(new_rays)
+end
+
+# ╔═╡ a0b84f62-2047-11eb-348c-db83f4e6c39c
+let
+	scene = [sky] # the vector of objects is just the spherical SkyBox `sky`
+	ray_trace(scene, basic_camera; num_intersections=4)
+end
+
 # ╔═╡ 1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
 let
 	cam = Camera((600,360), 16, -15, [0,10,100])
 
 	ray_trace(main_scene, cam; num_intersections=3)
 end
+
+# ╔═╡ a0ecae3a-8f2b-11eb-353e-a1a458e4f49f
+methods(interact)
+
+# ╔═╡ 27974e80-8f41-11eb-06f7-396743bd6540
+function refract(ray, lens::Sphere, ior)
+	n = sphere_normal_at(ray, lens)
+	
+	# account for entry and exiting of new medium with new_ior 
+	if dot(n, ray.l) > 0
+		n .*= -1 # reverse normal
+	end
+		
+	c = dot(ray.l, -n);
+	d = 1 - ior^2 * (1 - c^2);
+
+	if d < 0
+		return reflect(ray, n)
+	end
+	# Following skips normalize, and seems to reverse old_ior and new_ior
+	# ray_vel = normalize(r * ray.l + (r*c - sqrt(d)) * n) # for r = old_ior / new_ior
+	ray_vel = ior * ray.l + (ior*c - sqrt(d)) * n
+
+	# can this be done with existing vector refraction function: ?
+	# ray_vel = refract(ray.l, sphere_normal_at(ray, lens), 1, ior)
+
+	return Ray(ray_vel, ray.p, ray.c)
+end
+
+# ╔═╡ ea7f0792-8f34-11eb-29cb-cb86aa84a804
+function convert_to_image(rays::Array{Ray}, filename)
+	color_array = Array{RGB}(undef, size(rays)[2], size(rays)[1])
+	for i = 1:length(color_array)
+		color_array[i] = rays[i].c # iterates across all dimensions
+	end
+	
+	save(filename, color_array)	
+end
+
+# ╔═╡ 29621cb4-8f4a-11eb-182c-2528f45496ca
+md"XXX"
 
 # ╔═╡ 67c0bd70-206a-11eb-3935-83d32c67f2eb
 md"""
@@ -929,7 +1324,7 @@ still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdo
 keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
 
 # ╔═╡ ec5d59b0-19c3-11eb-0206-cbd1a5415c28
-yays = [md"Fantastic!", md"Splendid!", md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+yays = [md"Fantastic!", md"Splendid!", md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section.", md"Whew! About time.", md"Good Gawd, yes."]
 
 # ╔═╡ ec698eb0-19c3-11eb-340a-e319abb8ebb5
 correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
@@ -942,6 +1337,12 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 
 # ╔═╡ 8cfa4902-1ad3-11eb-03a1-736898ff9cef
 TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]))
+
+# ╔═╡ b3899eda-8f31-11eb-3283-3bf0c7062dd5
+TODO_note("Need a `interact` function for a sphere. Start with reflection")
+
+# ╔═╡ c8e755e4-8f34-11eb-0b8b-41fd005961d4
+TODO_note("Need functions `reflect` and `refract` dispatching for Photons (Rays) on Spheres")
 
 # ╔═╡ Cell order:
 # ╟─1df32310-19c4-11eb-0824-6766cd21aaf4
@@ -961,11 +1362,18 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═89e98868-1fb2-11eb-078d-c9298d8a9970
 # ╟─dc36ceaa-205c-11eb-169c-bb4c36aaec9f
 # ╠═43306bd4-194d-11eb-2e30-07eabb8b29ef
+# ╠═5e9d35c4-8e6b-11eb-07e1-8f5a551d9c55
 # ╠═14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
 # ╟─7f0bf286-2071-11eb-0cac-6d10c93bab6c
+# ╟─dbc195d8-8f3b-11eb-1e5c-0f0c08d464a9
+# ╠═fe9ddc72-8f4c-11eb-3ef4-e9a3e8130ab8
+# ╠═f0c0477c-8f4c-11eb-2c89-29b3e5bbe392
 # ╠═8a4e888c-1ef7-11eb-2a52-17db130458a5
 # ╠═9c3bdb62-1ef7-11eb-2204-417510bf0d72
 # ╠═cb7ed97e-1ef7-11eb-192c-abfd66238378
+# ╠═fda4d41e-8f3e-11eb-324a-53236d6dca4e
+# ╠═8f414efc-8f3f-11eb-3744-9722c269ce60
+# ╠═48436c3c-8f40-11eb-0d44-69d240609b84
 # ╠═093b9e4a-1f8a-11eb-1d32-ad1d85ddaf42
 # ╠═6fdf613c-193f-11eb-0029-957541d2ed4d
 # ╟─452d6668-1ec7-11eb-3b0a-0b8f45b43fd5
@@ -977,26 +1385,40 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═4006566e-1ecd-11eb-2ce1-9d1107186784
 # ╠═156c0d7a-2071-11eb-1551-4f2d393df6c8
 # ╠═2838c1e4-2071-11eb-13d8-1da955fbf544
+# ╠═bca71e18-8f25-11eb-387f-1de578048acb
 # ╠═595acf48-1ef6-11eb-0b46-934d17186e7b
 # ╠═b7fa4512-2089-11eb-255d-4d6de9cdfb8e
 # ╟─494687f6-1ecd-11eb-3ada-6f11f45aa74f
 # ╠═9e71183c-1ef4-11eb-1802-3fc60b51ceba
 # ╟─aa9e61aa-1ef4-11eb-0b56-cd7ded52b640
+# ╠═86e661e4-8f27-11eb-0d94-db239128e3bb
 # ╠═c947f546-1ef5-11eb-0f02-054f4e7ae871
+# ╠═2f8f27ba-8f29-11eb-2e8b-5f37fe9d1e83
+# ╟─de75a7ca-8efb-11eb-3fc8-33978482a0e2
 # ╠═a919c880-206e-11eb-2796-55ccd9dbe619
 # ╟─49651bc6-2071-11eb-1aa0-ff829f7b4350
+# ╠═f5196d3c-8f0c-11eb-34ea-9d4b4851a77d
 # ╠═daf80644-2070-11eb-3363-c577ae5846b3
 # ╠═a0b84f62-2047-11eb-348c-db83f4e6c39c
 # ╟─df3f2178-1ef5-11eb-3098-b1c8c67cf136
 # ╠═6b91a58a-1ef6-11eb-1c36-2f44713905e1
-# ╟─04a86366-208b-11eb-1977-ff7e4ae6b714
+# ╠═04a86366-208b-11eb-1977-ff7e4ae6b714
 # ╠═a9754410-204d-11eb-123e-e5c5f87ae1c5
 # ╠═086e1956-204e-11eb-2524-f719504fb95b
+# ╠═b3899eda-8f31-11eb-3283-3bf0c7062dd5
+# ╠═a0ecae3a-8f2b-11eb-353e-a1a458e4f49f
 # ╠═95ca879a-204d-11eb-3473-959811aa8320
 # ╠═1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
 # ╟─d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
+# ╠═cd2681a6-8f30-11eb-240d-cb980ace20a7
 # ╠═16f4c8e6-2051-11eb-2f23-f7300abea642
 # ╟─7c804c30-208d-11eb-307c-076f2086ae73
+# ╠═2fa4e1ac-8f58-11eb-0741-615eacf823a9
+# ╠═c8e755e4-8f34-11eb-0b8b-41fd005961d4
+# ╠═27974e80-8f41-11eb-06f7-396743bd6540
+# ╠═3766ddda-8f35-11eb-3b67-e782bcfcf631
+# ╠═ea7f0792-8f34-11eb-29cb-cb86aa84a804
+# ╠═29621cb4-8f4a-11eb-182c-2528f45496ca
 # ╟─67c0bd70-206a-11eb-3935-83d32c67f2eb
 # ╟─748cbaa2-206c-11eb-2cc9-7fa74308711b
 # ╟─981e6bd2-206c-11eb-116d-6fad4e04ce34
@@ -1028,7 +1450,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─ec3ed530-19c3-11eb-10bb-a55e77550d1f
 # ╟─ec4abc12-19c3-11eb-1ca4-b5e9d3cd100b
 # ╟─ec57b460-19c3-11eb-2142-07cf28dcf02b
-# ╟─ec5d59b0-19c3-11eb-0206-cbd1a5415c28
+# ╠═ec5d59b0-19c3-11eb-0206-cbd1a5415c28
 # ╠═ec698eb0-19c3-11eb-340a-e319abb8ebb5
 # ╟─ec7638e0-19c3-11eb-1ca1-0b3aa3b40240
 # ╟─ec85c940-19c3-11eb-3375-a90735beaec1
