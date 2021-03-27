@@ -593,12 +593,46 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     ```
 
 
+## Notes on 3-D Ray TRracing and HW 8
+- James says "Camera: For the purposes of this homework, we will constrain ourselves to a camera pointing exclusively downward."
+    - does "downward" just mean that the 2D screen/window (image plane) is a plane orthogonal to the shortest vector from the center of the camera sphere?
+    - Or does this just define the image plane (screen) to be parallel to the x-y plane, and place the camera in the positive direction on the z-axis (camera center location is [0, 0, -focal_length]) relative to center screen?
+- Important to clarify: 
+    - the camera "image plane" is the camera aperture, of specified `Camera.aperture_width` and `Camera.resolution` (pixel dimensions)
+    - `focal_length::Float64` "Camera's distance from screen" is <0 if camera "above" on z axis
+- `HW8 function `init_rays()` uses broadcasting in interesting ways
+    - Q: in `function init_rays(cam::Camera)`, why do the pixel x-coords (xs) go from pos to neg, while y-coords (ys) gofrom neg to pos?
+    - in function
+        - rather than 
+        ```julia
+        function gradient_skybox_color(position, skybox) 
+        ...
+            if position[1] < extents && position[1] > -extents
+        ```
+        - how about more Julianic and elegant
+        ```julia
+        function gradient_skybox_color(position, skybox)
+        ...
+            if -extents < position[1] < extents 
+        ```
+- *Aside*: the VSCode preview of markdown is top notch, preview text in the buffer (need not save), rendering many features (equations, tables, syntax-highlighted code) and moving the focus to follow the cursor in the text window.
+- **Q re `methods`:** did you notice that `methods(foobar)` shows all the methods and a hyperlink to their location in a file (but not a link to the open Pluto notebook).
 
+        methods(interact)
 
+        # 2 methods for generic function interact:
+        interact(photon::Main.workspace16.Photon, ::Main.workspace3.Miss, ::Any, ::Any) in Main.workspace16 at /Users/paulleiby/Documents/Programming/Julia/computationalthinking/hw/homework8/hw8.jl#==#086e1956-204e-11eb-2524-f719504fb95b:1
+        interact(ray::Main.workspace16.Photon, hit::Main.workspace3.Intersection{Main.workspace121.SkyBox}, ::Any, ::Any) in Main.workspace121 at /Users/paulleiby/Documents/Programming/Julia/computationalthinking/hw/homework8/hw8.jl#==#a9754410-204d-11eb-123e-e5c5f87ae1c5:1
 
+- `interact(ray::Photon, hit::Intersection{SkyBox}` This models absorbtion/transmission of the photon by the skybox, and producing only color (no reflection or refraction)
 
+- **Q re compound type declarations:** How do we understand these
+    ```julia
+    function intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S <: Union{SkyBox, Sphere}}
 
-
+    function step_ray(ray::Photon, objects::Vector{O},
+			   num_intersections) where {O <: Object}
+    ```
 ## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
