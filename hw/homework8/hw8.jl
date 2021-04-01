@@ -441,7 +441,7 @@ function init_rays(cam::Camera)
 	
 	# pixel_positions are relative to camera center,
 	#. hence they normalize to directions
-	pixel_positions = [[x, y, cam.focal_length] for x in xs, y in ys]
+	pixel_positions = [[x, y, cam.focal_length] for y in ys, x in xs]
 	directions = normalize.(pixel_positions)
 	
 	# broadcast the Photon constructor with all photons needed for the 
@@ -697,17 +697,17 @@ While working on your code, work in small increments, and do frequent checks to 
 """
 
 # ╔═╡ cd2681a6-8f30-11eb-240d-cb980ace20a7
-main_scene = [
+main_scene_small = [
 	sky,
 	Sphere([0,0,-25], 20, 
 		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
 	
-	#Sphere([0,50,-100], 20, 
-	#	Surface(0.0, 1.0, RGBA(0,0,0,0.0), 1.0)),
+	Sphere([0,50,-100], 20, 
+		Surface(0.0, 1.0, RGBA(0,0,0,0.0), 1.0)),
 ]
 
 # ╔═╡ 16f4c8e6-2051-11eb-2f23-f7300abea642
-main_scene_full = [
+main_scene = [
 	sky,
 	Sphere([0,0,-25], 20, 
 		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
@@ -817,12 +817,12 @@ begin
 
 		n = sphere_normal_at(hit.point, hit.object)
 
-		if !isapprox(hit.object.s.r, 0) # non-zero reflection
+		# if !isapprox(hit.object.s.r, 0) # non-zero reflection
 			reflected_ray = Photon(hit.point, reflect(ray.l, n), ray.c, ray.ior)
 			return step_ray(reflected_ray, objects, num_intersections - 1)	
-		else
-			return missing # need to handle absorbtion and refraction
-		end
+		# else
+		#	return missing # need to handle absorbtion and refraction
+		# end
 	end
 	
 	"""
@@ -876,6 +876,9 @@ let
 
 	ray_trace(main_scene, cam; num_intersections=3)
 end
+
+# ╔═╡ 4a7bfcca-8f5f-11eb-2091-11b339efd6ba
+methods(interact)
 
 # ╔═╡ a0ecae3a-8f2b-11eb-353e-a1a458e4f49f
 methods(interact)
@@ -1402,6 +1405,7 @@ TODO_note("Need functions `reflect` and `refract` dispatching for Photons (Rays)
 # ╠═a0b84f62-2047-11eb-348c-db83f4e6c39c
 # ╟─df3f2178-1ef5-11eb-3098-b1c8c67cf136
 # ╠═6b91a58a-1ef6-11eb-1c36-2f44713905e1
+# ╠═4a7bfcca-8f5f-11eb-2091-11b339efd6ba
 # ╠═04a86366-208b-11eb-1977-ff7e4ae6b714
 # ╠═a9754410-204d-11eb-123e-e5c5f87ae1c5
 # ╠═086e1956-204e-11eb-2524-f719504fb95b
