@@ -633,6 +633,49 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     function step_ray(ray::Photon, objects::Vector{O},
 			   num_intersections) where {O <: Object}
     ```
+
+
+## HW 9 - 
+- Laplacian: 
+    - In mathematics, the Laplace operator or Laplacian is a differential operator given by the divergence of the gradient of a function on Euclidean space. It is usually denoted by the symbols ∇·∇, $\nabla^2$ (where ∇ is the nabla operator) or Δ. 
+    - In a Cartesian coordinate system, the Laplacian is given by the sum of second partial derivatives of the function with respect to each independent variable. 
+    $$\nabla^2 f \equiv \frac {\partial^2 f}{\partial x_1^2} + \frac {\partial^2 f}{\partial x_2^2} + \frac {\partial^2 f}{\partial x_3^2} = \sum_i^n \frac {\partial^2 f}{\partial x_i^2}$$
+    - "Informally, the Laplacian Δf(p) of a function f at a point p measures by how much the average value of f over small spheres or balls centered at p deviates from f(p)." <https://en.wikipedia.org/wiki/Laplace_operator>
+    - If φ denotes the electrostatic potential associated to a charge distribution q, then the charge distribution itself is given by the negative of the Laplacian of φ:
+    $${q=-\varepsilon _{0}\Delta \varphi ,}$$
+        - the (electrostatic) field is the (negative) gradient of the potential
+    - Finding the potential function subject to suitable boundary conditions is equivalent to solving Poisson's equation.
+- **Poissons' Equation** <https://en.wikipedia.org/wiki/Poisson%27s_equation>
+    - Poisson's equation is an elliptic partial differential equation of broad utility in theoretical physics.
+    - For example, the solution to Poisson's equation is the potential field caused by a given electric charge or mass density distribution; with the potential field known, one can then calculate electrostatic or gravitational (force) field.
+    - It is a generalization of Laplace's equation, which is also frequently seen in physics
+    - Poisson's equation is
+    $${\Delta \varphi =f}$$
+        - where $\Delta$ is the Laplace operator (divergence of the gradient, or $\nabla \cdot \nabla$), and $f$ and $\varphi$  are real or complex-valued functions on a manifold. 
+    - Usually, $f$ is given and $\varphi$  is sought. 
+    - When the manifold is Euclidean space, the Laplace operator is often denoted as $\nabla^2$ and so Poisson's equation is frequently written as
+    $$\nabla^2 \varphi = f.$$
+
+    - *Gravity Example:* Newtonian gravity
+        - In the case of a gravitational field $g$ due to an attracting massive object of density $\rho$, Gauss's law for gravity in differential form can be used to obtain the corresponding Poisson equation for gravity,
+        $$\nabla \cdot \mathbf {g} = -4 \pi G\rho ~.$$
+        - Since the gravitational field is conservative (and irrotational), it can be expressed in terms of a scalar potential $\phi$,
+        $$\mathbf {g} =-\nabla \phi ~.$$
+        - Substituting into Gauss's law
+        $$\nabla \cdot (-\nabla \phi )=-4\pi G\rho$$
+        - yields Poisson's equation for gravity,
+        $${\nabla }^{2}\phi =4\pi G\rho .$$
+        - If the mass density is zero, Poisson's equation reduces to Laplace's equation.
+- Discrete Approximation of the Laplacian:
+    - Based on Taylor series approx in 2-D
+    $$\nabla^2 f \equiv \frac {\partial^2 f}{\partial x_1^2} + \frac {\partial^2 f}{\partial x_2^2} =0$$
+    $$\frac {f(x+h,y) + f(x-h,y) + f(x,y+h)+f(x,y-h)}{4 h^2} = f(x,y)$$
+    - Or in terms of values on adjacent grid observations $h=1$, $x \in \{1...n\}$, $y \in \{1...m\}$, $f(x,y) = f_{ij}$
+    $${f_{i+1,j} + f_{i-1,j} + f_{i,j+1}+f_{i, j-1}} - 4 f_{i,j} = 0$$
+    - Both these forms indicate that the Laplacian is the difference between the average value of $f$ around $(x,y)$ and its value at the point $f(x,y)$
+    
+
+
 ## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
