@@ -572,7 +572,7 @@ Now that we know how to bounce light around mirrors, we want to simulate a _sphe
 """
 	struct Sphere <: Object
 
-Sphere has position vector `center`,
+Spherical lens has position vector `center`,
 and real `radius`, and index of refraction `ior`
 """
 struct Sphere <: Object
@@ -997,11 +997,6 @@ md"""
 We need a helper functions to find the normal of the sphere's surface at any position. Remember that the normal will always be pointing perpendicularly from the surface of the sphere. This means that no matter what point you are at, the normal will just be a normalized vector of your current location minus the sphere's position:
 """
 
-# ╔═╡ 6fdf613c-193f-11eb-0029-957541d2ed4d
-function sphere_normal_at(p::Vector{Float64}, s::Sphere)
-	normalize(p - s.center)
-end
-
 # ╔═╡ 392c25b8-1add-11eb-225d-49cfca27bef4
 md"""
 👉 Write a new method for `interact` that takes a `photon` and a `hit` of type `Intersection{Sphere}`, that implements refraction. It returns a new `Photon` positioned at the hit point, with the refracted velocity and the new index of refraction.
@@ -1009,8 +1004,11 @@ md"""
 
 # ╔═╡ 427747d6-1ca1-11eb-28ae-ff50728c84fe
 function interact(photon::Photon, hit::Intersection{Sphere})
-	
-	return missing
+
+	n = sphere_normal_at(hit.point, hit.object)
+	l2 = reflect(photon.l, n)
+
+	return Photon(hit.point, l2, photon.c, ray.ior)
 end
 
 # ╔═╡ 0b03316c-1c80-11eb-347c-1b5c9a0ae379
@@ -1302,6 +1300,23 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╔═╡ 8cfa4902-1ad3-11eb-03a1-736898ff9cef
 TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]))
 
+# ╔═╡ f63237fc-8f53-11eb-2993-eb968c963cc1
+"""
+   function sphere_normal_at(p::Vector{Float64}, s::Sphere)
+
+return unit-normal to surface of sphere `s` at point `p`
+(actually does not check if p is one the surface - this is the 
+unit-direction from center of sphere to `p`)
+"""
+function sphere_normal_at(p::Vector{Float64}, s::Sphere)
+	normalize(p - s.p) # this is the normalized vector from sphere center to point p
+end
+
+# ╔═╡ 6fdf613c-193f-11eb-0029-957541d2ed4d
+function sphere_normal_at(p::Vector{Float64}, s::Sphere)
+	normalize(p - s.center)
+end
+
 # ╔═╡ Cell order:
 # ╟─1df32310-19c4-11eb-0824-6766cd21aaf4
 # ╟─1df82c20-19c4-11eb-0959-8543a0d5630d
@@ -1374,7 +1389,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═63ef21c6-1c7a-11eb-2f3c-c5ac16bc289f
 # ╠═09762e56-86b5-11eb-2e39-cfd71b0c6ab7
 # ╠═16b295f0-86b5-11eb-050d-395e6b3b98f5
-# ╟─6cf7df1a-1c7a-11eb-230b-df1333f191c7
+# ╠═6cf7df1a-1c7a-11eb-230b-df1333f191c7
 # ╠═19cf420e-1c7c-11eb-1cb8-dd939fee1276
 # ╠═b8cd4112-1c7c-11eb-3b2d-29170ad9beb5
 # ╠═a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
@@ -1417,13 +1432,14 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═b3ab93d2-1a0b-11eb-0f5a-cdca19af3d89
 # ╟─71dc652e-1c9c-11eb-396c-cfd9ee2261fe
 # ╟─584ce620-1935-11eb-177a-f75d9ad8a399
-# ╟─78915326-1937-11eb-014f-fff29b3660a0
+# ╠═78915326-1937-11eb-014f-fff29b3660a0
 # ╠═14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
 # ╠═71b70da6-193e-11eb-0bc4-f309d24fd4ef
 # ╟─54b81de0-193f-11eb-004d-f90ec43588f8
 # ╠═6fdf613c-193f-11eb-0029-957541d2ed4d
 # ╟─392c25b8-1add-11eb-225d-49cfca27bef4
 # ╟─c25caf08-1a13-11eb-3c4d-0567faf4e662
+# ╠═f63237fc-8f53-11eb-2993-eb968c963cc1
 # ╠═427747d6-1ca1-11eb-28ae-ff50728c84fe
 # ╟─dced1fd0-1c9e-11eb-3226-17dc1e09e018
 # ╠═65aec4fc-1c9e-11eb-1c5a-6dd7c533d3b8
