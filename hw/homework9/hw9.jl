@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.9
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -170,7 +170,7 @@ i.e. our knowledge of the real value is normally distributed with a mean value $
 
 **Definition:** *Equilibrium climate sensitivity (ECS)* is defined as the amount of warming $\Delta T$ caused by a doubling of CO₂ (e.g. from the pre-industrial value 280 ppm to 560 ppm), at equilibrium.
 
-At equilibrium, the energy balance model equation is:
+At equilibrium, $dT/dt = 0$, and the energy balance model equation is:
 
 $0 = \frac{S(1 - α)}{4} - (A - BT_{eq}) + a \ln\left( \frac{2\;\text{CO}₂_{\text{PI}}}{\text{CO}₂_{\text{PI}}} \right)$
 
@@ -206,7 +206,8 @@ md"""
 
 # ╔═╡ a86f13de-259d-11eb-3f46-1f6fb40020ce
 observations_from_changing_B = md"""
-Hello world!
+More negative `B` correspond to stronger negative feedback to temperature change,
+that is the rate of Earth radiation rises more substantially with temperature `T`.
 """
 
 # ╔═╡ 3d66bd30-259d-11eb-2694-471fb3a4a7be
@@ -216,7 +217,7 @@ md"""
 
 # ╔═╡ 5f82dec8-259e-11eb-2f4f-4d661f44ef41
 observations_from_nonnegative_B = md"""
-Hello world!
+`B` greater than or equal to zero means positive feedback, and Earth's re-radiation declines with temperature `T`.
 """
 
 # ╔═╡ 56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -234,9 +235,6 @@ md"""
 👉 Create a graph to visualize ECS as a function of B. 
 """
 
-# ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
-
-
 # ╔═╡ 269200ec-259f-11eb-353b-0b73523ef71a
 md"""
 #### Exercise 1.2 - _Doubling CO₂_
@@ -253,13 +251,6 @@ md"""
 👉 In what year are we expected to have doubled the CO₂ concentration, under policy scenario RCP8.5?
 """
 
-# ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
-expected_double_CO2_year = let
-	
-	
-	missing
-end
-
 # ╔═╡ bade1372-25a1-11eb-35f4-4b43d4e8d156
 md"""
 #### Exercise 1.3 - _Uncertainty in B_
@@ -273,6 +264,13 @@ A value of ``B`` close to zero means that an increase in CO₂ concentrations wi
 B̅ = -1.3; σ = 0.4
 
 # ╔═╡ c4398f9c-1fc4-11eb-0bbb-37f066c6027d
+"""
+	ECS(; B=B̅, a=Model.a)
+
+*Equilibrium climate sensitivity (`ECS`)* is defined as the 
+amount of warming `Delta T` caused by a doubling of CO₂ 
+(e.g. from the pre-industrial value 280 ppm to 560 ppm), at equilibrium.
+"""
 ECS(; B=B̅, a=Model.a) = -a*log(2.)./B;
 
 # ╔═╡ 25f92dec-1fc4-11eb-055d-f34deea81d0e
@@ -305,6 +303,26 @@ let
 		label="ΔT(t) = T(t) - T₀")
 end |> as_svg
 
+# ╔═╡ 193e9aa6-5319-4e13-a49d-43ba146c25e6
+ecs = [ECS(B=b) for b in collect(-2.5:0.1:0)]
+
+# ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
+let
+	B_range = collect(-2.5:.001:-0.1)
+	ecs = [ECS(B=b) for b in B_range]
+	
+	p = plot(
+		size=(500,250), legend=:bottomright, 
+		title="ECS Variation with Climate Feedback Parameter `B`", 
+		ylabel="temperature change [°C]", xlabel="B [W/m²/K]",
+		ylim=(-.5, maximum(ecs)),
+	)
+	
+	plot!(p, B_range, ecs, 
+		ls=:dash, color=:darkred, label="ECS")
+	
+end |> as_svg
+
 # ╔═╡ 736ed1b6-1fc2-11eb-359e-a1be0a188670
 B_samples = let
 	B_distribution = Normal(B̅, σ)
@@ -324,13 +342,13 @@ md"""
 """
 
 # ╔═╡ 3d72ab3a-2689-11eb-360d-9b3d829b78a9
-ECS_samples = missing
+ECS_samples = ECS.(B= B_samples)
 
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 md"**Answer:**"
 
 # ╔═╡ 1f148d9a-1fc8-11eb-158e-9d784e390b24
-
+histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ΔT [K]", ylabel="samples")
 
 # ╔═╡ cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is. 
@@ -338,16 +356,35 @@ md"It looks like the ECS distribution is **not normally distributed**, even thou
 👉 How does $\overline{\text{ECS}(B)}$ compare to $\text{ECS}(\overline{B})$? What is the probability that $\text{ECS}(B)$ lies above $\text{ECS}(\overline{B})$?
 "
 
-# ╔═╡ 02173c7a-2695-11eb-251c-65efb5b4a45f
+# ╔═╡ e6a381c2-d0a1-4b5f-ba47-613d25951ac0
+meanECS = trunc(mean(ECS_samples), digits=3)
 
+# ╔═╡ dd398aaa-d960-4dd7-9eb9-90681d28deb8
+ECSatmean = trunc(ECS(B = mean(B_samples)), digits=3)
+
+# ╔═╡ 02173c7a-2695-11eb-251c-65efb5b4a45f
+md"The mean of `ECS(B)` is ($(trunc(mean(B_samples), digits=3))), while the value opf `ECS` at the mean `B` ($(trunc(mean(B_samples), digits=3))), is  "
+
+# ╔═╡ 017b5a2d-45df-4a38-9102-d92798bf6dfd
+md"""The mean of `ECS(B)` is $(meanECS),
+
+while the value of `ECS` at the mean `B` ($(trunc(mean(B_samples), digits=3))), is $(ECSatmean)."""
 
 # ╔═╡ 440271b6-25e8-11eb-26ce-1b80aa176aca
 md"👉 Does accounting for uncertainty in feedbacks make our expectation of global warming better (less implied warming) or worse (more implied warming)?"
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
-Hello world!
+It makeS our expectations (concerns) worse, because of the nonlinearity (convexity) of adverse consequences in our uncertain parameters. Specifically, the convexity of `ECS(B)` means that uncertainty in B create a higher mean $\Delta T$. By convexity of `ECS`:
+
+$$E[ECS(\tilde B)] \ge ECS(E[\tilde B])$$
 """
+
+# ╔═╡ 7df3548d-e909-4b13-a858-2223cc0e458b
+md"""See [Jensens Inequality](https://en.wikipedia.org/wiki/Jensen%27s_inequality): 
+
+> In its simplest form the inequality states that the convex transformation of a mean is less than or equal to the mean applied after convex transformation; it is a simple corollary that the opposite is true of concave transformations.
+""" 
 
 # ╔═╡ 5b5f25f0-266c-11eb-25d4-17e411c850c9
 md"""
@@ -483,6 +520,26 @@ t = 1850:2100
 # ╔═╡ e10a9b70-25a0-11eb-2aed-17ed8221c208
 plot(t, Model.CO2_RCP85.(t), 
 	ylim=(0,1200), ylabel="CO2 concentration [ppm]")
+
+# ╔═╡ 26d51210-74a6-44b3-9864-d0d2b7984308
+frac_CO2_increase = Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t))
+
+# ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
+expected_double_CO2_year = let
+	frac_CO2_increase = Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t))
+	base_CO2 = Model.CO2_RCP85(0)
+	y = missing
+	for i in 1:length(frac_CO2_increase)
+		if frac_CO2_increase[i] > 2.0
+			y = t[i]
+			break
+		end
+	end
+	y
+end
+
+# ╔═╡ 354a9f46-adec-4709-aece-7adbf2018bd8
+t[findfirst(Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t)) .> 2.0)]
 
 # ╔═╡ 40f1e7d8-252d-11eb-0549-49ca4e806e16
 @bind t_scenario_test Slider(t; show_value=true, default=1850)
@@ -776,34 +833,41 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─1312525c-1fc0-11eb-2756-5bc3101d2260
 # ╠═c4398f9c-1fc4-11eb-0bbb-37f066c6027d
 # ╟─7f961bc0-1fc5-11eb-1f18-612aeff0d8df
-# ╟─25f92dec-1fc4-11eb-055d-f34deea81d0e
+# ╠═25f92dec-1fc4-11eb-055d-f34deea81d0e
 # ╟─fa7e6f7e-2434-11eb-1e61-1b1858bb0988
 # ╟─16348b6a-1fc2-11eb-0b9c-65df528db2a1
 # ╟─e296c6e8-259c-11eb-1385-53f757f4d585
 # ╠═a86f13de-259d-11eb-3f46-1f6fb40020ce
 # ╟─3d66bd30-259d-11eb-2694-471fb3a4a7be
-# ╠═5f82dec8-259e-11eb-2f4f-4d661f44ef41
+# ╟─5f82dec8-259e-11eb-2f4f-4d661f44ef41
 # ╟─56b68356-2601-11eb-39a9-5f4b8e580b87
 # ╟─7d815988-1fc7-11eb-322a-4509e7128ce3
 # ╟─aed8f00e-266b-11eb-156d-8bb09de0dc2b
+# ╠═193e9aa6-5319-4e13-a49d-43ba146c25e6
 # ╠═b9f882d8-266b-11eb-2998-75d6539088c7
 # ╟─269200ec-259f-11eb-353b-0b73523ef71a
 # ╠═e10a9b70-25a0-11eb-2aed-17ed8221c208
 # ╟─2dfab366-25a1-11eb-15c9-b3dd9cd6b96c
+# ╠═26d51210-74a6-44b3-9864-d0d2b7984308
 # ╠═50ea30ba-25a1-11eb-05d8-b3d579f85652
+# ╠═354a9f46-adec-4709-aece-7adbf2018bd8
 # ╟─51e2e742-25a1-11eb-2511-ab3434eacc3e
 # ╟─bade1372-25a1-11eb-35f4-4b43d4e8d156
 # ╠═02232964-2603-11eb-2c4c-c7b7e5fed7d1
-# ╟─736ed1b6-1fc2-11eb-359e-a1be0a188670
+# ╠═736ed1b6-1fc2-11eb-359e-a1be0a188670
 # ╠═49cb5174-1fc3-11eb-3670-c3868c9b0255
 # ╟─f3abc83c-1fc7-11eb-1aa8-01ce67c8bdde
 # ╠═3d72ab3a-2689-11eb-360d-9b3d829b78a9
 # ╟─b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 # ╠═1f148d9a-1fc8-11eb-158e-9d784e390b24
 # ╟─cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
+# ╠═e6a381c2-d0a1-4b5f-ba47-613d25951ac0
+# ╠═dd398aaa-d960-4dd7-9eb9-90681d28deb8
 # ╠═02173c7a-2695-11eb-251c-65efb5b4a45f
+# ╠═017b5a2d-45df-4a38-9102-d92798bf6dfd
 # ╟─440271b6-25e8-11eb-26ce-1b80aa176aca
-# ╠═cf276892-25e7-11eb-38f0-03f75c90dd9e
+# ╟─cf276892-25e7-11eb-38f0-03f75c90dd9e
+# ╟─7df3548d-e909-4b13-a858-2223cc0e458b
 # ╟─5b5f25f0-266c-11eb-25d4-17e411c850c9
 # ╟─3f823490-266d-11eb-1ba4-d5a23975c335
 # ╟─971f401e-266c-11eb-3104-171ae299ef70
