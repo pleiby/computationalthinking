@@ -361,9 +361,6 @@ begin
 	);
 end;
 
-# ╔═╡ 5eab9995-3fcc-411e-b481-429a290585cb
-EBM()
-
 # ╔═╡ dae1ef3f-19c2-48e0-94d5-c88ecb24a7ab
 md"Q??? What does default constructor `EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)` do? What does it use for parameter values? A: Reaches out to the globals for params."
 
@@ -701,7 +698,6 @@ md"#### Package dependencies"
 # ╠═35dfe0d2-17b0-11eb-20dc-7d7f4c5568ae
 # ╟─3a549f2a-17b0-11eb-1d80-4bc2abc3dba6
 # ╠═d0bf9b06-179c-11eb-0f1c-2fd535cb0e57
-# ╠═5eab9995-3fcc-411e-b481-429a290585cb
 # ╟─dae1ef3f-19c2-48e0-94d5-c88ecb24a7ab
 # ╠═09821a25-9691-485d-aa71-a26ce6de22eb
 # ╠═d28403a6-7a6a-44bf-9305-24d97e485ba7
