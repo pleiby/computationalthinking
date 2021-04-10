@@ -635,7 +635,7 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     ```
 
 
-## HW 9 - 
+## Week 10, Lecture 18 (Hierarchical Thinking, Jacobi's Method and Multigrid) (HW 9 prep) 
 - Laplacian: 
     - In mathematics, the Laplace operator or Laplacian is a differential operator given by the divergence of the gradient of a function on Euclidean space. It is usually denoted by the symbols ∇·∇, $\nabla^2$ (where ∇ is the nabla operator) or Δ. 
     - In a Cartesian coordinate system, the Laplacian is given by the sum of second partial derivatives of the function with respect to each independent variable. 
@@ -674,8 +674,10 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
     $${f_{i+1,j} + f_{i-1,j} + f_{i,j+1}+f_{i, j-1}} - 4 f_{i,j} = 0$$
     - Both these forms indicate that the Laplacian is the difference between the average value of $f$ around $(x,y)$ and its value at the point $f(x,y)$
     
-
-
+## Week 11 Lecture 21 (Nonlinear Climate Dynamics & Showball Earth) - Prep for HW9
+- re `function Model.timestep!(ebm)`
+    - this is defined outside the `module Model`, and yet it seems to supercede the version of `timestep!(ebm)` defined within module `Model` (it adds the updating of albedo each step)
+    - Q: how is this scoping achieved, and which version of the fn is called when?
 ## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
