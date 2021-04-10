@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.10
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -105,6 +105,27 @@ $\alpha(T) = \begin{cases}
 \end{cases}$
 """
 
+# ╔═╡ ebb4e7e8-644d-46c7-b965-2df5c59cca3c
+md"So now the Energy Balance Model has new terms related to T in the dynamic equation for T:"
+
+# ╔═╡ e3e9dc90-450d-4860-845c-3e43ecb96ce4
+md"""
+\begin{gather}
+\color{brown}{C \frac{dT}{dt}}
+\; \color{black}{=} \; \color{orange}{\frac{(1 - α(T))S}{4}}
+\; \color{black}{-} \; \color{blue}{(A - BT)}.
+\end{gather}
+where
+$\alpha(T) = \begin{cases}
+\alpha_{i} & \mbox{if }\;\; T \leq -10\text{°C} \\
+\alpha_{i} + (\alpha_{0}-\alpha_{i})\frac{T + 10}{20} & \mbox{if }\;\; -10\text{°C} \leq T \leq 10\text{°C} \\
+\alpha_{0} &\mbox{if }\;\; T \geq 10\text{°C} \
+\end{cases}$
+"""
+
+# ╔═╡ 03c9573a-6896-41d0-863c-4b5362c8bc7a
+md"This is a piecewise linear model, which apparently has more complex behavior."
+
 # ╔═╡ 816f1d96-2508-11eb-0873-c3b564a31dea
 md"""
 ##### 1.2) Adding the ice-albedo feedback to our simple climate model
@@ -118,6 +139,17 @@ To add this function into our energy balance model from [Lecture 20 (Part I)](ht
 """
 
 # ╔═╡ 96ed2f9a-1e29-11eb-09f4-23df52152b2f
+"""
+	module Model
+
+Includes 
+`S, α, B, T0` planetary physical constants
+
+Thermal forcing functions `absorbed_solar_radiation`, `outgoing_thermal_radiation` and `greenhouse_effect`.
+Function `tendency` which is the dynamic equation (time derivative) for temp `T`, comprised of the above thermal forcing functions.
+
+Simulation functions `timestep!`, `run!`
+"""
 module Model
 
 const S = 1368; # solar insolation [W/m^2]  (energy per unit time per unit area)
@@ -126,11 +158,11 @@ const B = -1.3; # climate feedback parameter [W/m^2/°C],
 const T0 = 14.; # preindustrial temperature [°C]
 
 absorbed_solar_radiation(; α=α, S=S) = S*(1 - α)/4; # [W/m^2]
-outgoing_thermal_radiation(T; A=A, B=B) = A - B*T;
+outgoing_thermal_radiation(T; A=A, B=B) = A - B*T; # [W/m^2]
 
 const A = S*(1. - α)/4 + B*T0; # [W/m^2].
 
-greenhouse_effect(CO2; a=a, CO2_PI=CO2_PI) = a*log(CO2/CO2_PI);
+greenhouse_effect(CO2; a=a, CO2_PI=CO2_PI) = a*log(CO2/CO2_PI); # [W/m^2]
 
 const a = 5.0; # CO2 forcing coefficient [W/m^2]
 const CO2_PI = 280.; # preindustrial CO2 concentration [parts per million; ppm];
@@ -138,11 +170,24 @@ CO2_const(t) = CO2_PI; # constant CO2 concentrations
 
 const C = 51.; # atmosphere and upper-ocean heat capacity [J/m^2/°C]
 
+"""
+	timestep!(ebm)
+
+advance energy balance model `ebm` one time step,
+updating temp `T` and time `t`
+"""
 function timestep!(ebm)
 	append!(ebm.T, ebm.T[end] + ebm.Δt*tendency(ebm));
 	append!(ebm.t, ebm.t[end] + ebm.Δt);
 end;
 
+"""
+	tendency(ebm)
+
+Dynamic equation (time derivative) for temp `T`,
+comprised of the combined thermal forcing functions
+(`absorbed_solar_radiation`, `outgoing_thermal_radiation`, `greenhouse_effect`)
+"""
 tendency(ebm) = (1. /ebm.C) * (
 	+ absorbed_solar_radiation(α=ebm.α, S=ebm.S)
 	- outgoing_thermal_radiation(ebm.T[end], A=ebm.A, B=ebm.B)
@@ -151,21 +196,21 @@ tendency(ebm) = (1. /ebm.C) * (
 
 begin
 	mutable struct EBM
-		T::Array{Float64, 1}
+		T::Array{Float64, 1} # temperature sequence
 	
-		t::Array{Float64, 1}
+		t::Array{Float64, 1} # time sequence
 		Δt::Float64
 	
-		CO2::Function
+		CO2::Function # CO2 concentrations as function of time t
 	
-		C::Float64
-		a::Float64
-		A::Float64
-		B::Float64
+		C::Float64 # heat capacity
+		a::Float64 # CO2 thermal forcing coefficient 
+		A::Float64 # const term in earth radiation eqn
+		B::Float64 # temp coeff in earth radiation eqn
 		CO2_PI::Float64
 	
-		α::Float64
-		S::Float64
+		α::Float64 # earth surface albedo/reflectivity
+		S::Float64 # solar insolation
 	end;
 	
 	# Make constant parameters optional kwargs
@@ -174,7 +219,7 @@ begin
 		EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)
 	);
 	
-	# Construct from float inputs for convenience
+	# Construct sequence arrays from float inputs for convenience
 	EBM(T0::Float64, t0::Float64, Δt::Float64, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
 		EBM([T0], [t0], Δt, CO2;
@@ -183,6 +228,11 @@ begin
 end;
 
 begin
+	"""
+		run!(ebm::EBM, end_year::Real)
+	
+	runs an `EBM` simulation by timestepping forward until a given `end_year`
+	"""
 	function run!(ebm::EBM, end_year::Real)
 		while ebm.t[end] < end_year
 			timestep!(ebm)
@@ -200,7 +250,7 @@ begin
 	hist = EBM(T0, 1850., 1., CO2_hist,
 		C=C, B=B, A=A
 	)
-	run!(hist, 2020.)
+	run!(hist, 2020.) # run the EBM with historical CO2 levels, through 2020
 end
 
 begin
@@ -213,7 +263,7 @@ begin
 	run!(RCP85, 2100.)
 end
 
-end
+end # module Model
 
 # ╔═╡ 016c1074-1df4-11eb-2da8-578e25d9456b
 md"""##### 1.1) The ice-albedo feedback
@@ -223,7 +273,17 @@ In Lecture 20, we used a **constant** value $α =$ $(Model.hist.α) for Earth's 
 While oceans are dark and absorbant, $α_{ocean} \approx 0.05$, ice and snow are bright and reflective: $\alpha_{ice,\,snow} \approx 0.5$ to $0.9$. Thus, if much of the ocean's surface freezes over, we expect Earth's albedo to rise dramatically, causing more sunlight to be reflected to space, which in turn causes even more cooling and more of the ocean to freeze, etc. This *non-linear positive feedback effect* is referred to as the **ice-albedo feedback** (see illustration below).
 """
 
+# ╔═╡ d355c653-91de-4450-89ba-8718d1d22898
+md"**Note:** setting the breakpoint `ΔT` to 10 implies no ice (albedo `α` near zero) at current temp of `Model.T0` = $(Model.T0)"
+
 # ╔═╡ 262fc3c6-1df2-11eb-332d-c1c9561b3710
+"""
+	α(T; α0=Model.α, αi=0.5, ΔT=10.)
+
+Returns albedo as function of temperature `T`
+with option kwargs for breakpoints in piecewise
+linear (non-linear) response of `α` to `T`
+"""
 function α(T; α0=Model.α, αi=0.5, ΔT=10.)
 	if T < -ΔT
 		return αi
@@ -248,6 +308,12 @@ begin
 end
 
 # ╔═╡ 872c8f2a-1df1-11eb-3cfc-3dd568926442
+"""
+	Model.timestep!(ebm)
+
+advance energy balance model `ebm` one time step,
+updating temp `T`, time `t`, and albedo `α`
+"""
 function Model.timestep!(ebm)
 	ebm.α = α(ebm.T[end]) # Added this line
 	append!(ebm.T, ebm.T[end] + ebm.Δt*Model.tendency(ebm));
@@ -271,7 +337,7 @@ md"""
 
 In [Lecture 20 (Part II)](https://www.youtube.com/watch?v=D3jpfeQCISU), we learned how introducing non-linear terms in *ordinary differential equations* can lead to complex state spaces that allow for multiple fixed points (e.g. for $\dot{x} = \mu + x^{2}$).
 
-Let's explore how this plays out with the non-linear ice-albedo feedback by varying the initial condition $T_{0} \equiv T(t=0)$ and allowing the system to evolve for 200 years.
+Let's explore how this plays out with the non-linear ice-albedo feedback by varying the initial condition $T_{0} \equiv T(t=0)$ and allowing the system to evolve for 200 years. (We hold CO2 concentrations constant at the pre-industrial level  (`CO2_PI`)with the `EBM` argument `Model.CO2_const`.)
 """
 
 # ╔═╡ 7a1b3138-2503-11eb-1165-c399836b66a7
@@ -624,8 +690,10 @@ begin
 end;
 
 # ╔═╡ f4b24d20-251a-11eb-04cf-fd69abdcfd54
-function add_labels!(p)
+function add_labels_to_temperature_graph!(p)
 	plot!(p, xlabel="year", ylabel="temperature [°C]", legend=:bottomright, xlims=(-5,205), ylims=(-60, 30.))
+	
+	annotate!(p, 120, 0, text("some ice", 10, :black))
 	
 	plot!(p, [-5, 200], [-60, -60], fillrange=[-10., -10.], fillalpha=0.3, c=:lightblue, label=nothing)
 	annotate!(120, -20, text("completely frozen", 10, :darkblue))
@@ -639,7 +707,7 @@ begin
 	p_interact = plot(ebm_interact.t, ebm_interact.T, label=nothing, lw=3)
 	plot!([0.], [T0_interact], label=nothing, markersize=4, markershape=:circle)
 	
-	add_labels!(p_interact)
+	add_labels_to_temperature_graph!(p_interact)
 end |> as_svg
 
 # ╔═╡ Cell order:
@@ -654,18 +722,22 @@ end |> as_svg
 # ╟─9c118f9a-1df0-11eb-22dd-b14428994076
 # ╟─38346e6a-0d98-11eb-280b-f79787a3c788
 # ╟─f7761e40-1e23-11eb-2741-cfebfaf434ec
+# ╟─ebb4e7e8-644d-46c7-b965-2df5c59cca3c
+# ╟─e3e9dc90-450d-4860-845c-3e43ecb96ce4
+# ╟─03c9573a-6896-41d0-863c-4b5362c8bc7a
 # ╟─816f1d96-2508-11eb-0873-c3b564a31dea
+# ╟─d355c653-91de-4450-89ba-8718d1d22898
 # ╠═262fc3c6-1df2-11eb-332d-c1c9561b3710
 # ╟─a8dcc0fc-1df8-11eb-21fd-1fdebe5dabfc
-# ╟─96ed2f9a-1e29-11eb-09f4-23df52152b2f
+# ╠═96ed2f9a-1e29-11eb-09f4-23df52152b2f
 # ╠═872c8f2a-1df1-11eb-3cfc-3dd568926442
 # ╟─13f42334-1e27-11eb-11a0-f51af4574a6b
 # ╟─03292b48-2503-11eb-1514-5d1923d1d9a2
 # ╟─7a1b3138-2503-11eb-1165-c399836b66a7
 # ╠═1be1cce0-251b-11eb-35f7-e15741b0a712
-# ╟─af197a52-2503-11eb-1da1-d36bab6ef2d3
+# ╠═af197a52-2503-11eb-1da1-d36bab6ef2d3
 # ╟─a954ce70-2510-11eb-0d8c-c7b3f0fb3a06
-# ╟─94852946-1e25-11eb-3425-210be17c23cd
+# ╠═94852946-1e25-11eb-3425-210be17c23cd
 # ╟─c81b4956-2510-11eb-388c-87e93923e45a
 # ╟─67f43076-1fa5-11eb-093f-75e406d054c6
 # ╠═83819644-1fa5-11eb-0152-a9fab2f1730c
@@ -698,5 +770,5 @@ end |> as_svg
 # ╠═b5849000-0d68-11eb-3beb-c575e8d0ce8e
 # ╠═b4357da4-1f9e-11eb-2925-55cd6f37be22
 # ╠═90ae18dc-0db8-11eb-0d73-c3b7efaef9b0
-# ╟─f4b24d20-251a-11eb-04cf-fd69abdcfd54
+# ╠═f4b24d20-251a-11eb-04cf-fd69abdcfd54
 # ╠═e9ad66b0-0d6b-11eb-26c0-27413c19dd32
