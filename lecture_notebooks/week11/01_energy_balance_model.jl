@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.7
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -120,6 +120,14 @@ $\textcolor{orange}{\text{absorbed solar radiation} \equiv \frac{S(1-\alpha)}{4}
 """
 
 # ╔═╡ 9fd1be88-179d-11eb-15c3-fb779a666f45
+"""
+	absorbed_solar_radiation(; α=α, S=S)
+
+Interesting use of constant valued function with no required parameters
+to convert values of other (generally fixed) parameters
+`α` Earth surface albedo (fraction of insolation reflected) [unitless]
+`S` Solar insolation [W/m^2]
+"""
 absorbed_solar_radiation(; α=α, S=S) = S*(1 - α)/4; # [W/m^2]
 
 # ╔═╡ d5293b24-177f-11eb-1135-4f6395003637
@@ -141,7 +149,7 @@ T0 = 14.; # preindustrial temperature [°C]
 md"""To simplify the expression, we define:
 
 \begin{align}
-& A \equiv \mathcal{G}(T₀) - \mathcal{G}'(T₀)(T₀) & \\\\
+& A \equiv \mathcal{G}(T₀) - \mathcal{G}'(T₀)(T₀) & \text{(pre-industrial net BB radiation)}, \\\\
 & B \equiv -\mathcal{G}'(T₀) & \text{(the climate feedback parameter)},
 \end{align}
 
@@ -154,7 +162,7 @@ $\color{blue}{\text{outgoing thermal radiation} \equiv \mathcal{G}(T) \approx A 
 outgoing_thermal_radiation(T; A=A, B=B) = A - B*T;
 
 # ╔═╡ 8b076962-179d-11eb-2c44-b5bf340e92ab
-md"""The value of the *climate feedback parameter* used here,"""
+md"""The value of the *climate feedback parameter* used here (representing net rate change of planet heat (from water vapor and BB radiation) with temperature),"""
 
 # ╔═╡ bd01be7a-1786-11eb-047d-cbfaa63f93a2
 B = -1.3; # climate feedback parameter [W/m^2/°C],
@@ -178,6 +186,12 @@ By rearanging this equation, we find that the value of $A$ is given by
 # ╔═╡ f258767c-1786-11eb-0a9b-ad9f0094a8a0
 A = S*(1. - α)/4 + B*T0; # [W/m^2].
 
+# ╔═╡ 31bfc46b-cccb-46db-8a9e-5c1c3504f164
+A # Pre-industrial net BB radiation, [W/m^2]
+
+# ╔═╡ 6d3c6747-df6c-464f-bb6e-6e7a272428b7
+md"**Note:** this value for constant `A` in the expresssion for outgoing thermal radiation as a linear function of temperature `T` is benchmarked to temperature level in degrees C, not K."
+
 # ╔═╡ eaceee7e-177f-11eb-3d94-778732ca8768
 md"""
 ##### 1.3) Human-caused greenhouse effect
@@ -194,10 +208,19 @@ greenhouse_effect(CO2; a=a, CO2_PI=CO2_PI) = a*log(CO2/CO2_PI);
 md"where"
 
 # ╔═╡ 1be33ebe-1787-11eb-02f5-43802a30be01
-a = 5.0; # CO2 forcing coefficient [W/m^2]
+a = 5.0; # CO2 forcing coefficient [W/m^2] (per e-fold increase in CO2 concentration)
 
 # ╔═╡ 91b1ff3a-179c-11eb-3fc1-2d991840a4a1
 CO2_PI = 280.; # preindustrial CO2 concentration [parts per million; ppm];
+
+# ╔═╡ 9e534d91-3dc8-4c49-92f1-3956ace78b47
+greenhouse_effect(CO2_PI) # CO2 forcing [W/m^2] at base preindustrial (equil) level
+
+# ╔═╡ 33f28c8c-bfcb-4ec1-9dee-2bd2dc9107b0
+md"The CO2 thermal forcing [W/m^2] for an e-fold $(round(1000*exp(1))/1000) increase in CO2 concentration from the preindustrial level is just `a`"
+
+# ╔═╡ 077b7185-bc34-4ed6-994d-6e7d5a5789c7
+greenhouse_effect(CO2_PI*exp(1)) # CO2 forcing [W/m^2] for an e-fold increase = `a`
 
 # ╔═╡ 6cd7db88-2293-11eb-20a2-69fc5c87b82f
 begin
@@ -206,7 +229,7 @@ begin
 	plot(CO2_range, greenhouse_effect.(CO2_range), lw=2.5, label=nothing, color=:black)
 	plot!([CO2_PI], [greenhouse_effect(CO2_PI)], marker=:., ms=6, linecolor=:white,
 		color=:blue, lw=0, label="pre-industrial (PI)")
-	plot!([CO2_present], [greenhouse_effect(CO2_present)], marker=:., ms=6, color=:red, linecolor=:white, lw=0, label="present day (2020)")
+	plot!([CO2_present], [greenhouse_effect(CO2_present)], marker=:., ms=6, color=:red, linecolor=:white, lw=0, label="present day (2020) $CO2_present ppm")
 	plot!(xticks=[280, 280*2, 280*4, 280*8], legend=:bottomright, size=(400, 250))
 	plot!(ylabel="Radiative forcing [W/m²]", xlabel="CO₂ concentration [ppm]")
 end
@@ -215,7 +238,7 @@ end
 md"""
 ##### 1.4) Change in heat content
 
-The heat content $CT$ is determined by the temperature $T$ (in Kelvin) and the heat capacity of the climate system. While we are interested in the temperature of the atmosphere, which has a very small heat capacity, its heat is closely coupled with that of the upper ocean, which has a much larger heat capacity of 
+The heat content $CT$ [J/m^2] is determined by the temperature $T$ (in Kelvin) and the heat capacity $C$ [J/m^2/K] of the climate system. While we are interested in the temperature of the atmosphere, which has a very small heat capacity, its heat is closely coupled with that of the upper ocean, which has a much larger heat capacity of 
 """
 
 # ╔═╡ 125df9ba-1787-11eb-1953-13449970b9f9
@@ -223,9 +246,9 @@ C = 51.; # atmosphere and upper-ocean heat capacity [J/m^2/°C]
 
 # ╔═╡ fe1844d2-1787-11eb-067f-e9664c17df27
 md"""
-The *change in heat content over time* is thus simply given by $\frac{d(CT)}{dt}$. Since the heat capacity of sea water hardly changes with temperature, we can rewrite this in terms of the change in temperature with time as:
+The *change in heat content over time* is thus simply given by $\frac{d(CT)}{dt}$ [W/m^2]. Since the heat capacity of sea water hardly changes with temperature, we can rewrite this in terms of the change in temperature with time as:
 
-$\color{brown}{\text{change in heat content } =\; C \frac{dT}{dt}}$
+$\color{brown}{\text{change in heat content} ~[W/m^2] =\; C \frac{dT}{dt}}$
 """
 
 # ╔═╡ fbf1ba3e-0d65-11eb-20a7-55402d46d4ed
@@ -239,11 +262,18 @@ Combining all of these subcomponent models, we write the governing equation of t
 \color{brown}{C \frac{dT}{dt}}
 \; \color{black}{=} \; \color{orange}{\frac{(1 - α)S}{4}}
 \; \color{black}{-} \; \color{blue}{(A - BT)}
-\; \color{black}{+} \; \color{grey}{a \ln \left( \frac{[\text{CO}₂]}{[\text{CO}₂]_{\text{PI}}} \right)},
+\; \color{black}{+} \; \color{grey}{a \ln \left( \frac{[\text{CO}₂]}{[\text{CO}₂]_{\text{PI}}} \right)} ~~[W/m^2],
 \end{gather}
 
 which determines the time evolution of Earth's globally-averaged surface temperature.
 """
+
+# ╔═╡ e088e95c-4ee0-4330-9c1f-772099200283
+md"$$\frac{dT}{dt} = \frac{1}{C} \left [ \frac{\left( 1-\alpha \right) S}{4} - (A - BT(t)) + a \ln \left( \frac{[\text{CO}₂](t)}{[\text{CO}₂]_{\text{PI}}} \right) \right ].$$  \begin{align}
+\text{change in temp} = \frac{1}{C}& \left [ \text{absorbed solar radiation}- \text{outgoing thermal radiation}  \right . 
+\newline
+& \left . + \text{greenhouse effect} \right ]
+\end{align}"
 
 # ╔═╡ 8d6d7fc6-1788-11eb-234d-59f27a1b79d2
 md"""
@@ -261,7 +291,7 @@ Hereafter, we use the subscript $n$ to denote the $n$-th timestep, where $T_{n+1
 
 By re-arranging the equation, we can solve for the temperature at the next timestep $n+1$ based on the known temperature at the present timestep $n$:
 
-$T_{n+1} = T_{n} + \frac{\Delta t}{C} \left[ \frac{ \left( 1-\alpha \right) S}{4} - (A - BT_{n}) + a \ln \left( \frac{[\text{CO}₂]_{n}}{[\text{CO}₂]_{\text{PI}}} \right) \right]$
+$T(t_{n} + \Delta t) \equiv T_{n+1} = T_{n} + \frac{\Delta t}{C} \left[ \frac{ \left( 1-\alpha \right) S}{4} - (A - BT_{n}) + a \ln \left( \frac{[\text{CO}₂]_{n}}{[\text{CO}₂]_{\text{PI}}} \right) \right]$
 
 ##### 2.2) Timestepping
 
@@ -273,7 +303,7 @@ which we implement below (don't forget to update the time as well, $t_{n+1} = t_
 """
 
 # ╔═╡ 5a51fac0-179c-11eb-0b65-859cc9232a3a
-md"where the `tendency(ebm)` is the sum of the various physical forcing mechanisms and is a function of the present temperature $T_{n}$, as well as a number of other parameters."
+md"where the `tendency(ebm)` is the sum of the various physical forcing mechanisms determining $\Delta T/\Delta t$ and is a function of the present temperature $T_{n}$, as well as a number of other parameters."
 
 # ╔═╡ 35dfe0d2-17b0-11eb-20dc-7d7f4c5568ae
 tendency(ebm) = (1. /ebm.C) * (
@@ -300,36 +330,48 @@ To save ourselves some time later on, we also make use of **multiple dispatch** 
 # ╔═╡ d0bf9b06-179c-11eb-0f1c-2fd535cb0e57
 begin
 	mutable struct EBM
-		T::Array{Float64, 1}
+		T::Array{Float64, 1} # temperature sequence
 	
-		t::Array{Float64, 1}
+		t::Array{Float64, 1} # time sequence
 		Δt::Float64
 	
-		CO2::Function
+		CO2::Function # CO2 concentrations as function of time t
 	
-		C::Float64
-		a::Float64
-		A::Float64
-		B::Float64
+		C::Float64 # heat capacity
+		a::Float64 # CO2 thermal forcing coefficient 
+		A::Float64 # const term in earth radiation eqn
+		B::Float64 # temp coeff in earth radiation eqn
 		CO2_PI::Float64
 	
-		α::Float64
-		S::Float64
+		α::Float64 #
+		S::Float64 # solar insolation
 	end;
 	
 	# Make constant parameters optional kwargs
 	EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Float64, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
-		EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)
+		EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S) # constructor
 	);
 	
-	# Construct from float inputs for convenience
+	# Construct sequence arrays from float inputs for convenience
 	EBM(T0::Float64, t0::Float64, Δt::Float64, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
 		EBM([T0], [t0], Δt, CO2;
 			C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S);
 	);
 end;
+
+# ╔═╡ 5eab9995-3fcc-411e-b481-429a290585cb
+EBM()
+
+# ╔═╡ dae1ef3f-19c2-48e0-94d5-c88ecb24a7ab
+md"Q??? What does default constructor `EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)` do? What does it use for parameter values? A: Reaches out to the globals for params."
+
+# ╔═╡ 09821a25-9691-485d-aa71-a26ce6de22eb
+test0_ebm = EBM(15.0, 2021.0, 1.0, t -> 280+t)
+
+# ╔═╡ d28403a6-7a6a-44bf-9305-24d97e485ba7
+test0_ebm.α
 
 # ╔═╡ e81fc2f8-17b0-11eb-20f8-2f4e890dc867
 md"
@@ -350,9 +392,9 @@ end
 # ╔═╡ eba4ba20-22b2-11eb-3989-dde4f9c26702
 md"For example, let us consider the case where CO₂ emissions increase by 1% year-over-year from the preindustrial value [CO₂ ] = $(CO2_PI) ppm, starting at T=T₀=14°C in year t=0 and with a timestep Δt = 1 year."
 
-# ╔═╡ effbbd1c-22b2-11eb-2fe2-5df555bf5f2c
+# ╔═╡ 860a04b3-5a7f-4cb5-9197-5d3b3aabf930
 begin
-	CO2_test(t) = CO2_PI .* (1 + 1/100).^t
+	CO2_test(t) = CO2_PI .* (1+1/100.0).^t
 	ebm_test = EBM(T0, 0., 1., CO2_test)
 end
 
@@ -422,17 +464,23 @@ md"To check how accurate this simple model is in reproducing observed warming ov
 # ╔═╡ 70039d58-1deb-11eb-053d-b96c2001b182
 md"*Click to reveal observations of global warming* $(@bind show_obs CheckBox(default=false))"
 
+# ╔═╡ 89dbd77b-5a6f-4502-b5d5-08efcb39f357
+B
+
 # ╔═╡ 1e9a7382-209e-11eb-0a1f-c54079d1fb11
 begin
 	Bmin = -4.; Bmax = -0.;
 	Bslider = @bind Bvary Slider(Bmin: 0.1: Bmax, default=B);
-	md""" $(Bmin) W/m²/K $(Bslider) $(Bmax) W/m²/K"""
+	md""" $(Bmin) W/m²/K $(Bslider) $(Bmax) W/m²/K)"""
 end
 
 # ╔═╡ 2ad598ce-209f-11eb-3aa7-d10c0c267470
 md"""
 *Move the slider below* to change the strength of **climate feedbacks**: B = $(Bvary) [W/m²/K] 
 """
+
+# ╔═╡ 57a5d1b2-41e1-42fe-a169-5e08446462ee
+
 
 # ╔═╡ e4029e6c-209f-11eb-3c0f-11ac0759a30f
 begin
@@ -453,6 +501,9 @@ end
 md"""
 or the **oceans' heat capacity**: C = $(Cvary) [W/m²/K],
 """
+
+# ╔═╡ 857391c7-29a3-4daf-8c9f-17274b35e58e
+md"Q???: What about lags? We currently have no delays between CO2 forcing and equilibrium temperature."
 
 # ╔═╡ caf982c0-1f73-11eb-2648-d3b71d230c6d
 if show_obs
@@ -628,32 +679,42 @@ md"#### Package dependencies"
 # ╠═bd01be7a-1786-11eb-047d-cbfaa63f93a2
 # ╟─d6fb4d64-1786-11eb-3859-9dc874b99e17
 # ╠═f258767c-1786-11eb-0a9b-ad9f0094a8a0
+# ╠═31bfc46b-cccb-46db-8a9e-5c1c3504f164
+# ╟─6d3c6747-df6c-464f-bb6e-6e7a272428b7
 # ╟─eaceee7e-177f-11eb-3d94-778732ca8768
 # ╠═19c127ce-179e-11eb-2500-bd1680754ba0
 # ╟─14c4c8ac-179e-11eb-3c26-e51c3191532d
 # ╠═1be33ebe-1787-11eb-02f5-43802a30be01
 # ╠═91b1ff3a-179c-11eb-3fc1-2d991840a4a1
+# ╠═9e534d91-3dc8-4c49-92f1-3956ace78b47
+# ╟─33f28c8c-bfcb-4ec1-9dee-2bd2dc9107b0
+# ╠═077b7185-bc34-4ed6-994d-6e7d5a5789c7
 # ╟─6cd7db88-2293-11eb-20a2-69fc5c87b82f
 # ╟─d42ff276-177f-11eb-32e5-b5ce2c4cd42f
 # ╠═125df9ba-1787-11eb-1953-13449970b9f9
 # ╟─fe1844d2-1787-11eb-067f-e9664c17df27
 # ╟─fbf1ba3e-0d65-11eb-20a7-55402d46d4ed
+# ╟─e088e95c-4ee0-4330-9c1f-772099200283
 # ╟─8d6d7fc6-1788-11eb-234d-59f27a1b79d2
 # ╠═27aa62a0-17b0-11eb-2029-a3c797e769eb
 # ╟─5a51fac0-179c-11eb-0b65-859cc9232a3a
 # ╠═35dfe0d2-17b0-11eb-20dc-7d7f4c5568ae
 # ╟─3a549f2a-17b0-11eb-1d80-4bc2abc3dba6
 # ╠═d0bf9b06-179c-11eb-0f1c-2fd535cb0e57
+# ╠═5eab9995-3fcc-411e-b481-429a290585cb
+# ╟─dae1ef3f-19c2-48e0-94d5-c88ecb24a7ab
+# ╠═09821a25-9691-485d-aa71-a26ce6de22eb
+# ╠═d28403a6-7a6a-44bf-9305-24d97e485ba7
 # ╟─e81fc2f8-17b0-11eb-20f8-2f4e890dc867
 # ╠═e5902d52-17b0-11eb-1ba3-4be6c2bbc90f
 # ╟─eba4ba20-22b2-11eb-3989-dde4f9c26702
-# ╠═effbbd1c-22b2-11eb-2fe2-5df555bf5f2c
+# ╠═860a04b3-5a7f-4cb5-9197-5d3b3aabf930
 # ╟─073d8ba6-22b4-11eb-329f-c5d0c2a28562
 # ╠═84d10370-22b3-11eb-0acd-07e5b454c481
 # ╟─38346e6a-0d98-11eb-280b-f79787a3c788
 # ╠═e5b20bda-17a0-11eb-38de-6d4d72b4e56d
 # ╟─d85f2a90-17b0-11eb-007b-d39c79660dca
-# ╟─cadbddec-179e-11eb-3a1e-3502e2534937
+# ╠═cadbddec-179e-11eb-3a1e-3502e2534937
 # ╟─e967605a-1de9-11eb-39d4-831533aed676
 # ╟─0c393822-1789-11eb-30b3-7ff90191d89e
 # ╠═b8527aa8-179e-11eb-3023-05bb5d40a1bd
@@ -663,9 +724,12 @@ md"#### Package dependencies"
 # ╟─70039d58-1deb-11eb-053d-b96c2001b182
 # ╟─c394ec66-17a0-11eb-259f-6b57f8cd4ece
 # ╟─2ad598ce-209f-11eb-3aa7-d10c0c267470
-# ╟─1e9a7382-209e-11eb-0a1f-c54079d1fb11
+# ╠═89dbd77b-5a6f-4502-b5d5-08efcb39f357
+# ╠═1e9a7382-209e-11eb-0a1f-c54079d1fb11
+# ╠═57a5d1b2-41e1-42fe-a169-5e08446462ee
 # ╟─d36ca536-209f-11eb-0489-051bbb54410f
 # ╟─e4029e6c-209f-11eb-3c0f-11ac0759a30f
+# ╟─857391c7-29a3-4daf-8c9f-17274b35e58e
 # ╟─caf982c0-1f73-11eb-2648-d3b71d230c6d
 # ╟─448db99e-1f74-11eb-3637-a1aec60e5a10
 # ╟─0b7d6da2-1dee-11eb-279b-dfc5318338e5
