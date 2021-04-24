@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.1
+# v0.14.3
 
 using Markdown
 using InteractiveUtils
@@ -43,7 +43,7 @@ md"""
 # ╔═╡ 23335418-2433-11eb-05e4-2b35dc6cca0e
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby@gmail")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -67,7 +67,70 @@ md"""
 _Before working on the homework, make sure that you have watched the first lecture on climate modeling 👆. We have included the important functions from this lecture notebook in the next cell. Feel free to have a look!_
 """
 
+# ╔═╡ 1a552400-04dd-4db1-bba3-56ebfe50ec4e
+md"""
+#### The Energy Balance Model (EBM) yields an ODE for the Rate of Temp Change
+$$\frac{dT}{dt} = \frac{1}{C} \left [ \frac{\left( 1-\alpha \right) S}{4} - (A - BT(t)) + a \ln \left( \frac{[\text{CO}₂](t)}{[\text{CO}₂]_{\text{PI}}} \right) \right ].$$  \begin{align}
+\text{change in temp} = \frac{1}{C}& \left [ \text{absorbed solar radiation}- \text{outgoing thermal radiation}  \right . 
+\newline
+& \left . + \text{greenhouse effect} \right ]
+\end{align}
+
+for 
+- `T` ave Temperature [°C]
+- `t` time, [years]
+- `C` thermal capacity `C` ~ [(yr/sec) J/m^2/°C], i.e. `1/C` ~ [°C/yr]/[W/m^2] 
+- `S` Solar insolation [W/m^2]
+- `α` Earth surface albedo (fraction of insolation reflected) [unitless]
+- `B` climate feedback parameter: Blackbody re-radiation change with `T`, [W/m^2/°C]. `B<0`
+- `A` Blackbody re-radiation at `T = 0` (for `T` in °C) \[W/m^2\] 
+- `a` CO2 forcing coefficient: greenhouse thermal capture rate per e-fold increase in CO2 concentration \[W/m^2\]
+
+- ``{[\text{CO}₂]_{\text{PI}}}`` Pre-Industrial CO2 atmospheric concentration [ppm]
+"""
+
+# ╔═╡ 522c97e9-3ce7-4eaf-9191-3b090f0d3191
+md"#### Equilibrium Temp Change is a Stationary Point $\frac{dT}{dt} = 0$:
+$$0 = \frac{1}{C} \left [ \frac{\left( 1-\alpha \right) S}{4} - (A - BT(t)) + a \ln \left( \frac{[\text{CO}₂](t)}{[\text{CO}₂]_{\text{PI}}} \right) \right ].$$
+$$T(t) = \frac{A}{B} - \frac{1}{B}\left [ \frac{\left( 1-\alpha \right) S}{4}  + a \ln \left( \frac{[\text{CO}₂](t)}{[\text{CO}₂]_{\text{PI}}} \right) \right ].$$"
+
+# ╔═╡ a4fab276-36d2-4f14-96b5-9c577da2cb6e
+md"""**Aside:
+Variation of Absorbed Solar Radiation over surface of Earth**: In terms of the climate Energy Balance Model (`EBM`), and the Absorbed Solar Radiation (`ASR`) component of the equation for rate of temperature change: `ASR = S*(1 - α)/4`, its really cool that we can divide solar insolation S by 4, because surface area of a sphere is $4 \pi r^2$, i.e. 4 times the area of its circular cross-section.  But of course a spinning globe will not distribute the incoming solar power (in W/m^2), which is uniform over the planet's cross section, uniformly over the spherical surface of the earth. Furthermore, there is the issue of axial tilt, or "obliquity", which changes the distribution of insolation over the surface of the earth with season, i.e. angle θ in earths annual orbit around the sun. Maybe they talk about this in the next lectures that focus on spatial effects. 
+But I took a quick look at this discussion of the pattern of solar irradiation and its pretty interesting: <https://en.wikipedia.org/wiki/Solar_irradiance#Irradiation_at_the_top_of_the_atmosphere>.
+"""
+
+
+# ╔═╡ ca447661-c8d1-406e-b60a-b20529848343
+md"![](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/InsolationTopOfAtmosphere.png/660px-InsolationTopOfAtmosphere.png)"
+
+# ╔═╡ f2c3b329-dfc3-4f1a-b80a-2d0d948cb95d
+md"""
+It involves spherical trig, so My Eyes Glaze Over, but the result is an awsome plot of relative irradiation as a function of time of year (polar angle θ of the Earth's orbit: θ = 0 at the vernal equinox, and θ = 90° at the summer solstice); and φ the latitude on the Earth. 
+
+So, as expected, evenish insolation over the year for equator at latitude 0, max and mins for poles at summer and winter equinox (θ 90 or 270). For average S_0 = 1367 ``W m^{(-2)}``, S_0/4 would be  $(1367/4) ``W m^{(-2)}``, but the plot above shows variation from 0 to 550.
+Furthermore, small variations in the earths orbit, over decades and millennia, lead to cycles in Total Solar Irradiation that explain climate cycles."""
+
+# ╔═╡ 3170dc17-6cdd-4e8a-972b-b37213720469
+md"""#### `Model` is a module
+that includes data, selected functions, 
+(`timestep`, `tendency` and `run!`), and the contructors for Energy Balance Models `EBM`.
+
+- `tendency(ebm)` sums the various physical forcing mechanisms determining $\Delta T/\Delta t$.  This is a function of the present temperature $T_{n}$, as well as a number of other parameters.
+- `timestep!(ebm)` updates Temperature `T` and time `t`, for an instance of an energy balance model `EBM`.
+- `run!(ebm::EBM, end_year::Real)` function runs an `EBM` simulation by timestepping forward until a given `end_year`, storing the results in the `EBM`.
+"""
+
 # ╔═╡ 930d7154-1fbf-11eb-1c3a-b1970d291811
+"""
+	module `Model`
+
+includes data, selected functions, 
+(`timestep`, `tendency` and `run!`), and the contructors for Energy Balance Models `EBM`.
+
+- `tendency(ebm)` sums the various physical forcing mechanisms determining `ΔT/Δt`.  This is a function of the present temperature `T_{n}`, as well as a number of other parameters.
+- `run!(ebm::EBM, end_year::Real)` function runs an `EBM` simulation by timestepping forward until a given `end_year`, storing the results in the `EBM`.
+"""
 module Model
 
 const S = 1368; # solar insolation [W/m^2]  (energy per unit time per unit area)
@@ -75,6 +138,13 @@ const α = 0.3; # albedo, or planetary reflectivity [unitless]
 const B = -1.3; # climate feedback parameter [W/m^2/°C],
 const T0 = 14.; # preindustrial temperature [°C]
 
+"""
+	absorbed_solar_radiation(; α=α, S=S)
+
+convert values of other (generally fixed) parameters to ASR
+`α` Earth surface albedo (fraction of insolation reflected) [unitless]
+`S` Solar insolation [W/m^2]
+"""
 absorbed_solar_radiation(; α=α, S=S) = S*(1 - α)/4; # [W/m^2]
 outgoing_thermal_radiation(T; A=A, B=B) = A - B*T;
 
@@ -88,11 +158,24 @@ CO2_const(t) = CO2_PI; # constant CO2 concentrations
 
 const C = 51.; # atmosphere and upper-ocean heat capacity [J/m^2/°C]
 
+"""
+	timestep!(ebm)
+
+update Temperature `T`
+and time `t`, 
+for an instance of an energy balance model `EBM`
+"""
 function timestep!(ebm)
 	append!(ebm.T, ebm.T[end] + ebm.Δt*tendency(ebm));
 	append!(ebm.t, ebm.t[end] + ebm.Δt);
 end;
 
+"""
+	`tendency(ebm)`
+
+sum the various physical forcing mechanisms determining ΔT/Δt.
+This is a function of the present temperature `T_{n}`, as well as a number of other parameters."
+"""
 tendency(ebm) = (1. /ebm.C) * (
 	+ absorbed_solar_radiation(α=ebm.α, S=ebm.S)
 	- outgoing_thermal_radiation(ebm.T[end], A=ebm.A, B=ebm.B)
@@ -119,12 +202,23 @@ begin
 	end;
 	
 	# Make constant parameters optional kwargs
+	"""
+		EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Real, CO2::Function;
+		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
+	
+	"""
 	EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Real, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
 		EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)
 	);
 	
-	# Construct from float inputs for convenience
+	# Construct from (initial) float inputs for convenience
+	"""
+		T0::Real, t0::Real, Δt::Real, CO2::Function;
+		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
+	
+	Construct Temp `T` and time `t arrays from (initial) float inputs for convenience
+	"""
 	EBM(T0::Real, t0::Real, Δt::Real, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
 		EBM(Float64[T0], Float64[t0], Δt, CO2;
@@ -133,6 +227,12 @@ begin
 end;
 
 begin
+	"""
+		run!(ebm::EBM, end_year::Real)
+	
+	function that runs an `EBM` simulation by timestepping forward
+	until a given `end_year`."
+	"""
 	function run!(ebm::EBM, end_year::Real)
 		while ebm.t[end] < end_year
 			timestep!(ebm)
@@ -159,6 +259,9 @@ begin
 end
 
 end
+
+# ╔═╡ f7fa1f6c-0271-4ca7-bcaa-889de7d98ea3
+
 
 # ╔═╡ 1312525c-1fc0-11eb-2756-5bc3101d2260
 md"""## **Exercise 1** - _policy goals under uncertainty_
@@ -206,7 +309,7 @@ md"""
 
 # ╔═╡ a86f13de-259d-11eb-3f46-1f6fb40020ce
 observations_from_changing_B = md"""
-More negative `B` correspond to stronger negative feedback to temperature change,
+Ans: More negative `B` correspond to stronger negative feedback to temperature change,
 that is the rate of Earth radiation rises more substantially with temperature `T`.
 """
 
@@ -217,7 +320,7 @@ md"""
 
 # ╔═╡ 5f82dec8-259e-11eb-2f4f-4d661f44ef41
 observations_from_nonnegative_B = md"""
-`B` greater than or equal to zero means positive feedback, and Earth's re-radiation declines with temperature `T`.
+Ans: `B` greater than or equal to zero means positive feedback, and Earth's re-radiation declines with temperature `T`. So warming inceases without limit.
 """
 
 # ╔═╡ 56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -273,6 +376,19 @@ amount of warming `Delta T` caused by a doubling of CO₂
 """
 ECS(; B=B̅, a=Model.a) = -a*log(2.)./B;
 
+# ╔═╡ 1d253abf-cbce-464f-a049-ae870f897c5b
+"""
+	ECS(ρ_CO2 ; B=B̅, a=Model.a)
+
+*Equilibrium climate sensitivity (`ECS`)* is defined as the 
+amount of warming `Delta T` caused by a doubling of CO₂ 
+(e.g. from the pre-industrial value 280 ppm to 560 ppm), at equilibrium.
+"""
+ECS(ρ_CO2; B=B̅, a=Model.a) = -a*log(ρ_CO2)./B;
+
+# ╔═╡ e5567637-dae7-4493-9f62-f19fcd7ef681
+ECS(3)
+
 # ╔═╡ 25f92dec-1fc4-11eb-055d-f34deea81d0e
 let
 	double_CO2(t) = if t >= 0
@@ -314,7 +430,7 @@ let
 	p = plot(
 		size=(500,250), legend=:bottomright, 
 		title="ECS Variation with Climate Feedback Parameter `B`", 
-		ylabel="temperature change [°C]", xlabel="B [W/m²/K]",
+		ylabel="temp change [°C]", xlabel="B [W/m²/K]",
 		ylim=(-.5, maximum(ecs)),
 	)
 	
@@ -362,22 +478,31 @@ meanECS = trunc(mean(ECS_samples), digits=3)
 # ╔═╡ dd398aaa-d960-4dd7-9eb9-90681d28deb8
 ECSatmean = trunc(ECS(B = mean(B_samples)), digits=3)
 
+# ╔═╡ 21c4ce27-2307-4df0-a1f9-115be566fa8a
+md"**Question/Note:** The following shows the problems of the markdown parser, 
+confusing interpolation with equation demarked by $. A key seems to be the numbber of dollar-signs for interpolation and the spacing around dollar-signs when used for interpolation."
+
 # ╔═╡ 02173c7a-2695-11eb-251c-65efb5b4a45f
-md"The mean of `ECS(B)` is ($(trunc(mean(B_samples), digits=3))), while the value opf `ECS` at the mean `B` ($(trunc(mean(B_samples), digits=3))), is  "
+md"""
+The mean of `ECS(B)` is ( $(trunc(mean(ECS_samples), digits=3)) ), 
+while the value opf `ECS` at the mean `B` ($(trunc(mean(B_samples), digits=3)) ), is  """
 
 # ╔═╡ 017b5a2d-45df-4a38-9102-d92798bf6dfd
 md"""The mean of `ECS(B)` is $(meanECS),
+while the value of `ECS` at the mean `B` ( $(trunc(mean(B_samples), digits=3)) ), is $(ECSatmean).
+"""
 
-while the value of `ECS` at the mean `B` ($(trunc(mean(B_samples), digits=3))), is $(ECSatmean)."""
 
 # ╔═╡ 440271b6-25e8-11eb-26ce-1b80aa176aca
 md"👉 Does accounting for uncertainty in feedbacks make our expectation of global warming better (less implied warming) or worse (more implied warming)?"
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
-It makeS our expectations (concerns) worse, because of the nonlinearity (convexity) of adverse consequences in our uncertain parameters. Specifically, the convexity of `ECS(B)` means that uncertainty in B create a higher mean $\Delta T$. By convexity of `ECS`:
+Accounting for the uncertainty regarding the climate feedback parameter `B` makes our expectations (concerns) regarding potential warming worse, because of the nonlinearity (convexity) of adverse consequences in our uncertain parameters. Specifically, the convexity of `ECS(B)` in `B` means that uncertainty in B creates a higher mean $\Delta T$ than we would estimate from the mean $\bar B = E[\tilde B]$. Given convexity of `ECS`:
 
 $$E[ECS(\tilde B)] \ge ECS(E[\tilde B])$$
+
+This is a example of _Jensens Inequality_.
 """
 
 # ╔═╡ 7df3548d-e909-4b13-a858-2223cc0e458b
@@ -435,7 +560,7 @@ soft {
 # ╔═╡ 971f401e-266c-11eb-3104-171ae299ef70
 md"""
 
-You can set up an instance of `EBM` like so:
+You can set up an instance of `EBM` like so, referencing the `EBM` structure in the module `Model`:
 """
 
 # ╔═╡ 746aa5bc-266c-11eb-14c9-63ccc313f5de
@@ -445,6 +570,10 @@ empty_ebm = Model.EBM(
 	1, # Δt
 	t -> 280.0, # CO2 function
 )
+
+# ╔═╡ 03b4f012-1702-4650-ba57-7068404dc374
+md"Note that unspecified `EBM` parameters are taken from the global scope, 
+in this case the module enclosing the definition of `EBM`."
 
 # ╔═╡ a919d584-2670-11eb-1cf9-2327c8135d6d
 md"""
@@ -469,14 +598,30 @@ In this simulation, we used `T0 = 14` and `CO2 = t -> 280`, which is why `T` is 
 👉 Run a simulation with policy scenario RCP8.5, and plot the computed temperature graph. What is the global temperature at 2100?
 """
 
+# ╔═╡ e174fa1b-239b-460e-a9d4-e136b5e2f724
+round(pi; digits=5)
+
 # ╔═╡ 9596c2dc-2671-11eb-36b9-c1af7e5f1089
 simulated_rcp85_model = let
+	ebm = Model.EBM(14.0, 1850, 1, Model.CO2_RCP85)
+	Model.run!(ebm, 2150)
+
+	t_index = t -> Int64(t - ebm.t[1] + 1) # map t to index?
+	T_2100 = round(ebm.T[t_index(2100)]; digits = 2)
+
+	p = plot(ebm.t, ebm.T)
+	plot!(p,
+		xlabel="year", 
+		ylabel="Global temperature T [°C]",
+		title="Earth's Temperature (CO2_RCP85 case)",
+		legend=:topleft
+		)
+
+	plot!(p, 2100 .* [1,1], [ebm.T[1], ebm.T[end]], 
+	# plot!(p, 2100 , [ebm.T[1], ebm.T[end]],  # v. bad result
+		ls=:dash, color=:darkred, label="T_2100 = $T_2100")
 	
-	missing
 end
-
-# ╔═╡ f94a1d56-2671-11eb-2cdc-810a9c7a8a5f
-
 
 # ╔═╡ 4b091fac-2672-11eb-0db8-75457788d85e
 md"""
@@ -495,8 +640,11 @@ md"""
 
 # ╔═╡ f688f9f2-2671-11eb-1d71-a57c9817433f
 function temperature_response(CO2::Function, B::Float64=-1.3)
+	ebm = Model.EBM(14, 1980, 1, CO2; B=B)
 	
-	return missing
+	Model.run!(ebm, 2100)
+	# findfirst(t .== 2100)
+	return ebm.T[end]
 end
 
 # ╔═╡ 049a866e-2672-11eb-29f7-bfea7ad8f572
@@ -520,6 +668,9 @@ t = 1850:2100
 # ╔═╡ e10a9b70-25a0-11eb-2aed-17ed8221c208
 plot(t, Model.CO2_RCP85.(t), 
 	ylim=(0,1200), ylabel="CO2 concentration [ppm]")
+
+# ╔═╡ 08f440de-9b02-49e3-ae06-be0fa0c68670
+t
 
 # ╔═╡ 26d51210-74a6-44b3-9864-d0d2b7984308
 frac_CO2_increase = Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t))
@@ -555,8 +706,32 @@ We are interested in how the **uncertainty in our input** $B$ (the climate feedb
 
 """
 
-# ╔═╡ f2e55166-25ff-11eb-0297-796e97c62b07
+# ╔═╡ eb1c639d-01eb-498e-baef-7dc06aa8dac7
+length(B_samples)
 
+# ╔═╡ f2e55166-25ff-11eb-0297-796e97c62b07
+T_RCP26_samples = temperature_response.(Model.CO2_RCP26, B_samples)
+
+# ╔═╡ 490bf73b-aa80-44a9-b747-a9119c154b66
+"""
+	probExceed(xlim, A)
+
+probability that elements of A equal or exceed `xlim`
+"""
+function probExceed(xlim, A)
+	length(filter(x -> x >= xlim, A))/length(A)
+end
+
+# ╔═╡ b9dde842-da18-4033-9dcf-a3fa748dc265
+md"Consider the probability of more than 2 degrees warming from Pre-Industrial level (`T0`):"
+
+# ╔═╡ a6e506cf-539b-4c95-92fa-0fbabeef1f1b
+round(probExceed(14+2.0, T_RCP26_samples); digits = 3)
+
+# ╔═╡ a58ca9e2-883b-4136-ba57-fc87a0db9549
+round(probExceed(2.0, 
+		temperature_response.(Model.CO2_RCP85, B_samples));
+	digits = 3)
 
 # ╔═╡ 1ea81214-1fca-11eb-2442-7b0b448b49d6
 md"""
@@ -829,15 +1004,24 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═1e06178a-1fbf-11eb-32b3-61769a79b7c0
 # ╟─87e68a4a-2433-11eb-3e9d-21675850ed71
 # ╟─fe3304f8-2668-11eb-066d-fdacadce5a19
-# ╟─930d7154-1fbf-11eb-1c3a-b1970d291811
+# ╟─1a552400-04dd-4db1-bba3-56ebfe50ec4e
+# ╟─522c97e9-3ce7-4eaf-9191-3b090f0d3191
+# ╟─a4fab276-36d2-4f14-96b5-9c577da2cb6e
+# ╟─ca447661-c8d1-406e-b60a-b20529848343
+# ╟─f2c3b329-dfc3-4f1a-b80a-2d0d948cb95d
+# ╟─3170dc17-6cdd-4e8a-972b-b37213720469
+# ╠═930d7154-1fbf-11eb-1c3a-b1970d291811
+# ╠═f7fa1f6c-0271-4ca7-bcaa-889de7d98ea3
 # ╟─1312525c-1fc0-11eb-2756-5bc3101d2260
 # ╠═c4398f9c-1fc4-11eb-0bbb-37f066c6027d
+# ╠═1d253abf-cbce-464f-a049-ae870f897c5b
+# ╠═e5567637-dae7-4493-9f62-f19fcd7ef681
 # ╟─7f961bc0-1fc5-11eb-1f18-612aeff0d8df
 # ╠═25f92dec-1fc4-11eb-055d-f34deea81d0e
 # ╟─fa7e6f7e-2434-11eb-1e61-1b1858bb0988
 # ╟─16348b6a-1fc2-11eb-0b9c-65df528db2a1
 # ╟─e296c6e8-259c-11eb-1385-53f757f4d585
-# ╠═a86f13de-259d-11eb-3f46-1f6fb40020ce
+# ╟─a86f13de-259d-11eb-3f46-1f6fb40020ce
 # ╟─3d66bd30-259d-11eb-2694-471fb3a4a7be
 # ╟─5f82dec8-259e-11eb-2f4f-4d661f44ef41
 # ╟─56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -847,6 +1031,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═b9f882d8-266b-11eb-2998-75d6539088c7
 # ╟─269200ec-259f-11eb-353b-0b73523ef71a
 # ╠═e10a9b70-25a0-11eb-2aed-17ed8221c208
+# ╠═08f440de-9b02-49e3-ae06-be0fa0c68670
 # ╟─2dfab366-25a1-11eb-15c9-b3dd9cd6b96c
 # ╠═26d51210-74a6-44b3-9864-d0d2b7984308
 # ╠═50ea30ba-25a1-11eb-05d8-b3d579f85652
@@ -863,6 +1048,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 # ╠═e6a381c2-d0a1-4b5f-ba47-613d25951ac0
 # ╠═dd398aaa-d960-4dd7-9eb9-90681d28deb8
+# ╠═21c4ce27-2307-4df0-a1f9-115be566fa8a
 # ╠═02173c7a-2695-11eb-251c-65efb5b4a45f
 # ╠═017b5a2d-45df-4a38-9102-d92798bf6dfd
 # ╟─440271b6-25e8-11eb-26ce-1b80aa176aca
@@ -872,11 +1058,12 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─3f823490-266d-11eb-1ba4-d5a23975c335
 # ╟─971f401e-266c-11eb-3104-171ae299ef70
 # ╠═746aa5bc-266c-11eb-14c9-63ccc313f5de
+# ╟─03b4f012-1702-4650-ba57-7068404dc374
 # ╟─a919d584-2670-11eb-1cf9-2327c8135d6d
 # ╠═bfb07a0a-2670-11eb-3938-772499c637b1
 # ╟─12cbbab0-2671-11eb-2b1f-038c206e84ce
+# ╠═e174fa1b-239b-460e-a9d4-e136b5e2f724
 # ╠═9596c2dc-2671-11eb-36b9-c1af7e5f1089
-# ╠═f94a1d56-2671-11eb-2cdc-810a9c7a8a5f
 # ╟─4b091fac-2672-11eb-0db8-75457788d85e
 # ╟─9cdc5f84-2671-11eb-3c78-e3495bc64d33
 # ╠═f688f9f2-2671-11eb-1d71-a57c9817433f
@@ -888,7 +1075,12 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═40f1e7d8-252d-11eb-0549-49ca4e806e16
 # ╟─ee1be5dc-252b-11eb-0865-291aa823b9e9
 # ╟─06c5139e-252d-11eb-2645-8b324b24c405
+# ╠═eb1c639d-01eb-498e-baef-7dc06aa8dac7
 # ╠═f2e55166-25ff-11eb-0297-796e97c62b07
+# ╠═490bf73b-aa80-44a9-b747-a9119c154b66
+# ╟─b9dde842-da18-4033-9dcf-a3fa748dc265
+# ╠═a6e506cf-539b-4c95-92fa-0fbabeef1f1b
+# ╠═a58ca9e2-883b-4136-ba57-fc87a0db9549
 # ╟─1ea81214-1fca-11eb-2442-7b0b448b49d6
 # ╟─a0ef04b0-25e9-11eb-1110-cde93601f712
 # ╟─3e310cf8-25ec-11eb-07da-cb4a2c71ae34
