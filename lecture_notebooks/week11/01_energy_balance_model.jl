@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.1
+# v0.14.3
 
 using Markdown
 using InteractiveUtils
@@ -302,6 +302,9 @@ $T_{n+1} = T_{n} + \Delta t * \text{tendency}(T_{n} \,; ...),$
 which we implement below (don't forget to update the time as well, $t_{n+1} = t_{n} + \Delta t$), which takes in an instance of our anticipated energy balance model `EBM` type as its only argument.
 """
 
+# ╔═╡ 91671ca8-6497-4b98-88d6-1416b4eb8965
+
+
 # ╔═╡ 5a51fac0-179c-11eb-0b65-859cc9232a3a
 md"where the `tendency(ebm)` is the sum of the various physical forcing mechanisms determining $\Delta T/\Delta t$ and is a function of the present temperature $T_{n}$, as well as a number of other parameters."
 
@@ -313,6 +316,13 @@ tendency(ebm) = (1. /ebm.C) * (
 );
 
 # ╔═╡ 27aa62a0-17b0-11eb-2029-a3c797e769eb
+"""
+	timestep!(ebm)
+
+update Temperature `T`
+and time `t`, 
+for an instance an energy balance model `EBM`
+"""
 function timestep!(ebm)
 	append!(ebm.T, ebm.T[end] + ebm.Δt*tendency(ebm));
 	append!(ebm.t, ebm.t[end] + ebm.Δt);
@@ -691,10 +701,11 @@ md"#### Package dependencies"
 # ╠═125df9ba-1787-11eb-1953-13449970b9f9
 # ╟─fe1844d2-1787-11eb-067f-e9664c17df27
 # ╟─fbf1ba3e-0d65-11eb-20a7-55402d46d4ed
-# ╟─e088e95c-4ee0-4330-9c1f-772099200283
+# ╠═e088e95c-4ee0-4330-9c1f-772099200283
 # ╟─8d6d7fc6-1788-11eb-234d-59f27a1b79d2
 # ╠═27aa62a0-17b0-11eb-2029-a3c797e769eb
-# ╟─5a51fac0-179c-11eb-0b65-859cc9232a3a
+# ╠═91671ca8-6497-4b98-88d6-1416b4eb8965
+# ╠═5a51fac0-179c-11eb-0b65-859cc9232a3a
 # ╠═35dfe0d2-17b0-11eb-20dc-7d7f4c5568ae
 # ╟─3a549f2a-17b0-11eb-1d80-4bc2abc3dba6
 # ╠═d0bf9b06-179c-11eb-0f1c-2fd535cb0e57
