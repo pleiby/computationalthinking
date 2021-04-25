@@ -94,6 +94,9 @@ md"#### Equilibrium Temp Change is a Stationary Point $\frac{dT}{dt} = 0$:
 $$0 = \frac{1}{C} \left [ \frac{\left( 1-\alpha \right) S}{4} - (A - BT(t)) + a \ln \left( \frac{[\text{CO}₂](t)}{[\text{CO}₂]_{\text{PI}}} \right) \right ].$$
 $$T(t) = \frac{A}{B} - \frac{1}{B}\left [ \frac{\left( 1-\alpha \right) S}{4}  + a \ln \left( \frac{[\text{CO}₂](t)}{[\text{CO}₂]_{\text{PI}}} \right) \right ].$$"
 
+# ╔═╡ 405399c0-e71e-4ee9-8306-0cdec4c2643f
+md"$$T(t) = \frac{1}{B}\left [A -  \frac{\left( 1-\alpha \right) S}{4}   \right ].$$"
+
 # ╔═╡ a4fab276-36d2-4f14-96b5-9c577da2cb6e
 md"""**Aside:
 Variation of Absorbed Solar Radiation over surface of Earth**: In terms of the climate Energy Balance Model (`EBM`), and the Absorbed Solar Radiation (`ASR`) component of the equation for rate of temperature change: `ASR = S*(1 - α)/4`, its really cool that we can divide solar insolation S by 4, because surface area of a sphere is $4 \pi r^2$, i.e. 4 times the area of its circular cross-section.  But of course a spinning globe will not distribute the incoming solar power (in W/m^2), which is uniform over the planet's cross section, uniformly over the spherical surface of the earth. Furthermore, there is the issue of axial tilt, or "obliquity", which changes the distribution of insolation over the surface of the earth with season, i.e. angle θ in earths annual orbit around the sun. Maybe they talk about this in the next lectures that focus on spatial effects. 
@@ -338,6 +341,9 @@ md"""
 👉 Create a graph to visualize ECS as a function of B. 
 """
 
+# ╔═╡ 275861aa-1573-467a-828a-9c8b4aa9c1a3
+
+
 # ╔═╡ 269200ec-259f-11eb-353b-0b73523ef71a
 md"""
 #### Exercise 1.2 - _Doubling CO₂_
@@ -420,18 +426,18 @@ let
 end |> as_svg
 
 # ╔═╡ 193e9aa6-5319-4e13-a49d-43ba146c25e6
-ecs = [ECS(B=b) for b in collect(-2.5:0.1:0)]
+ecs = [ECS(B=b) for b in collect(-2.5:0.1:1.0)]
 
 # ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
 let
-	B_range = collect(-2.5:.001:-0.1)
+	B_range = collect(-1.0:.001: 1.0)
 	ecs = [ECS(B=b) for b in B_range]
 	
 	p = plot(
 		size=(500,250), legend=:bottomright, 
 		title="ECS Variation with Climate Feedback Parameter `B`", 
 		ylabel="temp change [°C]", xlabel="B [W/m²/K]",
-		ylim=(-.5, maximum(ecs)),
+		# ylim=(-100, maximum(ecs)),
 	)
 	
 	plot!(p, B_range, ecs, 
@@ -463,8 +469,11 @@ ECS_samples = ECS.(B= B_samples)
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 md"**Answer:**"
 
+# ╔═╡ 6c87ac41-29ba-4ff4-9204-6b7aea7f1ff2
+plot(B_samples, ECS_samples, seriestype=:scatter)
+
 # ╔═╡ 1f148d9a-1fc8-11eb-158e-9d784e390b24
-histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ΔT [K]", ylabel="samples")
+histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ΔT [K]",xlim = (0,20), ylabel="samples")
 
 # ╔═╡ cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is. 
@@ -495,6 +504,12 @@ while the value of `ECS` at the mean `B` ( $(trunc(mean(B_samples), digits=3)) )
 
 # ╔═╡ 440271b6-25e8-11eb-26ce-1b80aa176aca
 md"👉 Does accounting for uncertainty in feedbacks make our expectation of global warming better (less implied warming) or worse (more implied warming)?"
+
+# ╔═╡ 74ec5163-363a-4aa8-a0d8-519cb0626ddb
+
+
+# ╔═╡ c893d838-dfda-407b-97b0-e33daba2543a
+E ∘ ECS ≠ ECS ∘ E (\tilde B)
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
@@ -726,12 +741,12 @@ end
 md"Consider the probability of more than 2 degrees warming from Pre-Industrial level (`T0`):"
 
 # ╔═╡ a6e506cf-539b-4c95-92fa-0fbabeef1f1b
-round(probExceed(14+2.0, T_RCP26_samples); digits = 3)
+round(probExceed(14+2.0, T_RCP26_samples); digits = 4)
 
 # ╔═╡ a58ca9e2-883b-4136-ba57-fc87a0db9549
-round(probExceed(2.0, 
+round(probExceed(14+2.0, 
 		temperature_response.(Model.CO2_RCP85, B_samples));
-	digits = 3)
+	digits = 4)
 
 # ╔═╡ 1ea81214-1fca-11eb-2442-7b0b448b49d6
 md"""
@@ -814,9 +829,6 @@ md"""
 👉 Create a slider for `CO2` between `CO2min` and `CO2max`. Just like the horizontal axis of our plot, we want the slider to be _logarithmic_. 
 """
 
-# ╔═╡ 1d388372-2695-11eb-3068-7b28a2ccb9ac
-
-
 # ╔═╡ 4c9173ac-2685-11eb-2129-99071821ebeb
 md"""
 👉 Write a function `step_model!` that takes an existing `ebm` and `new_CO2`, which performs a step of our interactive process:
@@ -826,10 +838,15 @@ md"""
 """
 
 # ╔═╡ 736515ba-2685-11eb-38cb-65bfcf8d1b8d
-function step_model!(ebm::Model.EBM, CO2::Real)
+function step_model!(ebm::Model.EBM, new_CO2::Real)
 	
 	# your code here
+	ebm.t = [0.0]
+	ebm.T = [ebm.T[end]]
+	ebm.CO2 = t -> new_CO2
 	
+	Model.run!(ebm, 200)
+
 	return ebm
 end
 
@@ -849,14 +866,35 @@ CO2min = 10
 # ╔═╡ 2bbf5a70-2676-11eb-1085-7130d4a30443
 CO2max = 1_000_000
 
+# ╔═╡ 52fd9868-2edb-40f5-ace0-89cb8a07777f
+@bind log10_CO2 Slider(log10(CO2min):0.1:log10(CO2max); show_value=true, default=1)
+
+# ╔═╡ 6de783ed-9245-4be7-ac42-d83ae37c9714
+CO2 = 10^log10_CO2
+
+# ╔═╡ 0495f43d-d780-4e4e-b6f7-862c32d5835b
+log10(CO2max)
+
 # ╔═╡ de95efae-2675-11eb-0909-73afcd68fd42
 Tneo = -48
 
 # ╔═╡ 06d28052-2531-11eb-39e2-e9613ab0401c
 ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const)
 
+# ╔═╡ bf5b6397-173b-49c5-b86f-8cf2326b5d61
+ebm.A
+
+# ╔═╡ ef5439fd-60b1-4b06-bb0a-18d3b5e71330
+(1- ebm.α)*ebm.S/4
+
+# ╔═╡ c4b6e445-b121-4720-9928-42d7bdcc5960
+# Net heat coming in at CO2_PI, T= 0
+(1- ebm.α)*ebm.S/4 - ebm.A
+
 # ╔═╡ 378aed18-252b-11eb-0b37-a3b511af2cb5
 let
+	step_model!(ebm, CO2)
+	
 	p = plot(
 		xlims=(CO2min, CO2max), ylims=(-55, 75), 
 		xaxis=:log,
@@ -877,6 +915,7 @@ let
 		color=:black,
 		shape=:circle,
 	)
+	
 	
 end |> as_svg
 
@@ -915,10 +954,27 @@ md"""
 👉 Find the **lowest CO₂ concentration** necessary to melt the Snowball, programatically.
 """
 
+# ╔═╡ 406d5ce1-c2b3-436d-ae49-1ecd0cdaec69
+Tneo
+
 # ╔═╡ 9eb07a6e-2687-11eb-0de3-7bc6aa0eefb0
 co2_to_melt_snowball = let
+	ΔT = 10. # assumed threshold temp below freezing to begin some melt
+	test_CO2 = 10 # very low ppm
 	
-	missing
+	# start a model, very cold, year 0, Δt 5, very low CO2
+	ebm_alt = Model.EBM(Tneo, 0., 5., x -> test_CO2)
+	Model.run!(ebm_alt)	# solve for default num years
+	
+	while ebm_alt.T[end] <= -ΔT # final Temp, degrees C still below iceball temp?
+		if ebm_alt.T[end] <= -(ΔT + 2)
+			test_CO2 = test_CO2 * 1.5 # doubling may be too big a step
+		else
+			test_CO2 = test_CO2 * 1.1 # smaller step, getting close
+		end
+		step_model!(ebm_alt, test_CO2 )
+	end
+	test_CO2
 end
 
 # ╔═╡ 3a35598a-2527-11eb-37e5-3b3e4c63c4f7
@@ -1005,7 +1061,11 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─87e68a4a-2433-11eb-3e9d-21675850ed71
 # ╟─fe3304f8-2668-11eb-066d-fdacadce5a19
 # ╟─1a552400-04dd-4db1-bba3-56ebfe50ec4e
-# ╟─522c97e9-3ce7-4eaf-9191-3b090f0d3191
+# ╠═522c97e9-3ce7-4eaf-9191-3b090f0d3191
+# ╠═405399c0-e71e-4ee9-8306-0cdec4c2643f
+# ╠═bf5b6397-173b-49c5-b86f-8cf2326b5d61
+# ╠═ef5439fd-60b1-4b06-bb0a-18d3b5e71330
+# ╠═c4b6e445-b121-4720-9928-42d7bdcc5960
 # ╟─a4fab276-36d2-4f14-96b5-9c577da2cb6e
 # ╟─ca447661-c8d1-406e-b60a-b20529848343
 # ╟─f2c3b329-dfc3-4f1a-b80a-2d0d948cb95d
@@ -1029,6 +1089,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─aed8f00e-266b-11eb-156d-8bb09de0dc2b
 # ╠═193e9aa6-5319-4e13-a49d-43ba146c25e6
 # ╠═b9f882d8-266b-11eb-2998-75d6539088c7
+# ╠═275861aa-1573-467a-828a-9c8b4aa9c1a3
 # ╟─269200ec-259f-11eb-353b-0b73523ef71a
 # ╠═e10a9b70-25a0-11eb-2aed-17ed8221c208
 # ╠═08f440de-9b02-49e3-ae06-be0fa0c68670
@@ -1044,6 +1105,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─f3abc83c-1fc7-11eb-1aa8-01ce67c8bdde
 # ╠═3d72ab3a-2689-11eb-360d-9b3d829b78a9
 # ╟─b6d7a362-1fc8-11eb-03bc-89464b55c6fc
+# ╠═6c87ac41-29ba-4ff4-9204-6b7aea7f1ff2
 # ╠═1f148d9a-1fc8-11eb-158e-9d784e390b24
 # ╟─cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 # ╠═e6a381c2-d0a1-4b5f-ba47-613d25951ac0
@@ -1052,6 +1114,8 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═02173c7a-2695-11eb-251c-65efb5b4a45f
 # ╠═017b5a2d-45df-4a38-9102-d92798bf6dfd
 # ╟─440271b6-25e8-11eb-26ce-1b80aa176aca
+# ╠═74ec5163-363a-4aa8-a0d8-519cb0626ddb
+# ╠═c893d838-dfda-407b-97b0-e33daba2543a
 # ╟─cf276892-25e7-11eb-38f0-03f75c90dd9e
 # ╟─7df3548d-e909-4b13-a858-2223cc0e458b
 # ╟─5b5f25f0-266c-11eb-25d4-17e411c850c9
@@ -1086,11 +1150,13 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─3e310cf8-25ec-11eb-07da-cb4a2c71ae34
 # ╟─d6d1b312-2543-11eb-1cb2-e5b801686ffb
 # ╠═378aed18-252b-11eb-0b37-a3b511af2cb5
+# ╠═52fd9868-2edb-40f5-ace0-89cb8a07777f
+# ╠═6de783ed-9245-4be7-ac42-d83ae37c9714
 # ╟─3cbc95ba-2685-11eb-3810-3bf38aa33231
 # ╟─68b2a560-2536-11eb-0cc4-27793b4d6a70
 # ╟─0e19f82e-2685-11eb-2e99-0d094c1aa520
 # ╟─1eabe908-268b-11eb-329b-b35160ec951e
-# ╠═1d388372-2695-11eb-3068-7b28a2ccb9ac
+# ╠═0495f43d-d780-4e4e-b6f7-862c32d5835b
 # ╟─53c2eaf6-268b-11eb-0899-b91c03713da4
 # ╠═06d28052-2531-11eb-39e2-e9613ab0401c
 # ╟─4c9173ac-2685-11eb-2129-99071821ebeb
@@ -1105,6 +1171,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═607058ec-253c-11eb-0fb6-add8cfb73a4f
 # ╟─9c1f73e0-268a-11eb-2bf1-216a5d869568
 # ╟─11096250-2544-11eb-057b-d7112f20b05c
+# ╠═406d5ce1-c2b3-436d-ae49-1ecd0cdaec69
 # ╠═9eb07a6e-2687-11eb-0de3-7bc6aa0eefb0
 # ╟─cb15cd88-25ed-11eb-2be4-f31500a726c8
 # ╟─232b9bec-2544-11eb-0401-97a60bb172fc
