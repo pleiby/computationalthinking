@@ -678,6 +678,17 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
 - re `function Model.timestep!(ebm)`
     - this is defined outside the `module Model`, and yet it seems to supercede the version of `timestep!(ebm)` defined within module `Model` (it adds the updating of albedo each step)
     - Q: how is this scoping achieved, and which version of the fn is called when?
+## Notes and Questions re HW9
+- note problems of the markdown parser, confusing interpolation with equation demarked by $ (even if no actual equations denoted with $)
+- Note issue of parameter uncertainty and result of Jensen's inequality
+    - more broadly, is this a consequence of the non-commutative nature of function composition, when the functions are not linear? [Function compostion is not commutative](https://en.wikipedia.org/wiki/Function_composition#:~:text=Composition%20of%20functions%20is%20different,of%20functions%20is%20not%20commutative.)
+- ugly `histogram(ECS_samples ....`?
+- in `simulated_rcp85_model`
+    - nicxe way to map t to index to get T[2100]
+        - `findfirst(t .== 2100)`
+        - just solve to 2100 and take T[end]?
+    - both produce plot and value of T[2100] in single `let` block?
+
 ## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
