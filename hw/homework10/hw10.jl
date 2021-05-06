@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.11
+# v0.14.4
 
 using Markdown
 using InteractiveUtils
@@ -52,7 +52,7 @@ md"""
 # ╔═╡ 6cb238d0-2c05-11eb-221e-d5df4c479302
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Paul Leiby", kerberos_id = "pleiby@gmail")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -195,15 +195,40 @@ abstract type ClimateModel end
 # ╔═╡ f4c884fc-2a97-11eb-1ba9-01bf579f8b43
 begin
 	# main method:
+	"""
+		advect(T::Array{Float64,2}, O::ClimateModel)
+	
+	returns an array of the advection tendencies
+	corresponding to each grid cell in temperature array `T` 
+	for the spatial velocities and spatial step increments
+	given in the `ClimateModel` `O`
+	"""
 	advect(T::Array{Float64,2}, O::ClimateModel) = 
 		advect(T, O.u, O.v, O.grid.Δy, O.grid.Δx)
 	
 	# helper methods:
+	"""
+		advect(T::Array{Float64,2}, u, v, Δy, Δx)
+	
+	returns an array of the advection tendencies
+	corresponding to each grid cell in temperature array `T` 
+	with x-velocity `u` and y-velocity `v`
+	for spatial step increments `Δy, Δx`
+	"""
 	advect(T::Array{Float64,2}, u, v, Δy, Δx) = pad_zeros([
+		# use array comprehension to apply advect to each non-boundary element
 		advect(T, u, v, Δy, Δx, j, i)
 		for j=2:size(T, 1)-1, i=2:size(T, 2)-1
 	])
 	
+	"""
+		advect(T::Array{Float64,2}, u, v, Δy, Δx, j, i)
+	
+	computes the advective tendency (as a single Float64 type)
+	for the  grid cell `j,i` in temperature array `T` 
+	with x-velocity `u` and y-velocity `v`
+	for spatial step increments `Δy, Δx`
+	"""
 	advect(T::Array{Float64,2}, u, v, Δy, Δx, j, i) = .-(
 		u[j, i].*sum(xgrad_kernel[0, -1:1].*T[j, i-1:i+1])/(2Δx) .+
 		v[j, i].*sum(ygrad_kernel[-1:1, 0].*T[j-1:j+1, i])/(2Δy)
