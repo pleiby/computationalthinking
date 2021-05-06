@@ -701,6 +701,12 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
         - would the use of `dot` be easier without offset indexing: `dot(k , T[j-hw_k:j+hw_k,i])`
             - for `hw_k = div(length(k)-1, 2)`
     - Q: as in array-based function `advect()` is there any assurance about the order of computations in an "array comprehension" statement? A: expect the implied loops are executed in order?
+- what is `ModelType`
+    - I dont understand this constructor at all:
+    ```julia
+        ClimateModelSimulation(C::ModelType, T, Δt) where ModelType = 
+		ClimateModelSimulation{ModelType}(C, T, Δt, 0)
+    ```
 
 
 ## Dataframes
