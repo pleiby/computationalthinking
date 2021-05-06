@@ -115,6 +115,9 @@ xgrad_kernel = OffsetArray(reshape([-1., 0, 1.], 1, 3),  0:0, -1:1);
 # ╔═╡ 682f2530-2a97-11eb-3ee6-99a7c79b3767
 ygrad_kernel = OffsetArray(reshape([-1., 0, 1.], 3, 1),  -1:1, 0:0);
 
+# ╔═╡ 93fe1744-e7c4-4e4c-966d-5b584f297815
+md"These are the kernels needed for diffusion tendency calculation: discrete approx of Laplacian is average of neighboring values minus central value."
+
 # ╔═╡ b629d89a-2a95-11eb-2f27-3dfa45789be4
 xdiff_kernel = OffsetArray(reshape([1., -2., 1.], 1, 3),  0:0, -1:1);
 
@@ -142,14 +145,14 @@ Let's look at our first type, `Grid`. Notice that it only has one 'constructor f
 # ╔═╡ cd2ee4ca-2a06-11eb-0e61-e9a2ecf72bd6
 begin
 	struct Grid
-		N::Int64
-		L::Float64
+		N::Int64 # number of longitudinal grid points
+		L::Float64 # longitudinal size in meters
 
-		Δx::Float64
-		Δy::Float64
+		Δx::Float64 # grid step size in x (meridianal) direction
+		Δy::Float64 # grid step size in y (longitudinal) direction
 
-		x::Array{Float64, 2}
-		y::Array{Float64, 2}
+		x::Array{Float64, 2} # x values for grid points
+		y::Array{Float64, 2} # y values for grid points
 
 		Nx::Int64
 		Ny::Int64
@@ -164,7 +167,7 @@ begin
 			y = -L -Δy/2.:Δy:L +Δy/2.
 			y = reshape(y, (size(y,1), 1))
 
-			Nx, Ny = size(x, 2), size(y, 1)
+			Nx, Ny = size(x, 2), size(y, 1) # possible diff number of x and y points
 
 			return new(N, L, Δx, Δy, x, y, Nx, Ny)
 		end
@@ -175,6 +178,7 @@ end
 
 # ╔═╡ e7f563f0-2d04-11eb-036d-992da68470a6
 Grid(5,300.0e3)
+# example small grid 
 
 # ╔═╡ 39404240-2cfe-11eb-2e3c-710e37f8cd4b
 md"""
@@ -186,7 +190,7 @@ Two structs: `OceanModel` and `OceanModelParameters`, and an abstract type: `Cli
 # ╔═╡ 0d63e6b2-2b49-11eb-3413-43977d299d90
 Base.@kwdef struct OceanModelParameters
 	
-	κ::Float64=1.e4
+	κ::Float64=1.e4 # [m^2 s^-1\
 end
 
 # ╔═╡ c9171c56-2dd8-11eb-189b-95d964a9724a
@@ -237,18 +241,44 @@ end
 
 # ╔═╡ ee6716c8-2a95-11eb-3a00-319ee69dd37f
 begin
+	"""
+		diffuse(T::Array{Float64,2}, O::ClimateModel)
+	
+	returns an array of the diffusion tendencies, in [deg/sec],
+	corresponding to each grid cell in temperature array `T` 
+	for the diffusivity and spatial step increments
+	given in the `ClimateModel` `O`
+	"""	
 	# main method:
 	diffuse(T::Array{Float64,2}, O::ClimateModel) = 
 		diffuse(T, O.params.κ, O.grid.Δy, O.grid.Δx)
 	
+	"""
+		diffuse(T, κ, Δy, Δx)
+	
+	returns an array of the diffusion tendencies
+	corresponding to each grid cell in temperature array `T` 
+	with diffusivity `κ`
+	for spatial step increments `Δy, Δx`
+	"""	
 	# helper methods:
 	diffuse(T, κ, Δy, Δx) = pad_zeros([
 		diffuse(T, κ, Δy, Δx, j, i) for j=2:size(T, 1)-1, i=2:size(T, 2)-1
 	])
+	
+
+	"""
+		diffuse(T, κ, Δy, Δx, j, i)
+	
+	computes the diffusive tendency (as a single Float64 type, [deg/sec])
+	for the  grid cell `j,i` in temperature array `T` 
+	with diffusivity `κ`
+	for spatial step increments `Δy, Δx`
+	"""	
 	diffuse(T, κ, Δy, Δx, j, i) = κ.*(
 		sum(xdiff_kernel[0, -1:1].*T[j, i-1:i+1])/(Δx^2) +
 		sum(ydiff_kernel[-1:1, 0].*T[j-1:j+1, i])/(Δy^2)
-	)
+	) # [deg/sec]
 end
 
 # ╔═╡ d3796644-2a05-11eb-11b8-87b6e8c311f9
@@ -257,8 +287,8 @@ begin
 		grid::Grid
 		params::OceanModelParameters
 
-		u::Array{Float64, 2}
-		v::Array{Float64, 2}
+		u::Array{Float64, 2} # field of x/horiz velocties
+		v::Array{Float64, 2} # field of y/vert velocties
 	end
 
 	OceanModel(G::Grid, params::OceanModelParameters) = 
@@ -281,6 +311,7 @@ The `OceanModel` struct contains a complete _description_ of the model being sim
 # ╔═╡ f92086c4-2a74-11eb-3c72-a1096667183b
 begin
 	mutable struct ClimateModelSimulation{ModelType<:ClimateModel}
+		# contains a model, together with the simulation results
 		model::ModelType
 		
 		T::Array{Float64, 2}
@@ -295,19 +326,19 @@ end
 
 # ╔═╡ 7caca2fa-2a9a-11eb-373f-156a459a1637
 function update_ghostcells!(A::Array{Float64,2}; option="no-flux")
-	# Atmp = @view A[:,:]
+	# Atmp = @view A[:,:] # not needed
 	if option=="no-flux"
-		A[1, :] .= A[2, :]; A[end, :] .= A[end-1, :]
-		A[:, 1] .= A[:, 2]; A[:, end] .= A[:, end-1]
+		A[1, :] .= A[2, :]; A[end, :] .= A[end-1, :] # top & bottom row equal next
+		A[:, 1] .= A[:, 2]; A[:, end] .= A[:, end-1] # left * right col equal next
 	end
 end
 
 # ╔═╡ 81bb6a4a-2a9c-11eb-38bb-f7701c79afa2
 function timestep!(sim::ClimateModelSimulation{OceanModel})
-	update_ghostcells!(sim.T)
+	update_ghostcells!(sim.T) # update boundary cells to assure b.c. satisfied
 	
 	tendencies = advect(sim.T, sim.model) .+ diffuse(sim.T, sim.model)
-	sim.T .+= sim.Δt*tendencies
+	sim.T .+= sim.Δt*tendencies # advance temperature array T one timestep
 	
 	sim.iteration += 1
 end;
@@ -399,6 +430,7 @@ end
 
 # ╔═╡ df706ebc-2a63-11eb-0b09-fd9f151cb5a8
 function impose_no_flux!(u, v)
+	# no u,v velocity along top & bottom rows, left and right cols
 	u[1,:] .= 0.; v[1,:] .= 0.;
 	u[end,:] .= 0.; v[end,:] .= 0.;
 	u[:,1] .= 0.; v[:,1] .= 0.;
@@ -406,6 +438,13 @@ function impose_no_flux!(u, v)
 end
 
 # ╔═╡ e2e4cfac-2a63-11eb-1b7f-9d8d5d304b43
+"""
+	 PointVortex(G; Ω=1., a=0.2, x0=0.5, y0=0.)
+
+return Velocity field
+(as separate arrays for meridianal and longitudinal `u` and `v`)
+for a single circular vortex
+"""
 function PointVortex(G; Ω=1., a=0.2, x0=0.5, y0=0.)
 	x = reshape(0. -G.Δx/(G.L):G.Δx/G.L:1. +G.Δx/(G.L), (1, G.Nx+1))
 	y = reshape(-1. -G.Δy/(G.L):G.Δy/G.L:1. +G.Δy/(G.L), (G.Ny+1, 1))
@@ -1288,6 +1327,7 @@ todo(text) = HTML("""<div
 # ╠═1e8d37ee-2a97-11eb-1d45-6b426b25d4eb
 # ╠═682f2530-2a97-11eb-3ee6-99a7c79b3767
 # ╠═ee6716c8-2a95-11eb-3a00-319ee69dd37f
+# ╟─93fe1744-e7c4-4e4c-966d-5b584f297815
 # ╠═b629d89a-2a95-11eb-2f27-3dfa45789be4
 # ╠═a8d8f8d2-2cfa-11eb-3c3e-d54f7b32e4a2
 # ╟─2beb6ec0-2dcc-11eb-1768-0b8e4fba1597
@@ -1319,9 +1359,9 @@ todo(text) = HTML("""<div
 # ╟─c9ea0f72-2a67-11eb-20ba-376ca9c8014f
 # ╟─3b24e1b0-2b46-11eb-383b-c57cbf3e68f1
 # ╟─c0298712-2a88-11eb-09af-bf2c39167aa6
-# ╟─e2e4cfac-2a63-11eb-1b7f-9d8d5d304b43
-# ╟─e3ee80c0-12dd-11eb-110a-c336bb978c51
-# ╟─df706ebc-2a63-11eb-0b09-fd9f151cb5a8
+# ╠═e2e4cfac-2a63-11eb-1b7f-9d8d5d304b43
+# ╠═e3ee80c0-12dd-11eb-110a-c336bb978c51
+# ╠═df706ebc-2a63-11eb-0b09-fd9f151cb5a8
 # ╟─bb084ace-12e2-11eb-2dfc-111e90eabfdd
 # ╟─ecaab27e-2a16-11eb-0e99-87c91e659cf3
 # ╟─e59d869c-2a88-11eb-2511-5d5b4b380b80
