@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.10
+# v0.14.4
 
 using Markdown
 using InteractiveUtils
@@ -65,6 +65,9 @@ where $\vec{u}(x,y) = (u, v) = u\,\mathbf{\hat{x}} + v\,\mathbf{\hat{y}}$ is a v
 
 Throughout the rest of the Climate Modelling module, we will consider $x$ to be the *longitundinal* direction (positive from west to east) and $y$ to the be the *latitudinal* direction (positive from south to north).
 """
+
+# ╔═╡ 8e10427c-e5d8-4dbf-b76e-a0f580010a3a
+md"Note: units of κ diffusivity are ``L^2 t^{-1}``, e.g. ``m^2/sec``"
 
 # ╔═╡ 3a4a1aea-2118-11eb-30a9-57b87f2ddfae
 begin
@@ -164,7 +167,7 @@ Its kernel is shown below.
 md"""
 Now that we have discretized the two derivate terms, we can write out the *advective tendency* for computing $T_{i, j, n+1}$ as
 
-$u\frac{\partial T}{\partial x} + v\frac{\partial T}{\partial y} \approx u_{i,\, j}^{n} \frac{T_{i,\, j+1}^{n} - T_{i,\,j-1}^{n}}{2 \Delta y} + v_{i,\, j}^{n} \frac{T_{i,\, j+1}^{n} - T_{i,\,j-1}^{n}}{2 \Delta y}.$
+$u\frac{\partial T}{\partial x} + v\frac{\partial T}{\partial y} \approx u_{i,\, j}^{n} \frac{T_{i+1\, j}^{n} - T_{i-1,\,j}^{n}}{2 \Delta x} + v_{i,\, j}^{n} \frac{T_{i,\, j+1}^{n} - T_{i,\,j-1}^{n}}{2 \Delta y}.$
 
 We implement this in julia as a series of methods for the `advect` function. The first method computes the advective tendency (as a single `Float64` type) for the $(i,j)$ grid cell while the second method returns an array of the tendencies for each grid cell using two nested for loops.
 """
@@ -582,25 +585,57 @@ begin
 	plot_kernel(xgrad_kernel)
 end
 
+# ╔═╡ d69933d2-023f-41cb-922b-a4504b0d221f
+xgrad_kernel
+
 # ╔═╡ 682f2530-2a97-11eb-3ee6-99a7c79b3767
 begin
 	ygrad_kernel = OffsetArray(reshape([-1., 0, 1.], 3, 1),  -1:1, 0:0)
 	plot_kernel(ygrad_kernel)
 end
 
+# ╔═╡ 74009249-34a9-43b6-8501-4c685e552d91
+ygrad_kernel
+
 # ╔═╡ f4c884fc-2a97-11eb-1ba9-01bf579f8b43
 begin
+	"""
+		advect(T, u, v, Δy, Δx, j, i)
+	
+	computes the advective tendency (as a single Float64 type)
+	for the  grid cell `j,i` in temperature array `T` 
+	with x-velocity `u` and y-velocity `v`
+	for spatial step increments `Δy, Δx`
+	"""
 	function advect(T, u, v, Δy, Δx, j, i)
 		return .-(
 			u[j, i].*sum(xgrad_kernel[0, -1:1].*T[j, i-1:i+1])/(2Δx) .+
 			v[j, i].*sum(ygrad_kernel[-1:1, 0].*T[j-1:j+1, i])/(2Δy)
 		)
 	end
+	
+	"""
+		advect(T, u, v, Δy, Δx)
+	
+	returns an array of the advection tendencies
+	corresponding to each grid cell in temperature array `T` 
+	with x-velocity `u` and y-velocity `v`
+	for spatial step increments `Δy, Δx`
+	"""
 	advect(T, u, v, Δy, Δx) = [
+		# use array comprehension to apply advect to each non-boundary element
 		advect(T, u, v, Δy, Δx, j, i)
 		for j=2:size(T, 1)-1, i=2:size(T, 2)-1
 	]
 	
+	"""
+		advect(T, O::OceanModel)
+	
+	returns an array of the advection tendencies
+	corresponding to each grid cell in temperature array `T` 
+	for the spatial velocities and spatial step increments
+	given in the `OceanModel` `O`
+	"""
 	advect(T, O::OceanModel) = advect(T, O.u, O.v, O.G.Δy, O.G.Δx)
 end
 
@@ -614,16 +649,41 @@ end
 
 # ╔═╡ ee6716c8-2a95-11eb-3a00-319ee69dd37f
 begin
+	"""
+		diffuse(T, κ, Δy, Δx, j, i)
+	
+	computes the diffusive tendency (as a single Float64 type)
+	for the  grid cell `j,i` in temperature array `T` 
+	with diffusivity `κ`
+	for spatial step increments `Δy, Δx`
+	"""	
 	function diffuse(T, κ, Δy, Δx, j, i)
 		return κ.*(
 			sum(xdiff_kernel[0, -1:1].*T[j, i-1:i+1])/(Δx^2) +
 			sum(ydiff_kernel[-1:1, 0].*T[j-1:j+1, i])/(Δy^2)
 		)
 	end
+	
+	"""
+		diffuse(T, κ, Δy, Δx)
+	
+	returns an array of the diffusion tendencies
+	corresponding to each grid cell in temperature array `T` 
+	with diffusivity `κ`
+	for spatial step increments `Δy, Δx`
+	"""	
 	diffuse(T, κ, Δy, Δx) = [
 		diffuse(T, κ, Δy, Δx, j, i) for j=2:size(T, 1)-1, i=2:size(T, 2)-1
 	]
+
+	"""
+		diffuse(T, O::OceanModel)
 	
+	returns an array of the diffusion tendencies
+	corresponding to each grid cell in temperature array `T` 
+	for the diffusivity and spatial step increments
+	given in the `OceanModel` `O`
+	"""	
 	diffuse(T, O::OceanModel) = diffuse(T, O.P.κ, O.G.Δy, O.G.Δx)
 end
 
@@ -683,16 +743,19 @@ end |> as_svg
 # ╟─0f8db6f4-2113-11eb-18b4-21a469c67f3a
 # ╠═ed741ec6-1f75-11eb-03be-ad6284abaab8
 # ╟─ac759b96-2114-11eb-24cb-d50b556f4142
+# ╟─8e10427c-e5d8-4dbf-b76e-a0f580010a3a
 # ╟─3a4a1aea-2118-11eb-30a9-57b87f2ddfae
 # ╟─023779a0-2a95-11eb-35b5-7be93c43afaf
 # ╟─b1b5625e-211a-11eb-3ee1-3ba9c9cc375a
 # ╠═1e8d37ee-2a97-11eb-1d45-6b426b25d4eb
+# ╠═d69933d2-023f-41cb-922b-a4504b0d221f
 # ╟─3578b158-2a97-11eb-0771-bf6d82d3b6d1
-# ╟─682f2530-2a97-11eb-3ee6-99a7c79b3767
+# ╠═682f2530-2a97-11eb-3ee6-99a7c79b3767
+# ╠═74009249-34a9-43b6-8501-4c685e552d91
 # ╟─7f3c9550-2a97-11eb-1549-455009025872
 # ╠═f4c884fc-2a97-11eb-1ba9-01bf579f8b43
 # ╟─0127bca6-2a99-11eb-16a0-8d7af66694f8
-# ╟─b629d89a-2a95-11eb-2f27-3dfa45789be4
+# ╠═b629d89a-2a95-11eb-2f27-3dfa45789be4
 # ╟─eac507ce-2a99-11eb-3eba-0780a4a7e078
 # ╠═ee6716c8-2a95-11eb-3a00-319ee69dd37f
 # ╟─09f179c0-2a9a-11eb-1d0f-e59012f9e77b
