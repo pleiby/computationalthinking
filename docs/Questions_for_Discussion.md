@@ -689,6 +689,20 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
         - just solve to 2100 and take T[end]?
     - both produce plot and value of T[2100] in single `let` block?
 
+## Notes and Questions on Lecture 22 & 23, HW10
+- Kernels and offset arrays:
+    - In Lecture 23 notebook 4_ocean_heat_transport.jl (Lecture 23: Solving Partial Differential Equations (PDEs) Numerically Part II:)
+    - Q: note function `advect()` seems to swap order of indices (i,j) = (x,y) in array T.
+        - i.e. T[j, i] vs algebraic notation $T_{ij}$
+        - Oh wait, I get it: x is horizontal, so if array maps to pixels, the horizontal runs across columns (2nd index i) for a single row (first index j)
+        - (Note that the typeset algebra above `advect` is erroneous for the central difference approx of the partial w.r.t. x)
+    - Q: for application of kernel k, why `sum(k .* x)` vs `dot(x, y)`?
+        - is this required by offset array indexing `sum(k[-1:1, 0] .* T[j-1:j+1,i])`
+        - would the use of `dot` be easier without offset indexing: `dot(k , T[j-hw_k:j+hw_k,i])`
+            - for `hw_k = div(length(k)-1, 2)`
+    - Q: as in array-based function `advect()` is there any assurance about the order of computations in an "array comprehension" statement? A: expect the implied loops are executed in order?
+
+
 ## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
@@ -706,3 +720,4 @@ Spring 2020
     - [MIT 18S190 Spring 2020 - Course Materials](https://ocw.mit.edu/courses/mathematics/18-s190-introduction-to-computational-thinking-with-julia-with-applications-to-modeling-the-covid-19-pandemic-spring-2020/course-materials/)
 
 - [Julia A Concise Tutorial](https://syl1.gitbook.io/julia-language-a-concise-tutorial/) for a pretty good rapid overview
+
