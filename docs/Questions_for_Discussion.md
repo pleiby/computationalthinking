@@ -707,8 +707,10 @@ https://www.youtube.com/playlist?list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ
         ClimateModelSimulation(C::ModelType, T, Δt) where ModelType = 
 		ClimateModelSimulation{ModelType}(C, T, Δt, 0)
     ```
-
-
+- what is function of `Base.@kwdef` macro before some structs
+- Q: in Ex 2.1, `function runtime()`:
+    - do we need to re-initialize `ocean_T_init` and `ocean_velocities`, whenever we change grid size?
+        - A: not if we use `constantT` for this test
 ## Dataframes
 - [Data Wrangling with DataFrames.jl Cheat Sheet](https://ahsmart.com/pub/data-wrangling-with-data-frames-jl-cheat-sheet/index.html)
     - Cheatsheet: https://ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v0.22_rev1.pdf
