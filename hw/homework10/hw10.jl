@@ -162,6 +162,8 @@ begin
 			Δx = L/N # [m]
 			Δy = L/N # [m]
 
+			# note x runs from 0-Δx/2 to +L+Δx/2, 
+			# and y runs from -L-Δy/2 to +L+Δy/2, 
 			x = 0. -Δx/2.:Δx:L +Δx/2.
 			x = reshape(x, (1, size(x,1)))
 			y = -L -Δy/2.:Δy:L +Δy/2.
@@ -310,6 +312,12 @@ The `OceanModel` struct contains a complete _description_ of the model being sim
 
 # ╔═╡ f92086c4-2a74-11eb-3c72-a1096667183b
 begin
+	"""
+		struct ClimateModelSimulation{ModelType<:ClimateModel}
+	
+	contains a `model`, together with the simulation results
+	for temperature `T`, and associated time increment `Δt` and iteration
+	"""
 	mutable struct ClimateModelSimulation{ModelType<:ClimateModel}
 		# contains a model, together with the simulation results
 		model::ModelType
@@ -429,6 +437,12 @@ begin
 end
 
 # ╔═╡ df706ebc-2a63-11eb-0b09-fd9f151cb5a8
+"""
+	impose_no_flux!(u, v)
+
+modifies u,v velocity to be zero
+along top & bottom rows, left and right cols
+"""
 function impose_no_flux!(u, v)
 	# no u,v velocity along top & bottom rows, left and right cols
 	u[1,:] .= 0.; v[1,:] .= 0.;
@@ -510,10 +524,23 @@ md"""
 """
 
 # ╔═╡ 0ae0bb70-2b8f-11eb-0104-93aa0e1c7a72
+"""
+	constantT(G; value)
+
+for a grid `G`, set all values to `value`
+"""
 constantT(G; value) = zeros(G) .+ value
 
 # ╔═╡ c4424838-12e2-11eb-25eb-058344b39c8b
+"""
+	linearT(G; value=50.0)
+
+for a grid `G`, set all values to linearly
+interpolate from 0 to `value` in the y direction,
+no variation in the x direction
+"""
 linearT(G; value=50.0) = value*0.5*(1. .+[ -(y/G.L) for y in G.y[:, 1], x in G.x[1, :] ])
+# note y runs from ~-L-Δy to +L+Δy, x runs from ~0-Δx to +L+Δx
 
 # ╔═╡ 3d12c114-2a0a-11eb-131e-d1a39b4f440b
 function InitBox(G; value=50., nx=2, ny=2, xspan=false, yspan=false)
@@ -558,8 +585,11 @@ md"""
 
 # ╔═╡ b952d290-2db7-11eb-3fa9-2bc8d77b9fd6
 numerical_parameters_observation = md"""
-
-Hello!
+Parameters `N` and `L` determine the grid size and spatial resolution (`L/N`).
+Parameter `Δt` is the time step, and determines the temporal resolution.
+Together, the number of computations needed to solve the system over time t
+is on the order of the grid size (number of grid points)
+times the number of timoe steps, i.e. ``N^2 \cdot t/Δt``.
 """
 
 # ╔═╡ 88c56350-2c08-11eb-14e9-77e71d749e6d
@@ -599,19 +629,20 @@ For constant ``M``, we want to verify that $\text{runtime} = \mathcal{O}(N_{x}^{
 
 """
 
-# ╔═╡ 126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
-function runtime(N)
-	
-	return missing
-end
-
 # ╔═╡ 923af680-2d0b-11eb-3f6a-db4bf29bb6a9
 md"""
 👉 Call your `runtime` function on a range of values for `N`, and use a plot to demonstrate that the predicted runtime complexity holds.
 """
 
-# ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
+# ╔═╡ 61873663-3963-4e85-bbb2-d11f41a32643
+begin
+	timings_wanted = true # set True to execute timing tests
+	sizesN = 10:10:100
+end
 
+# ╔═╡ 3b5abbd3-fd88-4b81-ae53-4b1a1c8b1dc9
+
+sizesN
 
 # ╔═╡ a6811db2-2cdf-11eb-0aac-b1bf7b7d99eb
 md"""
@@ -962,6 +993,63 @@ function timestep!(sim::ClimateModelSimulation{RadiationOceanModel})
 	
 	sim.iteration += 1
 end
+
+# ╔═╡ 126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
+function runtime(N)
+	study_grid = Grid(N, 6000.0e3);
+
+	# Q: do we need to re-initialize `ocean_T_init` and `ocean_velocities`,\
+	#  whenever we change grid size?
+	
+	# ocean_velocities = zeros(study_grid), zeros(default_grid);
+	ocean_velocities = PointVortex(study_grid, Ω=0.5);
+	# ocean_velocities = DoubleGyre(study_grid);
+
+	# ocean_T_init = InitBox(study_grid; value=50);
+	ocean_T_init = InitBox(study_grid, value=50, xspan=true);
+	# ocean_T_init = linearT(study_grid); 
+	
+	study_ocean_sim = let
+		P = OceanModelParameters(κ=κ_ex)
+
+		u, v = ocean_velocities
+		model = OceanModel(default_grid, P, u*2. ^U_ex, v*2. ^U_ex)
+
+		Δt = 12*60*60
+		ClimateModelSimulation(model, copy(ocean_T_init), Δt)
+	end
+
+	# determine the run time for one timestep
+	num_iters = 20
+	elapsed_time = @elapsed begin
+		# timestep!(study_ocean_sim)
+		# fuller set of iterations
+		for i in 1:num_iters
+			timestep!(study_ocean_sim)
+		end
+	end # timed loop
+	
+	return elapsed_time/num_iters
+end
+
+# ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
+begin	
+	if timings_wanted
+		run_timings_conditional = [runtime(n) for n in sizesN]
+	end
+end		
+
+# ╔═╡ 6bd725d9-351f-4bb3-8cfa-8b899a848e0e
+run_timings = [runtime(n) for n in sizesN]
+
+# ╔═╡ 56e54eb7-40bf-40a3-8141-624c6e91d1db
+plot(sizesN, run_timings)
+
+# ╔═╡ 18c013e9-b784-4827-90a9-08cb348f0f9b
+test = [runtime(10) for n in sizesN]
+
+# ╔═╡ feed0028-61ad-4b06-9114-284ab979afd6
+runtime(100)
 
 # ╔═╡ ad95c4e0-2b4a-11eb-3584-dda89970ffdf
 md"""
@@ -1357,7 +1445,7 @@ todo(text) = HTML("""<div
 # ╟─c20b0e00-2a8a-11eb-045d-9db88411746f
 # ╟─933d42fa-2a67-11eb-07de-61cab7567d7d
 # ╟─c9ea0f72-2a67-11eb-20ba-376ca9c8014f
-# ╟─3b24e1b0-2b46-11eb-383b-c57cbf3e68f1
+# ╠═3b24e1b0-2b46-11eb-383b-c57cbf3e68f1
 # ╟─c0298712-2a88-11eb-09af-bf2c39167aa6
 # ╠═e2e4cfac-2a63-11eb-1b7f-9d8d5d304b43
 # ╠═e3ee80c0-12dd-11eb-110a-c336bb978c51
@@ -1365,9 +1453,9 @@ todo(text) = HTML("""<div
 # ╟─bb084ace-12e2-11eb-2dfc-111e90eabfdd
 # ╟─ecaab27e-2a16-11eb-0e99-87c91e659cf3
 # ╟─e59d869c-2a88-11eb-2511-5d5b4b380b80
-# ╟─0ae0bb70-2b8f-11eb-0104-93aa0e1c7a72
-# ╟─c4424838-12e2-11eb-25eb-058344b39c8b
-# ╟─3d12c114-2a0a-11eb-131e-d1a39b4f440b
+# ╠═0ae0bb70-2b8f-11eb-0104-93aa0e1c7a72
+# ╠═c4424838-12e2-11eb-25eb-058344b39c8b
+# ╠═3d12c114-2a0a-11eb-131e-d1a39b4f440b
 # ╟─6b3b6030-2066-11eb-3343-e19284638efb
 # ╟─3dffa000-2db7-11eb-263b-57fa833d5785
 # ╠═b952d290-2db7-11eb-3fa9-2bc8d77b9fd6
@@ -1377,7 +1465,13 @@ todo(text) = HTML("""<div
 # ╠═126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
 # ╟─171c6880-2d0b-11eb-0180-454f2876cf51
 # ╟─923af680-2d0b-11eb-3f6a-db4bf29bb6a9
+# ╠═61873663-3963-4e85-bbb2-d11f41a32643
 # ╠═af02d23e-2e93-11eb-3547-85d2aa07081b
+# ╠═6bd725d9-351f-4bb3-8cfa-8b899a848e0e
+# ╠═18c013e9-b784-4827-90a9-08cb348f0f9b
+# ╠═3b5abbd3-fd88-4b81-ae53-4b1a1c8b1dc9
+# ╠═feed0028-61ad-4b06-9114-284ab979afd6
+# ╠═56e54eb7-40bf-40a3-8141-624c6e91d1db
 # ╟─a6811db2-2cdf-11eb-0aac-b1bf7b7d99eb
 # ╠═87de1c70-2d0c-11eb-2c22-f76eeca58f33
 # ╟─87e59680-2d0c-11eb-03c7-1d845ca6a1a5
