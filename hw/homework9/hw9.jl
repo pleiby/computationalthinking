@@ -15,19 +15,19 @@ end
 
 # ╔═╡ 1e06178a-1fbf-11eb-32b3-61769a79b7c0
 begin
-	import Pkg
-	Pkg.activate(mktempdir())
-	Pkg.add([
-			"Plots",
-			"PlutoUI",
-			"LaTeXStrings",
-			"Distributions",
-			"Random",
-	])
-	using LaTeXStrings
-	using Plots
-	using PlutoUI
-	using Random, Distributions
+    import Pkg
+    Pkg.activate(mktempdir())
+    Pkg.add([
+        "Plots",
+        "PlutoUI",
+        "LaTeXStrings",
+        "Distributions",
+        "Random",
+    ])
+    using LaTeXStrings
+    using Plots
+    using PlutoUI
+    using Random, Distributions
 end
 
 # ╔═╡ 169727be-2433-11eb-07ae-ab7976b5be90
@@ -43,7 +43,7 @@ md"""
 # ╔═╡ 23335418-2433-11eb-05e4-2b35dc6cca0e
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Paul Leiby", kerberos_id = "pleiby@gmail")
+student = (name="Paul Leiby", kerberos_id="pleiby@gmail")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -136,10 +136,10 @@ includes data, selected functions,
 """
 module Model
 
-const S = 1368; # solar insolation [W/m^2]  (energy per unit time per unit area)
-const α = 0.3; # albedo, or planetary reflectivity [unitless]
-const B = -1.3; # climate feedback parameter [W/m^2/°C],
-const T0 = 14.; # preindustrial temperature [°C]
+const S = 1368 # solar insolation [W/m^2]  (energy per unit time per unit area)
+const α = 0.3 # albedo, or planetary reflectivity [unitless]
+const B = -1.3 # climate feedback parameter [W/m^2/°C],
+const T0 = 14.0 # preindustrial temperature [°C]
 
 """
 	absorbed_solar_radiation(; α=α, S=S)
@@ -148,18 +148,18 @@ convert values of other (generally fixed) parameters to ASR
 `α` Earth surface albedo (fraction of insolation reflected) [unitless]
 `S` Solar insolation [W/m^2]
 """
-absorbed_solar_radiation(; α=α, S=S) = S*(1 - α)/4; # [W/m^2]
-outgoing_thermal_radiation(T; A=A, B=B) = A - B*T;
+absorbed_solar_radiation(; α=α, S=S) = S * (1 - α) / 4 # [W/m^2]
+outgoing_thermal_radiation(T; A=A, B=B) = A - B * T
 
-const A = S*(1. - α)/4 + B*T0; # [W/m^2].
+const A = S * (1.0 - α) / 4 + B * T0 # [W/m^2].
 
-greenhouse_effect(CO2; a=a, CO2_PI=CO2_PI) = a*log(CO2/CO2_PI);
+greenhouse_effect(CO2; a=a, CO2_PI=CO2_PI) = a * log(CO2 / CO2_PI)
 
-const a = 5.0; # CO2 forcing coefficient [W/m^2]
-const CO2_PI = 280.; # preindustrial CO2 concentration [parts per million; ppm];
-CO2_const(t) = CO2_PI; # constant CO2 concentrations
+const a = 5.0 # CO2 forcing coefficient [W/m^2]
+const CO2_PI = 280.0 # preindustrial CO2 concentration [parts per million; ppm];
+CO2_const(t) = CO2_PI # constant CO2 concentrations
 
-const C = 51.; # atmosphere and upper-ocean heat capacity [J/m^2/°C]
+const C = 51.0 # atmosphere and upper-ocean heat capacity [J/m^2/°C]
 
 """
 	timestep!(ebm)
@@ -169,9 +169,9 @@ and time `t`,
 for an instance of an energy balance model `EBM`
 """
 function timestep!(ebm)
-	append!(ebm.T, ebm.T[end] + ebm.Δt*tendency(ebm));
-	append!(ebm.t, ebm.t[end] + ebm.Δt);
-end;
+    append!(ebm.T, ebm.T[end] + ebm.Δt * tendency(ebm))
+    append!(ebm.t, ebm.t[end] + ebm.Δt)
+end
 
 """
 	`tendency(ebm)`
@@ -179,86 +179,88 @@ end;
 sum the various physical forcing mechanisms determining ΔT/Δt.
 This is a function of the present temperature `T_{n}`, as well as a number of other parameters."
 """
-tendency(ebm) = (1. /ebm.C) * (
-	+ absorbed_solar_radiation(α=ebm.α, S=ebm.S)
-	- outgoing_thermal_radiation(ebm.T[end], A=ebm.A, B=ebm.B)
-	+ greenhouse_effect(ebm.CO2(ebm.t[end]), a=ebm.a, CO2_PI=ebm.CO2_PI)
-);
+tendency(ebm) = (1.0 / ebm.C) * (
+    +absorbed_solar_radiation(α=ebm.α, S=ebm.S)
+    -
+    outgoing_thermal_radiation(ebm.T[end], A=ebm.A, B=ebm.B)
+    +
+    greenhouse_effect(ebm.CO2(ebm.t[end]), a=ebm.a, CO2_PI=ebm.CO2_PI)
+)
 
 begin
-	mutable struct EBM
-		T::Array{Float64, 1}
-	
-		t::Array{Float64, 1}
-		Δt::Float64
-	
-		CO2::Function
-	
-		C::Float64
-		a::Float64
-		A::Float64
-		B::Float64
-		CO2_PI::Float64
-	
-		α::Float64
-		S::Float64
-	end;
-	
-	# Make constant parameters optional kwargs
-	"""
-		EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Real, CO2::Function;
-		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
-	
-	"""
-	EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Real, CO2::Function;
-		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
-		EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)
-	);
-	
-	# Construct from (initial) float inputs for convenience
-	"""
-		T0::Real, t0::Real, Δt::Real, CO2::Function;
-		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
-	
-	Construct Temp `T` and time `t arrays from (initial) float inputs for convenience
-	"""
-	EBM(T0::Real, t0::Real, Δt::Real, CO2::Function;
-		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
-		EBM(Float64[T0], Float64[t0], Δt, CO2;
-			C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S);
-	);
-end;
+    mutable struct EBM
+        T::Array{Float64,1}
+
+        t::Array{Float64,1}
+        Δt::Float64
+
+        CO2::Function
+
+        C::Float64
+        a::Float64
+        A::Float64
+        B::Float64
+        CO2_PI::Float64
+
+        α::Float64
+        S::Float64
+    end
+
+    # Make constant parameters optional kwargs
+    """
+    	EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Real, CO2::Function;
+    	C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
+
+    """
+    EBM(T::Array{Float64,1}, t::Array{Float64,1}, Δt::Real, CO2::Function;
+        C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
+        EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)
+    )
+
+    # Construct from (initial) float inputs for convenience
+    """
+    	T0::Real, t0::Real, Δt::Real, CO2::Function;
+    	C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
+
+    Construct Temp `T` and time `t arrays from (initial) float inputs for convenience
+    """
+    EBM(T0::Real, t0::Real, Δt::Real, CO2::Function;
+        C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
+        EBM(Float64[T0], Float64[t0], Δt, CO2;
+        C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S)
+    )
+end
 
 begin
-	"""
-		run!(ebm::EBM, end_year::Real)
-	
-	function that runs an `EBM` simulation by timestepping forward
-	until a given `end_year`."
-	"""
-	function run!(ebm::EBM, end_year::Real)
-		while ebm.t[end] < end_year
-			timestep!(ebm)
-		end
-	end;
-	
-	run!(ebm) = run!(ebm, 200.) # run for 200 years by default
+    """
+    	run!(ebm::EBM, end_year::Real)
+
+    function that runs an `EBM` simulation by timestepping forward
+    until a given `end_year`."
+    """
+    function run!(ebm::EBM, end_year::Real)
+        while ebm.t[end] < end_year
+            timestep!(ebm)
+        end
+    end
+
+    run!(ebm) = run!(ebm, 200.0) # run for 200 years by default
 end
 
 
 
 
-CO2_hist(t) = CO2_PI * (1 .+ fractional_increase(t));
-fractional_increase(t) = ((t .- 1850.)/220).^3;
+CO2_hist(t) = CO2_PI * (1 .+ fractional_increase(t))
+fractional_increase(t) = ((t .- 1850.0) / 220) .^ 3
 
 begin
-	CO2_RCP26(t) = CO2_PI * (1 .+ fractional_increase(t) .* min.(1., exp.(-((t .-1850.).-170)/100))) ;
-	RCP26 = EBM(T0, 1850., 1., CO2_RCP26)
-	run!(RCP26, 2100.)
-	
-	CO2_RCP85(t) = CO2_PI * (1 .+ fractional_increase(t) .* max.(1., exp.(((t .-1850.).-170)/100)));
-	RCP85 = EBM(T0, 1850., 1., CO2_RCP85)
-	run!(RCP85, 2100.)
+    CO2_RCP26(t) = CO2_PI * (1 .+ fractional_increase(t) .* min.(1.0, exp.(-((t .- 1850.0) .- 170) / 100)))
+    RCP26 = EBM(T0, 1850.0, 1.0, CO2_RCP26)
+    run!(RCP26, 2100.0)
+
+    CO2_RCP85(t) = CO2_PI * (1 .+ fractional_increase(t) .* max.(1.0, exp.(((t .- 1850.0) .- 170) / 100)))
+    RCP85 = EBM(T0, 1850.0, 1.0, CO2_RCP85)
+    run!(RCP85, 2100.0)
 end
 
 end
@@ -331,9 +333,9 @@ md"Reveal answer: $(@bind reveal_nonnegative_B_answer CheckBox())"
 
 # ╔═╡ 7d815988-1fc7-11eb-322a-4509e7128ce3
 if reveal_nonnegative_B_answer
-	md"""
-This is known as the "runaway greenhouse effect", where warming self-amplifies so strongly through *positive feedbacks* that the warming continues forever (or until the oceans boil away and there is no longer a reservoir or water to support a *water vapor feedback*. This is thought to explain Venus' extremely hot and hostile climate, but as you can see is extremely unlikely to occur on present-day Earth.
-"""
+    md"""
+   This is known as the "runaway greenhouse effect", where warming self-amplifies so strongly through *positive feedbacks* that the warming continues forever (or until the oceans boil away and there is no longer a reservoir or water to support a *water vapor feedback*. This is thought to explain Venus' extremely hot and hostile climate, but as you can see is extremely unlikely to occur on present-day Earth.
+   """
 end
 
 # ╔═╡ aed8f00e-266b-11eb-156d-8bb09de0dc2b
@@ -370,7 +372,8 @@ A value of ``B`` close to zero means that an increase in CO₂ concentrations wi
 """
 
 # ╔═╡ 02232964-2603-11eb-2c4c-c7b7e5fed7d1
-B̅ = -1.3; σ = 0.4
+B̅ = -1.3;
+σ = 0.4;
 
 # ╔═╡ c4398f9c-1fc4-11eb-0bbb-37f066c6027d
 """
@@ -380,7 +383,7 @@ B̅ = -1.3; σ = 0.4
 amount of warming `Delta T` caused by a doubling of CO₂ 
 (e.g. from the pre-industrial value 280 ppm to 560 ppm), at equilibrium.
 """
-ECS(; B=B̅, a=Model.a) = -a*log(2.)./B;
+ECS(; B=B̅, a=Model.a) = -a * log(2.0) ./ B;
 
 # ╔═╡ 1d253abf-cbce-464f-a049-ae870f897c5b
 """
@@ -390,39 +393,40 @@ ECS(; B=B̅, a=Model.a) = -a*log(2.)./B;
 amount of warming `Delta T` caused by a doubling of CO₂ 
 (e.g. from the pre-industrial value 280 ppm to 560 ppm), at equilibrium.
 """
-ECS(ρ_CO2; B=B̅, a=Model.a) = -a*log(ρ_CO2)./B;
+ECS(ρ_CO2; B=B̅, a=Model.a) = -a * log(ρ_CO2) ./ B;
 
 # ╔═╡ e5567637-dae7-4493-9f62-f19fcd7ef681
 ECS(3)
 
 # ╔═╡ 25f92dec-1fc4-11eb-055d-f34deea81d0e
 let
-	double_CO2(t) = if t >= 0
-		2*Model.CO2_PI
-	else
-		Model.CO2_PI
-	end
-	
-	# the definition of A depends on B, so we recalculate:
-	A = Model.S*(1. - Model.α)/4 + B_slider*Model.T0
-	# create the model
-	ebm_ECS = Model.EBM(14., -100., 1., double_CO2, A=A, B=B_slider);
-	Model.run!(ebm_ECS, 300)
-	
-	ecs = ECS(B=B_slider)
-	
-	p = plot(
-		size=(500,250), legend=:bottomright, 
-		title="Transient response to instant doubling of CO₂", 
-		ylabel="temperature change [°C]", xlabel="years after doubling",
-		ylim=(-.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
-	)
-	
-	plot!(p, [ebm_ECS.t[1], ebm_ECS.t[end]], ecs .* [1,1], 
-		ls=:dash, color=:darkred, label="ECS")
-	
-	plot!(p, ebm_ECS.t, ebm_ECS.T .- ebm_ECS.T[1], 
-		label="ΔT(t) = T(t) - T₀")
+    double_CO2(t) =
+        if t >= 0
+            2 * Model.CO2_PI
+        else
+            Model.CO2_PI
+        end
+
+    # the definition of A depends on B, so we recalculate:
+    A = Model.S * (1.0 - Model.α) / 4 + B_slider * Model.T0
+    # create the model
+    ebm_ECS = Model.EBM(14.0, -100.0, 1.0, double_CO2, A=A, B=B_slider)
+    Model.run!(ebm_ECS, 300)
+
+    ecs = ECS(B=B_slider)
+
+    p = plot(
+        size=(500, 250), legend=:bottomright,
+        title="Transient response to instant doubling of CO₂",
+        ylabel="temperature change [°C]", xlabel="years after doubling",
+        ylim=(-0.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
+    )
+
+    plot!(p, [ebm_ECS.t[1], ebm_ECS.t[end]], ecs .* [1, 1],
+        ls=:dash, color=:darkred, label="ECS")
+
+    plot!(p, ebm_ECS.t, ebm_ECS.T .- ebm_ECS.T[1],
+        label="ΔT(t) = T(t) - T₀")
 end |> as_svg
 
 # ╔═╡ 193e9aa6-5319-4e13-a49d-43ba146c25e6
@@ -430,29 +434,29 @@ ecs = [ECS(B=b) for b in collect(-2.5:0.1:1.0)]
 
 # ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
 let
-	B_range = collect(-1.0:.001: 1.0)
-	ecs = [ECS(B=b) for b in B_range]
-	
-	p = plot(
-		size=(500,250), legend=:bottomright, 
-		title="ECS Variation with Climate Feedback Parameter `B`", 
-		ylabel="temp change [°C]", xlabel="B [W/m²/K]",
-		# ylim=(-100, maximum(ecs)),
-	)
-	
-	plot!(p, B_range, ecs, 
-		ls=:dash, color=:darkred, label="ECS")
-	
+    B_range = collect(-1.0:0.001:1.0)
+    ecs = [ECS(B=b) for b in B_range]
+
+    p = plot(
+        size=(500, 250), legend=:bottomright,
+        title="ECS Variation with Climate Feedback Parameter `B`",
+        ylabel="temp change [°C]", xlabel="B [W/m²/K]",
+        # ylim=(-100, maximum(ecs)),
+    )
+
+    plot!(p, B_range, ecs,
+        ls=:dash, color=:darkred, label="ECS")
+
 end |> as_svg
 
 # ╔═╡ 736ed1b6-1fc2-11eb-359e-a1be0a188670
 B_samples = let
-	B_distribution = Normal(B̅, σ)
-	Nsamples = 5000
-	
-	samples = rand(B_distribution, Nsamples)
-	# we only sample negative values of B
-	filter(x -> x < 0, samples)
+    B_distribution = Normal(B̅, σ)
+    Nsamples = 5000
+
+    samples = rand(B_distribution, Nsamples)
+    # we only sample negative values of B
+    filter(x -> x < 0, samples)
 end
 
 # ╔═╡ 49cb5174-1fc3-11eb-3670-c3868c9b0255
@@ -464,7 +468,7 @@ md"""
 """
 
 # ╔═╡ 3d72ab3a-2689-11eb-360d-9b3d829b78a9
-ECS_samples = ECS.(B= B_samples)
+ECS_samples = ECS.(B=B_samples)
 
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 md"**Answer:**"
@@ -473,7 +477,7 @@ md"**Answer:**"
 plot(B_samples, ECS_samples, seriestype=:scatter)
 
 # ╔═╡ 1f148d9a-1fc8-11eb-158e-9d784e390b24
-histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ΔT [K]",xlim = (0,20), ylabel="samples")
+histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ΔT [K]", xlim=(0, 20), ylabel="samples")
 
 # ╔═╡ cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is. 
@@ -485,7 +489,7 @@ md"It looks like the ECS distribution is **not normally distributed**, even thou
 meanECS = trunc(mean(ECS_samples), digits=3)
 
 # ╔═╡ dd398aaa-d960-4dd7-9eb9-90681d28deb8
-ECSatmean = trunc(ECS(B = mean(B_samples)), digits=3)
+ECSatmean = trunc(ECS(B=mean(B_samples)), digits=3)
 
 # ╔═╡ 21c4ce27-2307-4df0-a1f9-115be566fa8a
 md"**Question/Note:** The following shows the problems of the markdown parser, 
@@ -509,7 +513,7 @@ md"👉 Does accounting for uncertainty in feedbacks make our expectation of glo
 
 
 # ╔═╡ c893d838-dfda-407b-97b0-e33daba2543a
-E ∘ ECS ≠ ECS ∘ E (\tilde B)
+# E ∘ ECS (\tilde B) ≠ ECS ∘ E (\tilde B) # is this meant to be executable?
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
@@ -524,7 +528,7 @@ This is a example of _Jensens Inequality_.
 md"""See [Jensens Inequality](https://en.wikipedia.org/wiki/Jensen%27s_inequality): 
 
 > In its simplest form the inequality states that the convex transformation of a mean is less than or equal to the mean applied after convex transformation; it is a simple corollary that the opposite is true of concave transformations.
-""" 
+"""
 
 # ╔═╡ 5b5f25f0-266c-11eb-25d4-17e411c850c9
 md"""
@@ -580,10 +584,10 @@ You can set up an instance of `EBM` like so, referencing the `EBM` structure in 
 
 # ╔═╡ 746aa5bc-266c-11eb-14c9-63ccc313f5de
 empty_ebm = Model.EBM(
-	14.0, # initial temperature
-	1850, # initial year
-	1, # Δt
-	t -> 280.0, # CO2 function
+    14.0, # initial temperature
+    1850, # initial year
+    1, # Δt
+    t -> 280.0, # CO2 function
 )
 
 # ╔═╡ 03b4f012-1702-4650-ba57-7068404dc374
@@ -599,9 +603,9 @@ Let's run our model:
 
 # ╔═╡ bfb07a0a-2670-11eb-3938-772499c637b1
 simulated_model = let
-	ebm = Model.EBM(14.0, 1850, 1, t -> 280.0)
-	Model.run!(ebm, 2020)
-	ebm
+    ebm = Model.EBM(14.0, 1850, 1, t -> 280.0)
+    Model.run!(ebm, 2020)
+    ebm
 end
 
 # ╔═╡ 12cbbab0-2671-11eb-2b1f-038c206e84ce
@@ -618,24 +622,24 @@ round(pi; digits=5)
 
 # ╔═╡ 9596c2dc-2671-11eb-36b9-c1af7e5f1089
 simulated_rcp85_model = let
-	ebm = Model.EBM(14.0, 1850, 1, Model.CO2_RCP85)
-	Model.run!(ebm, 2150)
+    ebm = Model.EBM(14.0, 1850, 1, Model.CO2_RCP85)
+    Model.run!(ebm, 2150)
 
-	t_index = t -> Int64(t - ebm.t[1] + 1) # map t to index?
-	T_2100 = round(ebm.T[t_index(2100)]; digits = 2)
+    t_index = t -> Int64(t - ebm.t[1] + 1) # map t to index?
+    T_2100 = round(ebm.T[t_index(2100)]; digits=2)
 
-	p = plot(ebm.t, ebm.T)
-	plot!(p,
-		xlabel="year", 
-		ylabel="Global temperature T [°C]",
-		title="Earth's Temperature (CO2_RCP85 case)",
-		legend=:topleft
-		)
+    p = plot(ebm.t, ebm.T)
+    plot!(p,
+        xlabel="year",
+        ylabel="Global temperature T [°C]",
+        title="Earth's Temperature (CO2_RCP85 case)",
+        legend=:topleft
+    )
 
-	plot!(p, 2100 .* [1,1], [ebm.T[1], ebm.T[end]], 
-	# plot!(p, 2100 , [ebm.T[1], ebm.T[end]],  # v. bad result
-		ls=:dash, color=:darkred, label="T_2100 = $T_2100")
-	
+    plot!(p, 2100 .* [1, 1], [ebm.T[1], ebm.T[end]],
+        # plot!(p, 2100 , [ebm.T[1], ebm.T[end]],  # v. bad result
+        ls=:dash, color=:darkred, label="T_2100 = $T_2100")
+
 end
 
 # ╔═╡ 4b091fac-2672-11eb-0db8-75457788d85e
@@ -655,11 +659,11 @@ md"""
 
 # ╔═╡ f688f9f2-2671-11eb-1d71-a57c9817433f
 function temperature_response(CO2::Function, B::Float64=-1.3)
-	ebm = Model.EBM(14, 1980, 1, CO2; B=B)
-	
-	Model.run!(ebm, 2100)
-	# findfirst(t .== 2100)
-	return ebm.T[end]
+    ebm = Model.EBM(14, 1980, 1, CO2; B=B)
+
+    Model.run!(ebm, 2100)
+    # findfirst(t .== 2100)
+    return ebm.T[end]
 end
 
 # ╔═╡ 049a866e-2672-11eb-29f7-bfea7ad8f572
@@ -681,31 +685,31 @@ We talked about two _emissions scenarios_: RCP2.6 (strong mitigation - controlle
 t = 1850:2100
 
 # ╔═╡ e10a9b70-25a0-11eb-2aed-17ed8221c208
-plot(t, Model.CO2_RCP85.(t), 
-	ylim=(0,1200), ylabel="CO2 concentration [ppm]")
+plot(t, Model.CO2_RCP85.(t),
+    ylim=(0, 1200), ylabel="CO2 concentration [ppm]")
 
 # ╔═╡ 08f440de-9b02-49e3-ae06-be0fa0c68670
 t
 
 # ╔═╡ 26d51210-74a6-44b3-9864-d0d2b7984308
-frac_CO2_increase = Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t))
+frac_CO2_increase = Model.CO2_RCP85.(t) / Model.CO2_RCP85(first(t))
 
 # ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
 expected_double_CO2_year = let
-	frac_CO2_increase = Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t))
-	base_CO2 = Model.CO2_RCP85(0)
-	y = missing
-	for i in 1:length(frac_CO2_increase)
-		if frac_CO2_increase[i] > 2.0
-			y = t[i]
-			break
-		end
-	end
-	y
+    frac_CO2_increase = Model.CO2_RCP85.(t) / Model.CO2_RCP85(first(t))
+    base_CO2 = Model.CO2_RCP85(0)
+    y = missing
+    for i in 1:length(frac_CO2_increase)
+        if frac_CO2_increase[i] > 2.0
+            y = t[i]
+            break
+        end
+    end
+    y
 end
 
 # ╔═╡ 354a9f46-adec-4709-aece-7adbf2018bd8
-t[findfirst(Model.CO2_RCP85.(t)/Model.CO2_RCP85(first(t)) .> 2.0)]
+t[findfirst(Model.CO2_RCP85.(t) / Model.CO2_RCP85(first(t)) .> 2.0)]
 
 # ╔═╡ 40f1e7d8-252d-11eb-0549-49ca4e806e16
 @bind t_scenario_test Slider(t; show_value=true, default=1850)
@@ -734,19 +738,19 @@ T_RCP26_samples = temperature_response.(Model.CO2_RCP26, B_samples)
 probability that elements of A equal or exceed `xlim`
 """
 function probExceed(xlim, A)
-	length(filter(x -> x >= xlim, A))/length(A)
+    length(filter(x -> x >= xlim, A)) / length(A)
 end
 
 # ╔═╡ b9dde842-da18-4033-9dcf-a3fa748dc265
 md"Consider the probability of more than 2 degrees warming from Pre-Industrial level (`T0`):"
 
 # ╔═╡ a6e506cf-539b-4c95-92fa-0fbabeef1f1b
-round(probExceed(14+2.0, T_RCP26_samples); digits = 4)
+round(probExceed(14 + 2.0, T_RCP26_samples); digits=4)
 
 # ╔═╡ a58ca9e2-883b-4136-ba57-fc87a0db9549
-round(probExceed(14+2.0, 
-		temperature_response.(Model.CO2_RCP85, B_samples));
-	digits = 4)
+round(probExceed(14 + 2.0,
+        temperature_response.(Model.CO2_RCP85, B_samples));
+    digits=4)
 
 # ╔═╡ 1ea81214-1fca-11eb-2442-7b0b448b49d6
 md"""
@@ -783,45 +787,45 @@ We used two helper functions:
 
 # ╔═╡ 68b2a560-2536-11eb-0cc4-27793b4d6a70
 function add_cold_hot_areas!(p)
-	
-	left, right = xlims(p)
-	
-	plot!(p, 
-		[left, right], [-60, -60], 
-		fillrange=[-10., -10.], fillalpha=0.3, c=:lightblue, label=nothing
-	)
-	annotate!(p, 
-		left+12, -19, 
-		text("completely\nfrozen", 10, :darkblue, :left)
-	)
-	
-	plot!(p, 
-		[left, right], [10, 10], 
-		fillrange=[80., 80.], fillalpha=0.09, c=:red, lw=0., label=nothing
-	)
-	annotate!(p,
-		left+12, 15, 
-		text("no ice", 10, :darkred, :left)
-	)
+
+    left, right = xlims(p)
+
+    plot!(p,
+        [left, right], [-60, -60],
+        fillrange=[-10.0, -10.0], fillalpha=0.3, c=:lightblue, label=nothing
+    )
+    annotate!(p,
+        left + 12, -19,
+        text("completely\nfrozen", 10, :darkblue, :left)
+    )
+
+    plot!(p,
+        [left, right], [10, 10],
+        fillrange=[80.0, 80.0], fillalpha=0.09, c=:red, lw=0.0, label=nothing
+    )
+    annotate!(p,
+        left + 12, 15,
+        text("no ice", 10, :darkred, :left)
+    )
 end
 
 # ╔═╡ 0e19f82e-2685-11eb-2e99-0d094c1aa520
 function add_reference_points!(p)
-	plot!(p, 
-		[Model.CO2_PI, Model.CO2_PI], [-55, 75], 
-		color=:grey, alpha=0.3, lw=8, 
-		label="Pre-industrial CO2"
-	)
-	plot!(p, 
-		[Model.CO2_PI], [Model.T0], 
-		shape=:circle, color=:orange, markersize=8,
-		label="Our preindustrial climate"
-	)
-	plot!(p,
-		[Model.CO2_PI], [-38.3], 
-		shape=:circle, color=:aqua, markersize=8,
-		label="Alternate preindustrial climate"
-	)
+    plot!(p,
+        [Model.CO2_PI, Model.CO2_PI], [-55, 75],
+        color=:grey, alpha=0.3, lw=8,
+        label="Pre-industrial CO2"
+    )
+    plot!(p,
+        [Model.CO2_PI], [Model.T0],
+        shape=:circle, color=:orange, markersize=8,
+        label="Our preindustrial climate"
+    )
+    plot!(p,
+        [Model.CO2_PI], [-38.3],
+        shape=:circle, color=:aqua, markersize=8,
+        label="Alternate preindustrial climate"
+    )
 end
 
 # ╔═╡ 1eabe908-268b-11eb-329b-b35160ec951e
@@ -839,15 +843,15 @@ md"""
 
 # ╔═╡ 736515ba-2685-11eb-38cb-65bfcf8d1b8d
 function step_model!(ebm::Model.EBM, new_CO2::Real)
-	
-	# your code here
-	ebm.t = [0.0]
-	ebm.T = [ebm.T[end]]
-	ebm.CO2 = t -> new_CO2
-	
-	Model.run!(ebm, 200)
 
-	return ebm
+    # your code here
+    ebm.t = [0.0]
+    ebm.T = [ebm.T[end]]
+    ebm.CO2 = t -> new_CO2
+
+    Model.run!(ebm, 200)
+
+    return ebm
 end
 
 # ╔═╡ 8b06b944-268c-11eb-0bfc-8d4dd21e1f02
@@ -879,44 +883,44 @@ log10(CO2max)
 Tneo = -48
 
 # ╔═╡ 06d28052-2531-11eb-39e2-e9613ab0401c
-ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const)
+ebm = Model.EBM(Tneo, 0.0, 5.0, Model.CO2_const)
 
 # ╔═╡ bf5b6397-173b-49c5-b86f-8cf2326b5d61
 ebm.A
 
 # ╔═╡ ef5439fd-60b1-4b06-bb0a-18d3b5e71330
-(1- ebm.α)*ebm.S/4
+(1 - ebm.α) * ebm.S / 4
 
 # ╔═╡ c4b6e445-b121-4720-9928-42d7bdcc5960
 # Net heat coming in at CO2_PI, T= 0
-(1- ebm.α)*ebm.S/4 - ebm.A
+(1 - ebm.α) * ebm.S / 4 - ebm.A
 
 # ╔═╡ 378aed18-252b-11eb-0b37-a3b511af2cb5
 let
-	step_model!(ebm, CO2)
-	
-	p = plot(
-		xlims=(CO2min, CO2max), ylims=(-55, 75), 
-		xaxis=:log,
-		xlabel="CO2 concentration [ppm]", 
-		ylabel="Global temperature T [°C]",
-		title="Earth's CO2 concentration bifurcation diagram",
-		legend=:topleft
-	)
-	
-	add_cold_hot_areas!(p)
-	add_reference_points!(p)
-	
-	# your code here 
-	
-	plot!(p, 
-		[ebm.CO2(ebm.t[end])], [ebm.T[end]],
-		label=nothing,
-		color=:black,
-		shape=:circle,
-	)
-	
-	
+    step_model!(ebm, CO2)
+
+    p = plot(
+        xlims=(CO2min, CO2max), ylims=(-55, 75),
+        xaxis=:log,
+        xlabel="CO2 concentration [ppm]",
+        ylabel="Global temperature T [°C]",
+        title="Earth's CO2 concentration bifurcation diagram",
+        legend=:topleft
+    )
+
+    add_cold_hot_areas!(p)
+    add_reference_points!(p)
+
+    # your code here 
+
+    plot!(p,
+        [ebm.CO2(ebm.t[end])], [ebm.T[end]],
+        label=nothing,
+        color=:black,
+        shape=:circle,
+    )
+
+
 end |> as_svg
 
 # ╔═╡ c78e02b4-268a-11eb-0af7-f7c7620fcc34
@@ -925,21 +929,21 @@ The albedo feedback is implemented by the methods below:
 """
 
 # ╔═╡ d7801e88-2530-11eb-0b93-6f1c78d00eea
-function α(T; α0=Model.α, αi=0.5, ΔT=10.)
-	if T < -ΔT
-		return αi
-	elseif -ΔT <= T < ΔT
-		return αi + (α0-αi)*(T+ΔT)/(2ΔT)
-	elseif T >= ΔT
-		return α0
-	end
+function α(T; α0=Model.α, αi=0.5, ΔT=10.0)
+    if T < -ΔT
+        return αi
+    elseif -ΔT <= T < ΔT
+        return αi + (α0 - αi) * (T + ΔT) / (2ΔT)
+    elseif T >= ΔT
+        return α0
+    end
 end
 
 # ╔═╡ 607058ec-253c-11eb-0fb6-add8cfb73a4f
 function Model.timestep!(ebm)
-	ebm.α = α(ebm.T[end]) # Added this line
-	append!(ebm.T, ebm.T[end] + ebm.Δt*Model.tendency(ebm));
-	append!(ebm.t, ebm.t[end] + ebm.Δt);
+    ebm.α = α(ebm.T[end]) # Added this line
+    append!(ebm.T, ebm.T[end] + ebm.Δt * Model.tendency(ebm))
+    append!(ebm.t, ebm.t[end] + ebm.Δt)
 end
 
 # ╔═╡ 9c1f73e0-268a-11eb-2bf1-216a5d869568
@@ -959,22 +963,22 @@ Tneo
 
 # ╔═╡ 9eb07a6e-2687-11eb-0de3-7bc6aa0eefb0
 co2_to_melt_snowball = let
-	ΔT = 10. # assumed threshold temp below freezing to begin some melt
-	test_CO2 = 10 # very low ppm
-	
-	# start a model, very cold, year 0, Δt 5, very low CO2
-	ebm_alt = Model.EBM(Tneo, 0., 5., x -> test_CO2)
-	Model.run!(ebm_alt)	# solve for default num years
-	
-	while ebm_alt.T[end] <= -ΔT # final Temp, degrees C still below iceball temp?
-		if ebm_alt.T[end] <= -(ΔT + 2)
-			test_CO2 = test_CO2 * 1.5 # doubling may be too big a step
-		else
-			test_CO2 = test_CO2 * 1.1 # smaller step, getting close
-		end
-		step_model!(ebm_alt, test_CO2 )
-	end
-	test_CO2
+    ΔT = 10.0 # assumed threshold temp below freezing to begin some melt
+    test_CO2 = 10 # very low ppm
+
+    # start a model, very cold, year 0, Δt 5, very low CO2
+    ebm_alt = Model.EBM(Tneo, 0.0, 5.0, x -> test_CO2)
+    Model.run!(ebm_alt)# solve for default num years
+
+    while ebm_alt.T[end] <= -ΔT # final Temp, degrees C still below iceball temp?
+        if ebm_alt.T[end] <= -(ΔT + 2)
+            test_CO2 = test_CO2 * 1.5 # doubling may be too big a step
+        else
+            test_CO2 = test_CO2 * 1.1 # smaller step, getting close
+        end
+        step_model!(ebm_alt, test_CO2)
+    end
+    test_CO2
 end
 
 # ╔═╡ 3a35598a-2527-11eb-37e5-3b3e4c63c4f7
@@ -995,10 +999,10 @@ Abstraction, lines 1-219; Array Basics, lines 1-137; Course Intro, lines 1-144 (
 
 # ╔═╡ 36e2dfea-2433-11eb-1c90-bb93ab25b33c
 if student.name == "Jazzy Doe" || student.kerberos_id == "jazz"
-	md"""
-	!!! danger "Before you submit"
-	    Remember to fill in your **name** and **Kerberos ID** at the top of this notebook.
-	"""
+    md"""
+    !!! danger "Before you submit"
+        Remember to fill in your **name** and **Kerberos ID** at the top of this notebook.
+    """
 end
 
 # ╔═╡ 36ea4410-2433-11eb-1d98-ab4016245d95
