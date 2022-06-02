@@ -15,18 +15,18 @@ end
 
 # ╔═╡ c3e52bf2-ca9a-11ea-13aa-03a4335f2906
 begin
-	import Pkg
-	Pkg.activate(mktempdir())
-	Pkg.add([
-			Pkg.PackageSpec(name="Plots", version="1.6-1"),
-			Pkg.PackageSpec(name="PlutoUI", version="0.6.8-0.6"),
-			Pkg.PackageSpec(name="ImageMagick"),
-			Pkg.PackageSpec(name="Images", version="0.23"),
-			])
-	using Plots
-	using PlutoUI
-	using LinearAlgebra
-	using Images
+    import Pkg
+    Pkg.activate(mktempdir())
+    Pkg.add([
+        Pkg.PackageSpec(name="Plots", version="1.6-1"),
+        Pkg.PackageSpec(name="PlutoUI", version="0.6.8-0.6"),
+        Pkg.PackageSpec(name="ImageMagick"),
+        Pkg.PackageSpec(name="Images", version="0.23"),
+    ])
+    using Plots
+    using PlutoUI
+    using LinearAlgebra
+    using Images
 end
 
 # ╔═╡ 1df32310-19c4-11eb-0824-6766cd21aaf4
@@ -56,7 +56,7 @@ Feel free to ask questions!
 # ╔═╡ 1e202680-19c4-11eb-29a7-99061b886b3c
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Paul Leiby", kerberos_id = "pleiby@gmail")
+student = (name="Paul Leiby", kerberos_id="pleiby@gmail")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -103,16 +103,16 @@ index of refraction `ior` for the current
 media it travels through.
 """
 struct Photon
-	"Position vector"
-	p::Vector{Float64}
+    "Position vector"
+    p::Vector{Float64}
 
-	"Direction vector"
-	l::Vector{Float64}
+    "Direction vector"
+    l::Vector{Float64}
 
-	"Color associated with the photon"
-	c::RGB
-	
-	ior::Real
+    "Color associated with the photon"
+    c::RGB
+
+    ior::Real
 end
 
 # ╔═╡ c6e8d30e-205c-11eb-271c-6165a164073d
@@ -128,17 +128,17 @@ struct Miss end
 
 # ╔═╡ 8018fbf0-1a05-11eb-3032-95aae07ca78f
 struct Intersection{T<:Object}
-	object::T
-	distance::Float64
-	point::Vector{Float64}
+    object::T
+    distance::Float64
+    point::Vector{Float64}
 end
 
 # ╔═╡ fcde90ca-2048-11eb-3e96-f9f47b6154e8
 begin
-	Base.isless(a::Miss, b::Miss) = false
-	Base.isless(a::Miss, b::Intersection) = false
-	Base.isless(a::Intersection, b::Miss) = true
-	Base.isless(a::Intersection, b::Intersection) = a.distance < b.distance
+    Base.isless(a::Miss, b::Miss) = false
+    Base.isless(a::Miss, b::Intersection) = false
+    Base.isless(a::Intersection, b::Miss) = true
+    Base.isless(a::Intersection, b::Intersection) = a.distance < b.distance
 end
 
 # ╔═╡ dc36ceaa-205c-11eb-169c-bb4c36aaec9f
@@ -184,31 +184,31 @@ Refracts incident light ray with direction ℓ₁ from medium 1 with index of re
 Returns refracted, unit-normalized, direction vector \ell_2
 """
 function refract(
-		ℓ₁::Vector, n̂::Vector,
-		old_ior, new_ior
-	)
-	# Note: assumes ℓ₁ has unit length
-	r = old_ior / new_ior
-	
-	# account for entry and exiting of new medium with new_ior 
- 	n̂_oriented = if -dot(ℓ₁, n̂) < 0
-		-n̂
-	else
-		n̂
-	end
-	
-	c = -dot(ℓ₁, n̂_oriented)
-	
-	if abs(c) > 0.999 # incident direction parallel to normal n̂
-		ℓ₁
-	else
-		f = 1 - r^2 * (1 - c^2)
-		if f < 0
-			ℓ₁
-		else
-			normalize(r * ℓ₁ + (r*c - sqrt(f)) * n̂_oriented)
-		end
-	end
+    ℓ₁::Vector, n̂::Vector,
+    old_ior, new_ior
+)
+    # Note: assumes ℓ₁ has unit length
+    r = old_ior / new_ior
+
+    # account for entry and exiting of new medium with new_ior 
+    n̂_oriented = if -dot(ℓ₁, n̂) < 0
+        -n̂
+    else
+        n̂
+    end
+
+    c = -dot(ℓ₁, n̂_oriented)
+
+    if abs(c) > 0.999 # incident direction parallel to normal n̂
+        ℓ₁
+    else
+        f = 1 - r^2 * (1 - c^2)
+        if f < 0
+            ℓ₁
+        else
+            normalize(r * ℓ₁ + (r * c - sqrt(f)) * n̂_oriented)
+        end
+    end
 end
 
 # ╔═╡ 7f0bf286-2071-11eb-0cac-6d10c93bab6c
@@ -224,14 +224,14 @@ and index of refraction `ior`."
 
 # ╔═╡ fe9ddc72-8f4c-11eb-3ef4-e9a3e8130ab8
 function Base.isapprox(n1::Nothing, n2::Nothing)
-	return true
+    return true
 end
 
 # ╔═╡ f0c0477c-8f4c-11eb-2c89-29b3e5bbe392
 let
-	n1 = nothing
-	n2 = nothing
-	isapprox(n1, n1)
+    n1 = nothing
+    n2 = nothing
+    isapprox(n1, n1)
 end
 
 # ╔═╡ 8a4e888c-1ef7-11eb-2a52-17db130458a5
@@ -244,29 +244,29 @@ color `c`
 and index of refraction `ior`.
 """
 struct Surface
-	# Reflectivity
-	r::Float64
+    # Reflectivity
+    r::Float64
 
-	# Transmission
-	t::Float64
+    # Transmission
+    t::Float64
 
-	# Color (RGB with alpha property)
-	c::RGBA
+    # Color (RGB with alpha property)
+    c::RGBA
 
-	# index of refraction
-	ior::Float64
+    # index of refraction
+    ior::Float64
 
-	function Surface(in_r, in_t, in_c, in_ior)
-		if !isapprox(in_r + in_t + in_c.alpha, 1)
-			error("invalid Surface definition: RTC must total 1.0")
-		end
-		new(in_r, in_t, in_c, in_ior)
-	end
-	
-	"Constructor for color as Float vs RGBA - assume black/transparent"
-	function Surface(in_r, in_t, in_c::Float64, in_ior)
-		new(in_r, in_t, RGBA(0,0,0,0), in_ior)
-	end
+    function Surface(in_r, in_t, in_c, in_ior)
+        if !isapprox(in_r + in_t + in_c.alpha, 1)
+            error("invalid Surface definition: RTC must total 1.0")
+        end
+        new(in_r, in_t, in_c, in_ior)
+    end
+
+    "Constructor for color as Float vs RGBA - assume black/transparent"
+    function Surface(in_r, in_t, in_c::Float64, in_ior)
+        new(in_r, in_t, RGBA(0, 0, 0, 0), in_ior)
+    end
 end
 
 # ╔═╡ 9c3bdb62-1ef7-11eb-2204-417510bf0d72
@@ -284,13 +284,13 @@ and real radius `r`, and
 Surface `s` (non-refracting)
 """
 struct Sphere <: Object
-	# Lens position
-	p::Vector{Float64}
+    # Lens position
+    p::Vector{Float64}
 
-	# Lens radius
-	r::Float64
+    # Lens radius
+    r::Float64
 
-	s::Surface
+    s::Surface
 end
 
 # ╔═╡ fda4d41e-8f3e-11eb-324a-53236d6dca4e
@@ -302,7 +302,7 @@ with index-of-refraction `ior`
 at location `p` with radius `r`
 """
 function Lens(p, r, ior)
-	Sphere(p, r, Surface(0, 1, RGBA(0,0,0,0), ior))
+    Sphere(p, r, Surface(0, 1, RGBA(0, 0, 0, 0), ior))
 end
 
 # ╔═╡ 8f414efc-8f3f-11eb-3744-9722c269ce60
@@ -314,7 +314,7 @@ with index-of-refraction 0.0,
 at location `p` with radius `r`
 """
 function ReflectingSphere(p, r)
-	Sphere(p, r, Surface(1, 0, RGBA(0,0,0,0), 0))
+    Sphere(p, r, Surface(1, 0, RGBA(0, 0, 0, 0), 0))
 end
 
 # ╔═╡ 48436c3c-8f40-11eb-0d44-69d240609b84
@@ -323,8 +323,9 @@ end
 
 returns a perfectly opaque sphere (zero-transmission/refraction or reflection),
 at location `p` with radius `r`
-"""function ColoredSphere(p, r, c::RGB)
-	Sphere(p, r, Surface(0, 0, RGBA(c), 0))
+"""
+function ColoredSphere(p, r, c::RGB)
+    Sphere(p, r, Surface(0, 0, RGBA(c), 0))
 end
 
 # ╔═╡ 6fdf613c-193f-11eb-0029-957541d2ed4d
@@ -336,7 +337,7 @@ return unit-normal to surface of sphere `s` at point `p`
 unit-direction from center of sphere to `p`)
 """
 function sphere_normal_at(p::Vector{Float64}, s::Sphere)
-	normalize(p - s.p) # this is the normalized vector from sphere center to point p
+    normalize(p - s.p) # this is the normalized vector from sphere center to point p
 end
 
 # ╔═╡ 452d6668-1ec7-11eb-3b0a-0b8f45b43fd5
@@ -394,21 +395,21 @@ Let's start with the struct
 `p::Vector{Float64}` 		"Camera's 3D position"
 """
 struct Camera <: Object
-	"Set of all pixels, counts as scene resolution"
-	resolution::Tuple{Int64,Int64}
+    "Set of all pixels, counts as scene resolution"
+    resolution::Tuple{Int64,Int64}
 
-	"Physical size of aperture"
-	aperture_width::Float64
+    "Physical size of aperture"
+    aperture_width::Float64
 
-	"Camera's distance from screen (<0 if camera above)"
-	focal_length::Float64
+    "Camera's distance from screen (<0 if camera above)"
+    focal_length::Float64
 
-	"Camera's position (3D)"
-	p::Vector{Float64}
+    "Camera's position (3D)"
+    p::Vector{Float64}
 end
 
 # ╔═╡ e774d6a8-2058-11eb-015a-83b4b6104e6e
-test_cam = Camera((400,300), 9, -10, [0,00,100])
+test_cam = Camera((400, 300), 9, -10, [0, 00, 100])
 
 # ╔═╡ 8f73824e-1ecb-11eb-0b28-4d1bc0eefbc3
 md"""
@@ -424,36 +425,36 @@ center position `cam.p` to each pixel in the image plane (`cam.aperture`).
 Returns an array of such Photons, each colored black,`ior`=1.
 """
 function init_rays(cam::Camera)
-	
-	# Physical size of the aperture/image/grid
-	aspect_ratio = cam.resolution[1] / cam.resolution[2]
-	dim = (
-		cam.aperture_width, # width is in Skybox-world distance units
-		cam.aperture_width / aspect_ratio
-	)
 
-	# pixed width = dim ./ resolution
-	
-	# The x, y coordinates of every pixel in our image grid
-	# relative to the image center (at [0, 0, cam.focal_length])
-	xs = LinRange(-0.5* dim[1], 0.5 * dim[1], cam.resolution[1])
-	ys = LinRange(0.5* dim[2], -0.5 * dim[2], cam.resolution[2])
-	
-	# pixel_positions are relative to camera center,
-	#. hence they normalize to directions
-	pixel_positions = [[x, y, cam.focal_length] for y in ys, x in xs]
-	directions = normalize.(pixel_positions)
-	
-	# broadcast the Photon constructor with all photons needed for the 
-	# full aperture array with camera `resolution`
-	#.  Photons located at the camera position `p`,
-	#.  each directed to position of one pixel in the aperture,
-	#.  colored black
-	Photon.([cam.p], directions, [zero(RGB)], [1.0])
+    # Physical size of the aperture/image/grid
+    aspect_ratio = cam.resolution[1] / cam.resolution[2]
+    dim = (
+        cam.aperture_width, # width is in Skybox-world distance units
+        cam.aperture_width / aspect_ratio
+    )
+
+    # pixed width = dim ./ resolution
+
+    # The x, y coordinates of every pixel in our image grid
+    # relative to the image center (at [0, 0, cam.focal_length])
+    xs = LinRange(-0.5 * dim[1], 0.5 * dim[1], cam.resolution[1])
+    ys = LinRange(0.5 * dim[2], -0.5 * dim[2], cam.resolution[2])
+
+    # pixel_positions are relative to camera center,
+    #. hence they normalize to directions
+    pixel_positions = [[x, y, cam.focal_length] for y in ys, x in xs]
+    directions = normalize.(pixel_positions)
+
+    # broadcast the Photon constructor with all photons needed for the 
+    # full aperture array with camera `resolution`
+    #.  Photons located at the camera position `p`,
+    #.  each directed to position of one pixel in the aperture,
+    #.  colored black
+    Photon.([cam.p], directions, [zero(RGB)], [1.0])
 end
 
 # ╔═╡ 156c0d7a-2071-11eb-1551-4f2d393df6c8
-tiny_resolution_camera = Camera((4,3), 16, -5, [0, 20, 100])
+tiny_resolution_camera = Camera((4, 3), 16, -5, [0, 20, 100])
 
 # ╔═╡ 2838c1e4-2071-11eb-13d8-1da955fbf544
 test_rays = init_rays(tiny_resolution_camera)
@@ -504,14 +505,14 @@ SkyBox is a sphere with
 `c::Function` "Color function"
 """
 struct SkyBox <: Object
-	# Skybox position
-	p::Vector{Float64}
+    # Skybox position
+    p::Vector{Float64}
 
-	# Skybox radius
-	r::Float64
-	
-	# Color function provides color at a position
-	c::Function
+    # Skybox radius
+    r::Float64
+
+    # Color function provides color at a position
+    c::Function
 end
 
 # ╔═╡ 093b9e4a-1f8a-11eb-1d32-ad1d85ddaf42
@@ -523,35 +524,35 @@ which indicates the sphere,
 nearest intersection time ("distance) `t` and 
 location `point`.
 """
-function intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S <: Union{SkyBox, Sphere}}
-	# coeffs of quatratic equation for photon intersection time 
-	# with surface of sphere:
-	#    a t^2 + bt + c = 0
-	a = dot(photon.l, photon.l)
-	b = 2 * dot(photon.l, photon.p - sphere.p)
-	c = dot(photon.p - sphere.p, photon.p - sphere.p) - sphere.r^2
-	
-	d = b^2 - 4*a*c # discriminant 
-	
-	if d <= 0
-		Miss() # Miss if tangential (single root)
-	else
-		# quadratic roots
-		t1 = (-b-sqrt(d))/2a
-		t2 = (-b+sqrt(d))/2a
-		
-		t = if t1 > ϵ
-			t1
-		elseif t2 > ϵ
-			t2
-		else
-			return Miss() # if negative or near 0 (already passed?)
-		end
-		
-		point = photon.p + t * photon.l
-		
-		Intersection(sphere, t, point)
-	end
+function intersection(photon::Photon, sphere::S; ϵ=1e-3) where {S<:Union{SkyBox,Sphere}}
+    # coeffs of quatratic equation for photon intersection time 
+    # with surface of sphere:
+    #    a t^2 + bt + c = 0
+    a = dot(photon.l, photon.l)
+    b = 2 * dot(photon.l, photon.p - sphere.p)
+    c = dot(photon.p - sphere.p, photon.p - sphere.p) - sphere.r^2
+
+    d = b^2 - 4 * a * c # discriminant 
+
+    if d <= 0
+        Miss() # Miss if tangential (single root)
+    else
+        # quadratic roots
+        t1 = (-b - sqrt(d)) / 2a
+        t2 = (-b + sqrt(d)) / 2a
+
+        t = if t1 > ϵ
+            t1
+        elseif t2 > ϵ
+            t2
+        else
+            return Miss() # if negative or near 0 (already passed?)
+        end
+
+        point = photon.p + t * photon.l
+
+        Intersection(sphere, t, point)
+    end
 end
 
 # ╔═╡ 89e98868-1fb2-11eb-078d-c9298d8a9970
@@ -563,9 +564,9 @@ takes a `photon` and a
 Calculate the vector of `Intersection`s/`Miss`es, and return the `minimum`.
 """
 function closest_hit(photon::Photon, objects::Vector{<:Object})
-	hits = intersection.([photon], objects)
-	
-	minimum(hits)
+    hits = intersection.([photon], objects)
+
+    minimum(hits)
 end
 
 # ╔═╡ aa9e61aa-1ef4-11eb-0b56-cd7ded52b640
@@ -586,7 +587,7 @@ So let's get to it and write the function!
 """
 
 # ╔═╡ 86e661e4-8f27-11eb-0d94-db239128e3bb
-sb = SkyBox(
+sb = SkyBox()
 
 # ╔═╡ c947f546-1ef5-11eb-0f02-054f4e7ae871
 """
@@ -595,22 +596,22 @@ sb = SkyBox(
 returns color `c` at given `position` in the `skybox`
 """
 function gradient_skybox_color(position, skybox)
-	extents = skybox.r
-	c = zero(RGB)
-	
-	if -extents < position[1] < extents 
-		c += RGB((position[1]+extents)/(2.0*extents), 0, 0)
-	end
+    extents = skybox.r
+    c = zero(RGB)
 
-	if -extents < position[2] < extents
-		c += RGB(0,0,(position[2]+extents)/(2.0*extents))
-	end
+    if -extents < position[1] < extents
+        c += RGB((position[1] + extents) / (2.0 * extents), 0, 0)
+    end
 
-	if -extents < position[3] < extents
-		c += RGB(0,(position[3]+extents)/(2.0*extents), 0)
-	end
+    if -extents < position[2] < extents
+        c += RGB(0, 0, (position[2] + extents) / (2.0 * extents))
+    end
 
-	return c
+    if -extents < position[3] < extents
+        c += RGB(0, (position[3] + extents) / (2.0 * extents), 0)
+    end
+
+    return c
 end
 
 # ╔═╡ 2f8f27ba-8f29-11eb-2e8b-5f37fe9d1e83
@@ -631,7 +632,7 @@ Let's set up a basic scene and trace an image! Since our skybox is _spherical_ w
 md"Construct a `Camera` with given resolution, "
 
 # ╔═╡ daf80644-2070-11eb-3363-c577ae5846b3
-basic_camera = Camera((300,200), 16, -5, [0,20,100])
+basic_camera = Camera((300, 200), 16, -5, [0, 20, 100])
 
 # ╔═╡ df3f2178-1ef5-11eb-3098-b1c8c67cf136
 md"""
@@ -674,9 +675,9 @@ producing only color (no further reflection or refraction)
 Incidentally: drags along two other unnamed args
 """
 function interact(ray::Photon, hit::Intersection{SkyBox}, ::Any, ::Any)
-	
-	ray_color = hit.object.c(hit.point, hit.object)
-	Photon(hit.point, ray.l, ray_color, ray.ior)
+
+    ray_color = hit.object.c(hit.point, hit.object)
+    Photon(hit.point, ray.l, ray_color, ray.ior)
 end
 
 # ╔═╡ 086e1956-204e-11eb-2524-f719504fb95b
@@ -698,153 +699,141 @@ While working on your code, work in small increments, and do frequent checks to 
 
 # ╔═╡ cd2681a6-8f30-11eb-240d-cb980ace20a7
 main_scene_small = [
-	sky,
-	Sphere([0,0,-25], 20, 
-		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
-	
-	Sphere([0,50,-100], 20, 
-		Surface(0.0, 1.0, RGBA(0,0,0,0.0), 1.0)),
+    sky,
+    Sphere([0, 0, -25], 20,
+        Surface(1.0, 0.0, RGBA(1, 1, 1, 0.0), 1.5)), Sphere([0, 50, -100], 20,
+        Surface(0.0, 1.0, RGBA(0, 0, 0, 0.0), 1.0)),
 ]
 
 # ╔═╡ 16f4c8e6-2051-11eb-2f23-f7300abea642
 main_scene = [
-	sky,
-	Sphere([0,0,-25], 20, 
-		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
-	
-	Sphere([0,50,-100], 20, 
-		Surface(0.0, 1.0, RGBA(0,0,0,0.0), 1.0)),
-	
-	Sphere([-50,0,-25], 20, 
-		Surface(0.0, 0.0, RGBA(0, .3, .8, 1), 1.0)),
-	
-	Sphere([30, 25, -60], 20,
-		Surface(0.0, 0.75, RGBA(1,0,0,0.25), 1.5)),
-	
-	Sphere([50, 0, -25], 20,
-		Surface(0.5, 0.0, RGBA(.1,.9,.1,0.5), 1.5)),
-	
-	Sphere([-30, 25, -60], 20,
-		Surface(0.5, 0.5, RGBA(1,1,1,0), 1.5)),
+    sky,
+    Sphere([0, 0, -25], 20,
+        Surface(1.0, 0.0, RGBA(1, 1, 1, 0.0), 1.5)), Sphere([0, 50, -100], 20,
+        Surface(0.0, 1.0, RGBA(0, 0, 0, 0.0), 1.0)), Sphere([-50, 0, -25], 20,
+        Surface(0.0, 0.0, RGBA(0, 0.3, 0.8, 1), 1.0)), Sphere([30, 25, -60], 20,
+        Surface(0.0, 0.75, RGBA(1, 0, 0, 0.25), 1.5)), Sphere([50, 0, -25], 20,
+        Surface(0.5, 0.0, RGBA(0.1, 0.9, 0.1, 0.5), 1.5)), Sphere([-30, 25, -60], 20,
+        Surface(0.5, 0.5, RGBA(1, 1, 1, 0), 1.5)),
 ]
 
 # ╔═╡ 2fa4e1ac-8f58-11eb-0741-615eacf823a9
 function propagate(ray::Photon, objects::Vector{O},
-			   num_intersections) where {O <: Object}
-	for i = 1:num_intersections
-		if ray.l != zeros(length(ray.l))
-			intersect_final = [Inf, Inf]
-			intersected_object = nothing
-			for object in objects
-				intersect = intersection(ray, object)
-				# look for nearest intersected object
-				if intersect != nothing &&
-					sum(intersect[:]^2) < sum(intersect_final^2)
-					intersect_final = intersect
-					intersected_object = object
-				end
-			end
-			
-			if intersect_final != nothing
-				ray = Ray(ray.l, ray.p + intersect_final, ray.c, ray.ior)
-				if typeof(intersected_object) == Sphere
-					reflected_ray = ray
-					refracted_ray = ray
-					colored_ray = ray
-					if !isapprox(intersected_object.s.t, 0) # some transmission
-						ior = 1/intersected_object.s.ior
-						if dot(ray.l,
-								sphere_normal_at(ray, intersected_object)) > 0 
-							ior = intersected_object.s.ior
-						end
+    num_intersections) where {O<:Object}
+    for i = 1:num_intersections
+        if ray.l != zeros(length(ray.l))
+            intersect_final = [Inf, Inf]
+            intersected_object = nothing
+            for object in objects
+                intersect = intersection(ray, object)
+                # look for nearest intersected object
+                if intersect != nothing &&
+                   sum(intersect[:]^2) < sum(intersect_final^2)
+                    intersect_final = intersect
+                    intersected_object = object
+                end
+            end
 
-						refracted_ray = refract(ray, intersected_object, ior)
-						refracted_ray = propagate(refracted_ray, objects, num_intersections-1)
-					end
+            if intersect_final != nothing
+                ray = Ray(ray.l, ray.p + intersect_final, ray.c, ray.ior)
+                if typeof(intersected_object) == Sphere
+                    reflected_ray = ray
+                    refracted_ray = ray
+                    colored_ray = ray
+                    if !isapprox(intersected_object.s.t, 0) # some transmission
+                        ior = 1 / intersected_object.s.ior
+                        if dot(ray.l,
+                            sphere_normal_at(ray, intersected_object)) > 0
+                            ior = intersected_object.s.ior
+                        end
 
-					if !isapprox(intersected_object.s.r, 0) # some Reflection
-						n = sphere_normal_at(ray, intersected_object)
+                        refracted_ray = refract(ray, intersected_object, ior)
+                        refracted_ray = propagate(refracted_ray, objects, num_intersections - 1)
+                    end
 
-						reflected_ray = reflect(ray, n)
-						reflected_ray = propagate(reflected_ray, objects, num_intersections-1)
+                    if !isapprox(intersected_object.s.r, 0) # some Reflection
+                        n = sphere_normal_at(ray, intersected_object)
 
-					end
+                        reflected_ray = reflect(ray, n)
+                        reflected_ray = propagate(reflected_ray, objects, num_intersections - 1)
 
-					if !isapprox(intersected_object.s.c.alpha, 0) # some Color response
-						ray_color = RGB(intersected_object.s.c)
-						ray_vel = zeros(length(ray.l)) # stopping photon, velocity l=0
-						colored_ray = Ray(ray_vel, ray.p, ray_color)
-						# colored ray is not propagated further
-					end
-					
-					# eventually you return from all recursive calls to propagate,
-					#. either after hitting num_intersections objects, or 
-					#. being absorbed by a colored object or the SkyBox
-					# construct weighed average color, weighted by surface t, s, c
-					# Gather all the colors from all the refracted, reflected,
-					#  and absorbed photons/rays at this level of intersection
-					ray_color = intersected_object.s.t * refracted_ray.c +
-								intersected_object.s.r * reflected_ray.c +
-								intersected_object.s.c.alpha * colored_ray.c
+                    end
 
-					ray = Ray(zeros(length(ray.l)), ray.p, ray_color)
-					
-				elseif typeof(intersected_object) = SkyBox)
-					ray_color = pixel_color(ray.p, 1000)
-					ray_vel = zeros(length(ray.l)) # stopping photon, velocity l=0
-					ray = Ray(ray_val, ray.p, ray_color)
-				end # interacting with sphere or SkyBox
-						
-			end # if intersected with something, intersect_final != nothing
-		end # if ray not stopped, ray.l != zeros(length(ray.l))
-	end # i = 1:num_intersections
+                    if !isapprox(intersected_object.s.c.alpha, 0) # some Color response
+                        ray_color = RGB(intersected_object.s.c)
+                        ray_vel = zeros(length(ray.l)) # stopping photon, velocity l=0
+                        colored_ray = Ray(ray_vel, ray.p, ray_color)
+                        # colored ray is not propagated further
+                    end
+
+                    # eventually you return from all recursive calls to propagate,
+                    #. either after hitting num_intersections objects, or 
+                    #. being absorbed by a colored object or the SkyBox
+                    # construct weighed average color, weighted by surface t, s, c
+                    # Gather all the colors from all the refracted, reflected,
+                    #  and absorbed photons/rays at this level of intersection
+                    ray_color = intersected_object.s.t * refracted_ray.c +
+                                intersected_object.s.r * reflected_ray.c +
+                                intersected_object.s.c.alpha * colored_ray.c
+
+                    ray = Ray(zeros(length(ray.l)), ray.p, ray_color)
+
+                elseif typeof(intersected_object) = SkyBox
+                    ray_color = pixel_color(ray.p, 1000)
+                    ray_vel = zeros(length(ray.l)) # stopping photon, velocity l=0
+                    ray = Ray(ray_val, ray.p, ray_color)
+                end # interacting with sphere or SkyBox
+
+            end # if intersected with something, intersect_final != nothing
+        end # if ray not stopped, ray.l != zeros(length(ray.l))
+    end # i = 1:num_intersections
 end
 
 # ╔═╡ 3766ddda-8f35-11eb-3b67-e782bcfcf631
 function reflect(ray, n)
-	ray_vel = ray.l .- 2*dot(ray.l, n)
-	ray_pos = ray.p + 0.001*ray.l # advance position slightly, to avoid repeat collision
+    ray_vel = ray.l .- 2 * dot(ray.l, n)
+    ray_pos = ray.p + 0.001 * ray.l # advance position slightly, to avoid repeat collision
 end
 
 # ╔═╡ 95ca879a-204d-11eb-3473-959811aa8320
 begin
-	
-	function interact(ray::Photon, hit::Intersection{Sphere}, 
-			num_intersections::Int, objects::Any)
 
-		# ray_color = hit.object.c(hit.point, hit.object)
-		# Photon(hit.point, ray.l, ray_color, ray.ior)
+    function interact(ray::Photon, hit::Intersection{Sphere},
+        num_intersections::Int, objects::Any)
 
-		n = sphere_normal_at(hit.point, hit.object)
+        # ray_color = hit.object.c(hit.point, hit.object)
+        # Photon(hit.point, ray.l, ray_color, ray.ior)
 
-		# if !isapprox(hit.object.s.r, 0) # non-zero reflection
-			reflected_ray = Photon(hit.point, reflect(ray.l, n), ray.c, ray.ior)
-			return step_ray(reflected_ray, objects, num_intersections - 1)	
-		# else
-		#	return missing # need to handle absorbtion and refraction
-		# end
-	end
-	
-	"""
-		step_ray(ray::Photon, objects::Vector{O},
-				   num_intersections) where {O <: Object}
+        n = sphere_normal_at(hit.point, hit.object)
 
-	Step a single Photon `ray` forward `num_intersections`
-	intersection events, given the vector of objects (scene)
-	`objects`
+        # if !isapprox(hit.object.s.r, 0) # non-zero reflection
+        reflected_ray = Photon(hit.point, reflect(ray.l, n), ray.c, ray.ior)
+        return step_ray(reflected_ray, objects, num_intersections - 1)
+        # else
+        #	return missing # need to handle absorbtion and refraction
+        # end
+    end
 
-	Return the ray after `interact` with the closest `hit`
-	"""
-	function step_ray(ray::Photon, objects::Vector{O},
-				   num_intersections) where {O <: Object}
+    """
+    	step_ray(ray::Photon, objects::Vector{O},
+    			   num_intersections) where {O <: Object}
 
-		if num_intersections == 0 # return unchanged
-			return ray
-		else
-			hit = closest_hit(ray, objects)
-			return interact(ray, hit, num_intersections, objects)
-		end
-	end
+    Step a single Photon `ray` forward `num_intersections`
+    intersection events, given the vector of objects (scene)
+    `objects`
+
+    Return the ray after `interact` with the closest `hit`
+    """
+    function step_ray(ray::Photon, objects::Vector{O},
+        num_intersections) where {O<:Object}
+
+        if num_intersections == 0 # return unchanged
+            return ray
+        else
+            hit = closest_hit(ray, objects)
+            return interact(ray, hit, num_intersections, objects)
+        end
+    end
 end
 
 # ╔═╡ 6b91a58a-1ef6-11eb-1c36-2f44713905e1
@@ -856,25 +845,25 @@ and Camera `cam`, and
 3. Converts everything into an image by extracting colors
 """
 function ray_trace(objects::Vector{O}, cam::Camera;
-				   num_intersections = 10) where {O <: Object}
-	rays = init_rays(cam)
+    num_intersections=10) where {O<:Object}
+    rays = init_rays(cam)
 
-	new_rays = step_ray.(rays, [objects], [num_intersections])
+    new_rays = step_ray.(rays, [objects], [num_intersections])
 
-	extract_colors(new_rays)
+    extract_colors(new_rays)
 end
 
 # ╔═╡ a0b84f62-2047-11eb-348c-db83f4e6c39c
 let
-	scene = [sky] # the vector of objects is just the spherical SkyBox `sky`
-	ray_trace(scene, basic_camera; num_intersections=4)
+    scene = [sky] # the vector of objects is just the spherical SkyBox `sky`
+    ray_trace(scene, basic_camera; num_intersections=4)
 end
 
 # ╔═╡ 1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
 let
-	cam = Camera((600,360), 16, -15, [0,10,100])
+    cam = Camera((600, 360), 16, -15, [0, 10, 100])
 
-	ray_trace(main_scene, cam; num_intersections=3)
+    ray_trace(main_scene, cam; num_intersections=3)
 end
 
 # ╔═╡ 4a7bfcca-8f5f-11eb-2091-11b339efd6ba
@@ -885,37 +874,37 @@ methods(interact)
 
 # ╔═╡ 27974e80-8f41-11eb-06f7-396743bd6540
 function refract(ray, lens::Sphere, ior)
-	n = sphere_normal_at(ray, lens)
-	
-	# account for entry and exiting of new medium with new_ior 
-	if dot(n, ray.l) > 0
-		n .*= -1 # reverse normal
-	end
-		
-	c = dot(ray.l, -n);
-	d = 1 - ior^2 * (1 - c^2);
+    n = sphere_normal_at(ray, lens)
 
-	if d < 0
-		return reflect(ray, n)
-	end
-	# Following skips normalize, and seems to reverse old_ior and new_ior
-	# ray_vel = normalize(r * ray.l + (r*c - sqrt(d)) * n) # for r = old_ior / new_ior
-	ray_vel = ior * ray.l + (ior*c - sqrt(d)) * n
+    # account for entry and exiting of new medium with new_ior 
+    if dot(n, ray.l) > 0
+        n .*= -1 # reverse normal
+    end
 
-	# can this be done with existing vector refraction function: ?
-	# ray_vel = refract(ray.l, sphere_normal_at(ray, lens), 1, ior)
+    c = dot(ray.l, -n)
+    d = 1 - ior^2 * (1 - c^2)
 
-	return Ray(ray_vel, ray.p, ray.c)
+    if d < 0
+        return reflect(ray, n)
+    end
+    # Following skips normalize, and seems to reverse old_ior and new_ior
+    # ray_vel = normalize(r * ray.l + (r*c - sqrt(d)) * n) # for r = old_ior / new_ior
+    ray_vel = ior * ray.l + (ior * c - sqrt(d)) * n
+
+    # can this be done with existing vector refraction function: ?
+    # ray_vel = refract(ray.l, sphere_normal_at(ray, lens), 1, ior)
+
+    return Ray(ray_vel, ray.p, ray.c)
 end
 
 # ╔═╡ ea7f0792-8f34-11eb-29cb-cb86aa84a804
 function convert_to_image(rays::Array{Ray}, filename)
-	color_array = Array{RGB}(undef, size(rays)[2], size(rays)[1])
-	for i = 1:length(color_array)
-		color_array[i] = rays[i].c # iterates across all dimensions
-	end
-	
-	save(filename, color_array)	
+    color_array = Array{RGB}(undef, size(rays)[2], size(rays)[1])
+    for i = 1:length(color_array)
+        color_array[i] = rays[i].c # iterates across all dimensions
+    end
+
+    save(filename, color_array)
 end
 
 # ╔═╡ 29621cb4-8f4a-11eb-182c-2528f45496ca
@@ -930,7 +919,7 @@ If you managed to get through the exercises, we have a fun bonus exercise! The g
 """
 
 # ╔═╡ 748cbaa2-206c-11eb-2cc9-7fa74308711b
-Resource("https://www.researchgate.net/profile/Madhu_Gupta22/publication/3427377/figure/fig1/AS:663019482775553@1535087571714/A-self-portrait-of-MC-Escher-1898-1972-in-spherical-mirror-dating-from-1935-titled.png", :width=>300)
+Resource("https://www.researchgate.net/profile/Madhu_Gupta22/publication/3427377/figure/fig1/AS:663019482775553@1535087571714/A-self-portrait-of-MC-Escher-1898-1972-in-spherical-mirror-dating-from-1935-titled.png", :width => 300)
 
 # ╔═╡ 981e6bd2-206c-11eb-116d-6fad4e04ce34
 md"""
@@ -942,11 +931,11 @@ Let's start with our old skybox, and set up our scene:
 """
 
 # ╔═╡ 7a12a99a-206d-11eb-2393-bf28b881087a
-escher_sphere = Sphere([0,0,0], 20, 
-			Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5))
+escher_sphere = Sphere([0, 0, 0], 20,
+    Surface(1.0, 0.0, RGBA(1, 1, 1, 0.0), 1.5))
 
 # ╔═╡ 373b6a26-206d-11eb-1e67-9debb032f69e
-escher_cam = Camera((300,300), 30, -10, [0,00,30])
+escher_cam = Camera((300, 300), 30, -10, [0, 00, 30])
 
 # ╔═╡ 5dfec31c-206d-11eb-23a2-259f2c205cb5
 md"""
@@ -955,8 +944,8 @@ md"""
 
 # ╔═╡ 6f1dbf48-206d-11eb-24d3-5154703e1753
 let
-	scene = [sky, escher_sphere]
-	ray_trace(scene, escher_cam; num_intersections=3)
+    scene = [sky, escher_sphere]
+    ray_trace(scene, escher_cam; num_intersections=3)
 end
 
 # ╔═╡ dc786ccc-206e-11eb-29e2-99882e6613af
@@ -969,23 +958,23 @@ earth = load(download("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f
 
 # ╔═╡ 12d3b806-2062-11eb-20a8-7d1a33e4b073
 function get_index_rational(A, x, y)
-	a, b = size(A)
-	
-	u = clamp(floor(Int, x * (a-1)) + 1, 1, a)
-	v = clamp(floor(Int, y * (b-1)) + 1, 1, b)
-	A[u,v]
+    a, b = size(A)
+
+    u = clamp(floor(Int, x * (a - 1)) + 1, 1, a)
+    v = clamp(floor(Int, y * (b - 1)) + 1, 1, b)
+    A[u, v]
 end
 
 # ╔═╡ cc492966-2061-11eb-1000-d90c279c4668
 function image_skybox(img)
-	f = function(position, skybox)
-		lon = atan(-position[1], position[3])
-		lat = -atan(position[2], norm(position[[1,3]]))
+    f = function (position, skybox)
+        lon = atan(-position[1], position[3])
+        lat = -atan(position[2], norm(position[[1, 3]]))
 
-		get_index_rational(img, (lat/(pi)) + .5, (lon/2pi) + .5)
-	end
-	
-	SkyBox([0.0, 0.0, 0.0], 1000, f)
+        get_index_rational(img, (lat / (pi)) + 0.5, (lon / 2pi) + 0.5)
+    end
+
+    SkyBox([0.0, 0.0, 0.0], 1000, f)
 end
 
 # ╔═╡ 137834d4-206d-11eb-0082-7b87bf222808
@@ -993,8 +982,8 @@ earth_skybox = image_skybox(earth)
 
 # ╔═╡ bff27890-206e-11eb-2e40-696424a0b8be
 let
-	scene = [earth_skybox, escher_sphere]
-	ray_trace(scene, escher_cam; num_intersections=3)
+    scene = [earth_skybox, escher_sphere]
+    ray_trace(scene, escher_cam; num_intersections=3)
 end
 
 # ╔═╡ b0bc76f8-206d-11eb-0cad-4bde96565fed
@@ -1017,8 +1006,8 @@ Another option is that we approximate the panaroma by _padding_ the image of you
 
 # ╔═╡ 6480b85c-2067-11eb-0262-f752d306d8ae
 function padded(img)
-	
-	return missing
+
+    return missing
 end
 
 # ╔═╡ 3de614da-2091-11eb-361a-83bcf357c394
@@ -1028,10 +1017,10 @@ Let's put it all together!
 
 # ╔═╡ ebd05bf0-19c3-11eb-2559-7d0745a84025
 if student.name == "Jazzy Doe" || student.kerberos_id == "jazz"
-	md"""
-	!!! danger "Before you submit"
-	    Remember to fill in your **name** and **Kerberos ID** at the top of this notebook.
-	"""
+    md"""
+    !!! danger "Before you submit"
+        Remember to fill in your **name** and **Kerberos ID** at the top of this notebook.
+    """
 end
 
 # ╔═╡ ec275590-19c3-11eb-23d0-cb3d9f62ba92
@@ -1042,240 +1031,240 @@ Just some helper functions used in the notebook."
 # ╔═╡ 2c36d3e8-2065-11eb-3a12-8382f8539ea6
 
 function process_raw_camera_data(raw_camera_data)
-	# the raw image data is a long byte array, we need to transform it into something
-	# more "Julian" - something with more _structure_.
-	
-	# The encoding of the raw byte stream is:
-	# every 4 bytes is a single pixel
-	# every pixel has 4 values: Red, Green, Blue, Alpha
-	# (we ignore alpha for this notebook)
-	
-	# So to get the red values for each pixel, we take every 4th value, starting at 
-	# the 1st:
-	reds_flat = UInt8.(raw_camera_data["data"][1:4:end])
-	greens_flat = UInt8.(raw_camera_data["data"][2:4:end])
-	blues_flat = UInt8.(raw_camera_data["data"][3:4:end])
-	
-	# but these are still 1-dimensional arrays, nicknamed 'flat' arrays
-	# We will 'reshape' this into 2D arrays:
-	
-	width = raw_camera_data["width"]
-	height = raw_camera_data["height"]
-	
-	# shuffle and flip to get it in the right shape
-	reds = reshape(reds_flat, (width, height))' / 255.0
-	greens = reshape(greens_flat, (width, height))' / 255.0
-	blues = reshape(blues_flat, (width, height))' / 255.0
-	
-	# we have our 2D array for each color
-	# Let's create a single 2D array, where each value contains the R, G and B value of 
-	# that pixel
-	
-	RGB.(reds, greens, blues)
+    # the raw image data is a long byte array, we need to transform it into something
+    # more "Julian" - something with more _structure_.
+
+    # The encoding of the raw byte stream is:
+    # every 4 bytes is a single pixel
+    # every pixel has 4 values: Red, Green, Blue, Alpha
+    # (we ignore alpha for this notebook)
+
+    # So to get the red values for each pixel, we take every 4th value, starting at 
+    # the 1st:
+    reds_flat = UInt8.(raw_camera_data["data"][1:4:end])
+    greens_flat = UInt8.(raw_camera_data["data"][2:4:end])
+    blues_flat = UInt8.(raw_camera_data["data"][3:4:end])
+
+    # but these are still 1-dimensional arrays, nicknamed 'flat' arrays
+    # We will 'reshape' this into 2D arrays:
+
+    width = raw_camera_data["width"]
+    height = raw_camera_data["height"]
+
+    # shuffle and flip to get it in the right shape
+    reds = reshape(reds_flat, (width, height))' / 255.0
+    greens = reshape(greens_flat, (width, height))' / 255.0
+    blues = reshape(blues_flat, (width, height))' / 255.0
+
+    # we have our 2D array for each color
+    # Let's create a single 2D array, where each value contains the R, G and B value of 
+    # that pixel
+
+    RGB.(reds, greens, blues)
 end
 
 # ╔═╡ f7b5ff68-2064-11eb-3be3-554519ca4847
-function camera_input(;max_size=200, default_url="https://i.imgur.com/SUmi94P.png")
-"""
-<span class="pl-image waiting-for-permission">
-<style>
-	
-	.pl-image.popped-out {
-		position: fixed;
-		top: 0;
-		right: 0;
-		z-index: 5;
-	}
+function camera_input(; max_size=200, default_url="https://i.imgur.com/SUmi94P.png")
+    """
+    <span class="pl-image waiting-for-permission">
+    <style>
+    	
+    	.pl-image.popped-out {
+    		position: fixed;
+    		top: 0;
+    		right: 0;
+    		z-index: 5;
+    	}
 
-	.pl-image #video-container {
-		width: 250px;
-	}
+    	.pl-image #video-container {
+    		width: 250px;
+    	}
 
-	.pl-image video {
-		border-radius: 1rem 1rem 0 0;
-	}
-	.pl-image.waiting-for-permission #video-container {
-		display: none;
-	}
-	.pl-image #prompt {
-		display: none;
-	}
-	.pl-image.waiting-for-permission #prompt {
-		width: 250px;
-		height: 200px;
-		display: grid;
-		place-items: center;
-		font-family: monospace;
-		font-weight: bold;
-		text-decoration: underline;
-		cursor: pointer;
-		border: 5px dashed rgba(0,0,0,.5);
-	}
+    	.pl-image video {
+    		border-radius: 1rem 1rem 0 0;
+    	}
+    	.pl-image.waiting-for-permission #video-container {
+    		display: none;
+    	}
+    	.pl-image #prompt {
+    		display: none;
+    	}
+    	.pl-image.waiting-for-permission #prompt {
+    		width: 250px;
+    		height: 200px;
+    		display: grid;
+    		place-items: center;
+    		font-family: monospace;
+    		font-weight: bold;
+    		text-decoration: underline;
+    		cursor: pointer;
+    		border: 5px dashed rgba(0,0,0,.5);
+    	}
 
-	.pl-image video {
-		display: block;
-	}
-	.pl-image .bar {
-		width: inherit;
-		display: flex;
-		z-index: 6;
-	}
-	.pl-image .bar#top {
-		position: absolute;
-		flex-direction: column;
-	}
-	
-	.pl-image .bar#bottom {
-		background: black;
-		border-radius: 0 0 1rem 1rem;
-	}
-	.pl-image .bar button {
-		flex: 0 0 auto;
-		background: rgba(255,255,255,.8);
-		border: none;
-		width: 2rem;
-		height: 2rem;
-		border-radius: 100%;
-		cursor: pointer;
-		z-index: 7;
-	}
-	.pl-image .bar button#shutter {
-		width: 3rem;
-		height: 3rem;
-		margin: -1.5rem auto .2rem auto;
-	}
+    	.pl-image video {
+    		display: block;
+    	}
+    	.pl-image .bar {
+    		width: inherit;
+    		display: flex;
+    		z-index: 6;
+    	}
+    	.pl-image .bar#top {
+    		position: absolute;
+    		flex-direction: column;
+    	}
+    	
+    	.pl-image .bar#bottom {
+    		background: black;
+    		border-radius: 0 0 1rem 1rem;
+    	}
+    	.pl-image .bar button {
+    		flex: 0 0 auto;
+    		background: rgba(255,255,255,.8);
+    		border: none;
+    		width: 2rem;
+    		height: 2rem;
+    		border-radius: 100%;
+    		cursor: pointer;
+    		z-index: 7;
+    	}
+    	.pl-image .bar button#shutter {
+    		width: 3rem;
+    		height: 3rem;
+    		margin: -1.5rem auto .2rem auto;
+    	}
 
-	.pl-image video.takepicture {
-		animation: pictureflash 200ms linear;
-	}
+    	.pl-image video.takepicture {
+    		animation: pictureflash 200ms linear;
+    	}
 
-	@keyframes pictureflash {
-		0% {
-			filter: grayscale(1.0) contrast(2.0);
-		}
+    	@keyframes pictureflash {
+    		0% {
+    			filter: grayscale(1.0) contrast(2.0);
+    		}
 
-		100% {
-			filter: grayscale(0.0) contrast(1.0);
-		}
-	}
-</style>
+    		100% {
+    			filter: grayscale(0.0) contrast(1.0);
+    		}
+    	}
+    </style>
 
-	<div id="video-container">
-		<div id="top" class="bar">
-			<button id="stop" title="Stop video">✖</button>
-			<button id="pop-out" title="Pop out/pop in">⏏</button>
-		</div>
-		<video playsinline autoplay></video>
-		<div id="bottom" class="bar">
-		<button id="shutter" title="Click to take a picture">📷</button>
-		</div>
-	</div>
-		
-	<div id="prompt">
-		<span>
-		Enable webcam
-		</span>
-	</div>
+    	<div id="video-container">
+    		<div id="top" class="bar">
+    			<button id="stop" title="Stop video">✖</button>
+    			<button id="pop-out" title="Pop out/pop in">⏏</button>
+    		</div>
+    		<video playsinline autoplay></video>
+    		<div id="bottom" class="bar">
+    		<button id="shutter" title="Click to take a picture">📷</button>
+    		</div>
+    	</div>
+    		
+    	<div id="prompt">
+    		<span>
+    		Enable webcam
+    		</span>
+    	</div>
 
-<script>
-	// based on https://github.com/fonsp/printi-static (by the same author)
+    <script>
+    	// based on https://github.com/fonsp/printi-static (by the same author)
 
-	const span = currentScript.parentElement
-	const video = span.querySelector("video")
-	const popout = span.querySelector("button#pop-out")
-	const stop = span.querySelector("button#stop")
-	const shutter = span.querySelector("button#shutter")
-	const prompt = span.querySelector(".pl-image #prompt")
+    	const span = currentScript.parentElement
+    	const video = span.querySelector("video")
+    	const popout = span.querySelector("button#pop-out")
+    	const stop = span.querySelector("button#stop")
+    	const shutter = span.querySelector("button#shutter")
+    	const prompt = span.querySelector(".pl-image #prompt")
 
-	const maxsize = $(max_size)
+    	const maxsize = $(max_size)
 
-	const send_source = (source, src_width, src_height) => {
-		const scale = Math.min(1.0, maxsize / src_width, maxsize / src_height)
+    	const send_source = (source, src_width, src_height) => {
+    		const scale = Math.min(1.0, maxsize / src_width, maxsize / src_height)
 
-		const width = Math.floor(src_width * scale)
-		const height = Math.floor(src_height * scale)
+    		const width = Math.floor(src_width * scale)
+    		const height = Math.floor(src_height * scale)
 
-		const canvas = html`<canvas width=\${width} height=\${height}>`
-		const ctx = canvas.getContext("2d")
-		ctx.drawImage(source, 0, 0, width, height)
+    		const canvas = html`<canvas width=\${width} height=\${height}>`
+    		const ctx = canvas.getContext("2d")
+    		ctx.drawImage(source, 0, 0, width, height)
 
-		span.value = {
-			width: width,
-			height: height,
-			data: ctx.getImageData(0, 0, width, height).data,
-		}
-		span.dispatchEvent(new CustomEvent("input"))
-	}
-	
-	const clear_camera = () => {
-		window.stream.getTracks().forEach(s => s.stop());
-		video.srcObject = null;
+    		span.value = {
+    			width: width,
+    			height: height,
+    			data: ctx.getImageData(0, 0, width, height).data,
+    		}
+    		span.dispatchEvent(new CustomEvent("input"))
+    	}
+    	
+    	const clear_camera = () => {
+    		window.stream.getTracks().forEach(s => s.stop());
+    		video.srcObject = null;
 
-		span.classList.add("waiting-for-permission");
-	}
+    		span.classList.add("waiting-for-permission");
+    	}
 
-	prompt.onclick = () => {
-		navigator.mediaDevices.getUserMedia({
-			audio: false,
-			video: {
-				facingMode: "environment",
-			},
-		}).then(function(stream) {
+    	prompt.onclick = () => {
+    		navigator.mediaDevices.getUserMedia({
+    			audio: false,
+    			video: {
+    				facingMode: "environment",
+    			},
+    		}).then(function(stream) {
 
-			stream.onend = console.log
+    			stream.onend = console.log
 
-			window.stream = stream
-			video.srcObject = stream
-			window.cameraConnected = true
-			video.controls = false
-			video.play()
-			video.controls = false
+    			window.stream = stream
+    			video.srcObject = stream
+    			window.cameraConnected = true
+    			video.controls = false
+    			video.play()
+    			video.controls = false
 
-			span.classList.remove("waiting-for-permission");
+    			span.classList.remove("waiting-for-permission");
 
-		}).catch(function(error) {
-			console.log(error)
-		});
-	}
-	stop.onclick = () => {
-		clear_camera()
-	}
-	popout.onclick = () => {
-		span.classList.toggle("popped-out")
-	}
+    		}).catch(function(error) {
+    			console.log(error)
+    		});
+    	}
+    	stop.onclick = () => {
+    		clear_camera()
+    	}
+    	popout.onclick = () => {
+    		span.classList.toggle("popped-out")
+    	}
 
-	shutter.onclick = () => {
-		const cl = video.classList
-		cl.remove("takepicture")
-		void video.offsetHeight
-		cl.add("takepicture")
-		video.play()
-		video.controls = false
-		console.log(video)
-		send_source(video, video.videoWidth, video.videoHeight)
-	}
-	
-	
-	document.addEventListener("visibilitychange", () => {
-		if (document.visibilityState != "visible") {
-			clear_camera()
-		}
-	})
+    	shutter.onclick = () => {
+    		const cl = video.classList
+    		cl.remove("takepicture")
+    		void video.offsetHeight
+    		cl.add("takepicture")
+    		video.play()
+    		video.controls = false
+    		console.log(video)
+    		send_source(video, video.videoWidth, video.videoHeight)
+    	}
+    	
+    	
+    	document.addEventListener("visibilitychange", () => {
+    		if (document.visibilityState != "visible") {
+    			clear_camera()
+    		}
+    	})
 
 
-	// Set a default image
+    	// Set a default image
 
-	const img = html`<img crossOrigin="anonymous">`
+    	const img = html`<img crossOrigin="anonymous">`
 
-	img.onload = () => {
-	console.log("helloo")
-		send_source(img, img.width, img.height)
-	}
-	img.src = "$(default_url)"
-	console.log(img)
-</script>
-</span>
-""" |> HTML
+    	img.onload = () => {
+    	console.log("helloo")
+    		send_source(img, img.width, img.height)
+    	}
+    	img.src = "$(default_url)"
+    	console.log(img)
+    </script>
+    </span>
+    """ |> HTML
 end
 
 # ╔═╡ 27d64432-2065-11eb-3795-e99b1d6718d2
@@ -1286,9 +1275,9 @@ face = process_raw_camera_data(wow)
 
 # ╔═╡ 06ac2efc-206f-11eb-1a73-9306bf5f7a9c
 let
-	face_skybox = image_skybox(face)
-	scene = [face_skybox, escher_sphere]
-	ray_trace(scene, escher_cam; num_intersections=3)
+    face_skybox = image_skybox(face)
+    scene = [face_skybox, escher_sphere]
+    ray_trace(scene, escher_cam; num_intersections=3)
 end
 
 # ╔═╡ 7d03b258-2067-11eb-3070-1168e282b2ea
@@ -1299,16 +1288,14 @@ padded(face)
 
 # ╔═╡ c68dbe1c-2066-11eb-048d-038df2c68a8b
 let
-	img = process_raw_camera_data(escher_face_data)
-	img_padded = padded(img)
-	
-	scene = [
-		image_skybox(padded(img)),
+    img = process_raw_camera_data(escher_face_data)
+    img_padded = padded(img)
 
-		escher_sphere,
-	]
-	
-	ray_trace(scene, escher_cam; num_intersections=20)
+    scene = [
+        image_skybox(padded(img)), escher_sphere,
+    ]
+
+    ray_trace(scene, escher_cam; num_intersections=20)
 end
 
 # ╔═╡ ec31dce0-19c3-11eb-1487-23cc20cd5277
