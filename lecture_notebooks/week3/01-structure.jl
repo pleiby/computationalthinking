@@ -614,7 +614,7 @@ pr, pg, pb = eachslice(picture, dims=1)
 [RGB.(pr, 0, 0) RGB.(0, pg, 0) RGB.(0, 0, pb)]
 
 # ╔═╡ fee66076-f5f9-11ea-2316-abc57b62a57c
-RGB.(image
+# RGB.(image
 
 # ╔═╡ 6532b388-f5f9-11ea-2ae2-f9b12e441bb3
 pr
