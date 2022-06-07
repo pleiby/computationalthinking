@@ -1,15 +1,11 @@
-MIT Computational Thinking Courses Info
-=======================================
+Notes on MIT Computational Thinking Courses Info
+================================================
 
 ### ComputationalThinking Spring 2021 https://computationalthinking.mit.edu/Spring21/
 - Lecturers: 
     - Alan Edelman, 
     - David P. Sanders, 
     - Charles E. Leiserson
-- For previous versions of this class, see:
-    - [Fall 2020](https://computationalthinking.mit.edu/Fall20/)
-    - [Spring 2020](https://ocw.mit.edu/courses/mathematics/18-s190-introduction-to-computational-thinking-with-julia-with-applications-to-modeling-the-covid-19-pandemic-spring-2020/)
-    - [Fall 2019](https://github.com/dpsanders/6.S083_fall_2019/tree/fall_2019)
 - course repository github.com/mitmath/18S191
 - Topics Include
     - Images as Data and Arrays
@@ -37,9 +33,13 @@ MIT Computational Thinking Courses Info
     - Advection and diffusion in 1D
     - Resistors, stencils and climate models
     - Advection and diffusion in 2D
-    - Climate Economics
+    - [Climate Economics](https://computationalthinking.mit.edu/Spring21/notebooks/week14/inverse_climate_model.jl)
     - Solving inverse problems
 
+### For previous versions of this class, see:
+    - [Fall 2020](https://computationalthinking.mit.edu/Fall20/)
+    - [Spring 2020](https://ocw.mit.edu/courses/mathematics/18-s190-introduction-to-computational-thinking-with-julia-with-applications-to-modeling-the-covid-19-pandemic-spring-2020/)
+    - [Fall 2019](https://github.com/dpsanders/6.S083_fall_2019/tree/fall_2019)
 
 ### [Computational Thinking - MIT OCR Fall 2020](https://ocw.mit.edu/courses/18-s191-introduction-to-computational-thinking-fall-2020/)
 - Instructors: 	
